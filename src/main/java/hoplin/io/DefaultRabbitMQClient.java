@@ -150,6 +150,12 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         return with(channel -> channel.queueDeclare().getQueue());
     }
 
+    @Override public void disconnect() throws IOException
+    {
+        if(provider != null)
+            provider.disconnect();
+    }
+
     private <T> T with(final ThrowableChannel<T> handler)
     {
         try

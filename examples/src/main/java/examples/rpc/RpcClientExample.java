@@ -10,6 +10,7 @@ import hoplin.io.rpc.RpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -19,7 +20,7 @@ public class RpcClientExample extends BaseExample
 {
     private static final Logger log = LoggerFactory.getLogger(RpcClientExample.class);
 
-    public static void main(final String... args) throws InterruptedException
+    public static void main(final String... args) throws InterruptedException, IOException
     {
         final Binding binding = bind();
         log.info("Binding : {}", binding);
@@ -27,12 +28,14 @@ public class RpcClientExample extends BaseExample
 
         request(client);
 //        asyncRequest(client);
+
+        client.disconnect();
     }
 
     private static void request(RpcClient<LogDetail, String> client)
     {
         long s = System.currentTimeMillis();
-        int tickets  = 1000;
+        int tickets  = 10;
 
         for(int i = 0; i < tickets; i++)
         {

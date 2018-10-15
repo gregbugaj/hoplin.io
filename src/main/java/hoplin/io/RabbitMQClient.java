@@ -3,6 +3,7 @@ package hoplin.io;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -160,4 +161,11 @@ public interface RabbitMQClient
      * @see com.rabbitmq.client.Channel#queueDeclare()
      */
     String queueDeclareTemporary();
+
+    /**
+     * Disconnect the client and all underlying Channels
+     *
+     * @throws IOException
+     */
+    void disconnect() throws IOException;
 }

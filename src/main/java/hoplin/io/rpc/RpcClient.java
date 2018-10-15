@@ -170,4 +170,9 @@ public class RpcClient<I, O>
             throw new HoplinRuntimeException("Unable to start RPC client consumer", e);
         }
     }
+
+    public void disconnect() throws IOException
+    {
+        client.disconnect();
+    }
 }
