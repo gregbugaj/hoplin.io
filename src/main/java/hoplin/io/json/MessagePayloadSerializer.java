@@ -6,6 +6,11 @@ import hoplin.io.rpc.MessagePayload;
 
 import java.lang.reflect.Type;
 
+/**
+ * Message payload serializer
+ * Messages exchanged between two clients are decorated with special JSON tags
+ * to allow for generic type serialization.
+ */
 public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>, JsonDeserializer<MessagePayload>
 {
     private static final String PROPERTY_NAME = "_payload_type_";
