@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class AbstractExchangeClient
+abstract class AbstractExchangeClient
 {
     private static final Logger log = LoggerFactory.getLogger(AbstractExchangeClient.class);
 
@@ -15,7 +15,7 @@ public abstract class AbstractExchangeClient
 
     RabbitMQClient client;
 
-    public  AbstractExchangeClient(final RabbitMQOptions options, final Binding binding)
+    AbstractExchangeClient(final RabbitMQOptions options, final Binding binding)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(binding);

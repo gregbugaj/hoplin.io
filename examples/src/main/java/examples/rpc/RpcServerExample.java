@@ -25,7 +25,9 @@ public class RpcServerExample extends BaseExample
         final RpcServer<LogDetail, String> server = Rpc.server(options(), binding);
         server.start(RpcServerExample::handler);
 
-        Thread.currentThread().join();
+        server.disconnect();
+
+        //Thread.currentThread().join();
     }
 
     private static String handler(final LogDetail log)

@@ -77,8 +77,7 @@ public class JsonCodec implements Codec
         try
         {
             final String input = new String(data, "UTF-8");
-            final E value = gson.fromJson(input, clazz);
-            return value;
+            return  gson.fromJson(input, clazz);
         }
         catch (final Exception t)
         {

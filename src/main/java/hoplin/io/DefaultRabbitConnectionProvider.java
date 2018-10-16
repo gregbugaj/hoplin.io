@@ -12,7 +12,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Broker connection provider
+ * Default implementation of {@ConnectionProvider}
+ * This provider handles basic retry and disconnect policy
  */
 public class DefaultRabbitConnectionProvider implements ConnectionProvider
 {
@@ -219,6 +220,6 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
 
     private void asyncWaitAndReconnect()
     {
-        executor.schedule(() -> connect(), 5, TimeUnit.SECONDS);
+        executor.schedule(this::connect, 5, TimeUnit.SECONDS);
     }
 }

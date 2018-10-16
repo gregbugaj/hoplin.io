@@ -48,8 +48,4 @@ public class MessagePayload<T>
         return this;
     }
 
-    public <K> K getPayloadWithType()
-    {
-        return (K) payload;
-    }
 }

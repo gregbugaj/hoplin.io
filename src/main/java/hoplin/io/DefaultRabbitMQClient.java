@@ -160,8 +160,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
     {
         try
         {
-           final T t = handler.handle(channel);
-           return t;
+           return handler.handle(channel);
         }
         catch (final Exception e)
         {
@@ -225,11 +224,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         {
             return messageCountAsync(queue).get();
         }
-        catch (final ExecutionException e)
-        {
-            log.error("Unable to get message count", e);
-        }
-        catch (InterruptedException e)
+        catch (final ExecutionException | InterruptedException e)
         {
             log.error("Unable to get message count", e);
         }

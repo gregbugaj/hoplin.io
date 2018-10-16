@@ -127,11 +127,12 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
         // TODO: send to special queue for internal review
     }
 
+    @SuppressWarnings("unchecked")
     private byte[] dispatch(final byte[] body)
     {
         try
         {
-            final MessagePayload requestMsg = codec.deserialize(body, MessagePayload.class);
+            final MessagePayload<?> requestMsg = codec.deserialize(body, MessagePayload.class);
             final O reply = handler.apply((I) requestMsg.getPayload());
             final MessagePayload<O> replyMsg = new MessagePayload();
             replyMsg.setPayload(reply);

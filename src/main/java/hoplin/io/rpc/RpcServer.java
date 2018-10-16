@@ -5,6 +5,7 @@ import hoplin.io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -72,5 +73,11 @@ public class RpcServer<I, O>
         {
             throw new HoplinRuntimeException("Unable to start RPC server consumer", e);
         }
+    }
+
+    public void disconnect() throws IOException
+    {
+        if(client != null)
+            client.disconnect();
     }
 }
