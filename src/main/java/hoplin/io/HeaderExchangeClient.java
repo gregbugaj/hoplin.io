@@ -45,7 +45,6 @@ public class HeaderExchangeClient
         final String routingKey   = binding.getRoutingKey();
         final Map<String, Object> arguments = binding.getArguments();
 
-
         try
         {
             // Make sure that the Exchange and Queue are declared
@@ -55,17 +54,14 @@ public class HeaderExchangeClient
 
             log.info("exchangeDeclared : {}", exchangeDeclared);
             log.info("queueDeclare : {}", queueDeclare);
-
             log.info("Binding client [exchangeName, queueName, routingKeys] : {}, {}, {}",exchangeName, queueName, routingKey);
+
             channel.queueBind(queueName, exchangeName, routingKey);
 
-      /*      client.basicConsume(queueName, (msg)->{
-                System.out.println("XXX :: "+ msg);
-            });*/
         }
         catch (final Exception e)
         {
-            throw new RuntimeException(e);
+            throw new HoplinRuntimeException("Unable to bind header exchange client", e);
         }
 
     }

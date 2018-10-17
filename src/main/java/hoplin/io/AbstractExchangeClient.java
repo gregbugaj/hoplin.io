@@ -70,8 +70,14 @@ abstract class AbstractExchangeClient
 
         try
         {
+            // survive a server restart
+            final boolean durable = true;
+            // keep it even if not in user
+            final boolean autoDelete = false;
+
             // Make sure that the Exchange is declared
-            client.exchangeDeclare(exchangeName, type, true, false);
+            client.exchangeDeclare(exchangeName, type, durable, autoDelete);
+
             // setup consumer options
             if (consume)
                 subscribe();

@@ -1,25 +1,19 @@
 package hoplin.io;
 
-import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * Client is bound to individual {@link Binding}
+ * Fanout Exchange Client
  */
-public class FanoutExchangeClient
+public class FanoutExchangeClient extends AbstractExchangeClient
 {
     private static final Logger log = LoggerFactory.getLogger(FanoutExchangeClient.class);
-
-    private final Binding binding;
-
-    private RabbitMQClient client;
 
     public FanoutExchangeClient(final RabbitMQOptions options, final Binding binding)
     {
@@ -28,54 +22,11 @@ public class FanoutExchangeClient
 
     public FanoutExchangeClient(final RabbitMQOptions options, final Binding binding, boolean consume)
     {
-        Objects.requireNonNull(options);
-        Objects.requireNonNull(binding);
-
-        this.client = RabbitMQClient.create(options);
-        this.binding = binding;
-
-        bind(consume);
+        super(options, binding);
+        bind(consume, "fanout");
     }
 
-    /**
-     * This will actively declare:
-     *
-     * a durable, non-autodelete exchange of "fanout" type
-     * a durable, non-exclusive, non-autodelete queue with a well-known name
-     *
-     * @param consume
-     */
-    private void bind(final boolean consume)
-    {
-        final String exchangeName = binding.getExchange();
-        // prevent changing default queues
-        if(Strings.isNullOrEmpty(exchangeName))
-            throw new IllegalArgumentException("Exchange name can't be empty");
-
-        try
-        {
-            final String type = "fanout";
-            // survive a server restart
-            final boolean durable = true;
-            // keep it even if not in user
-            final boolean autoDelete = false;
-            // no special arguments
-            final Map<String, Object> arguments = null;
-
-            // Make sure that the Exchange is declared
-            client.exchangeDeclare(exchangeName, type, durable, autoDelete);
-
-            // setup consumer options
-            if (consume)
-                consume();
-        }
-        catch (final Exception e)
-        {
-            throw new HoplinRuntimeException("Unable to bind queue", e);
-        }
-    }
-
-    private void consume()
+    void subscribe()
     {
         final String exchangeName = binding.getExchange();
         final String queueName = binding.getQueue();
@@ -124,7 +75,7 @@ public class FanoutExchangeClient
      * @param handler
      * @param <T>
      */
-    public <T> void consume(final Class<T> clazz, final Consumer<T> handler)
+    public <T> void subscribe(final Class<T> clazz, final Consumer<T> handler)
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);

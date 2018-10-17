@@ -34,8 +34,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
 
     public DefaultRabbitMQClient(final RabbitMQOptions options)
     {
-        Objects.requireNonNull(options, "Options are required and  can't be null");
-        this.options = options;
+        this.options = Objects.requireNonNull(options, "Options are required and  can't be null");
         this.provider = create();
         this.channel = provider.acquire();
         this.codec = new JsonCodec();
