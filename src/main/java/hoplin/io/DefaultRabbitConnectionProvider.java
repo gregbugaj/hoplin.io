@@ -1,6 +1,9 @@
 package hoplin.io;
 
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,6 +175,8 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
         cf.setRequestedChannelMax(config.getRequestedChannelMax());
         cf.setNetworkRecoveryInterval(config.getNetworkRecoveryInterval());
         cf.setAutomaticRecoveryEnabled(config.isAutomaticRecoveryEnabled());
+
+        cf.setClientProperties(config.getClientProperties());
 
         return cf.newConnection();
     }

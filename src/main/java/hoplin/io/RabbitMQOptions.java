@@ -1,6 +1,16 @@
 package hoplin.io;
 
 import com.rabbitmq.client.ConnectionFactory;
+import hoplin.io.util.OsUtil;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Client options
@@ -89,9 +99,11 @@ public class RabbitMQOptions
     private boolean automaticRecoveryEnabled = DEFAULT_AUTOMATIC_RECOVERY_ENABLED;
     private boolean includeProperties = false;
 
+    private Map<String, Object> clientProperties;
+
     public RabbitMQOptions()
     {
-
+        clientProperties = createClientProperties();
     }
 
     public RabbitMQOptions(final RabbitMQOptions that)
@@ -111,6 +123,60 @@ public class RabbitMQOptions
         automaticRecoveryEnabled = that.automaticRecoveryEnabled;
         includeProperties = that.includeProperties;
         requestedChannelMax = that.requestedChannelMax;
+        clientProperties = that.clientProperties;
+    }
+
+    private Map<String, Object> createClientProperties()
+    {
+        final Map<String, Object> props = new HashMap<>();
+
+        addValueIfNotExists("client_api", "hoplin.io");
+        addValueIfNotExists("connection_name", findApplicationName());
+        addValueIfNotExists("platform", OsUtil.platform());
+        addValueIfNotExists("version", findApplicationVersion());
+        addValueIfNotExists("application", findApplicationName());
+        addValueIfNotExists("application_location", findWorkingDirectory());
+        addValueIfNotExists("machine_name", getHostName());
+        addValueIfNotExists("user", System.getProperty("user.name"));
+        addValueIfNotExists("connected", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+        addValueIfNotExists("requested_heartbeat", Integer.toString(requestedHeartbeat));
+
+        return props;
+    }
+
+    private String findApplicationVersion()
+    {
+        return "unknown";
+    }
+
+    private String findApplicationName()
+    {
+        return "unknown";
+    }
+
+    private String getHostName()
+    {
+        try
+        {
+            return  InetAddress.getLocalHost().getHostName();
+        }
+        catch (UnknownHostException e)
+        {
+            // suppressed
+        }
+        return "localhost";
+    }
+
+    private String findWorkingDirectory()
+    {
+        final Path currentRelativePath = Paths.get("");
+        return currentRelativePath.toAbsolutePath().toString();
+    }
+
+    private void addValueIfNotExists(final String key, final String value)
+    {
+        if(!clientProperties.containsKey(key))
+            clientProperties.put(key, value);
     }
 
     /**
@@ -287,4 +353,14 @@ public class RabbitMQOptions
         return this;
     }
 
+    public Map<String, Object> getClientProperties()
+    {
+        return clientProperties;
+    }
+
+    public RabbitMQOptions setClientProperties(final Map<String, Object> clientProperties)
+    {
+        this.clientProperties = clientProperties;
+        return this;
+    }
 }
