@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/gregbugaj/hoplin.io.svg?branch=master)](https://travis-ci.org/gregbugaj/hoplin.io)
+
 # hoplin.io
 A lightweight RabbitMQ client for Java (built on top of rabittmq java client)
 
