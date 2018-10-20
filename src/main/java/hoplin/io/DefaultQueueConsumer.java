@@ -1,5 +1,7 @@
 package hoplin.io;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
@@ -9,20 +11,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+/**
+ * Default consumer with default ACK stategy
+ */
 public class DefaultQueueConsumer extends DefaultConsumer
 {
+    private static final Logger log = LoggerFactory.getLogger(DefaultQueueConsumer.class);
+
     private final QueueOptions queueOptions;
 
-    private Set<HandlerReference> handlers = new LinkedHashSet<>();
-
-    private static final Logger log = LoggerFactory.getLogger(DefaultQueueConsumer.class);
+    private Multimap<Class<?>, Consumer> handlers = ArrayListMultimap.create();
 
     private Executor executor;
 
@@ -43,6 +50,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
         codec = new JsonCodec();
     }
 
+
     /**
      * If you don't send the ack back, the consumer continues to fetch subsequent messages;
      * however, when you disconnect the consumer, all the messages will still be in the queue.
@@ -60,51 +68,150 @@ public class DefaultQueueConsumer extends DefaultConsumer
     public void handleDelivery(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException
     {
-        final String message = new String(body, "UTF-8");
-        System.out.println(" [x] Received '" + message + "'" + " consumerTag = " + consumerTag + " :: " + envelope);
-
-        final long deliveryTag = envelope.getDeliveryTag();
-        final boolean autoAck = queueOptions.isAutoAck();
+        final AcknowledgmentHandler acknowledgmentHandler = new DefaultAcknowledgmentHandler();
 
         try
         {
-            for(final HandlerReference ref : handlers)
-            {
-                final Object val = codec.deserialize(body, ref.clazz);
-                final Consumer<Object> handler = ref.handler;
+            CompletableFuture.supplyAsync(()-> {
 
-                handler.accept(val);
-            }
+                final MessagePayload message = codec.deserialize(body, MessagePayload.class);
+                final Object val = message.getPayload();
+                final Class<?> typeAsClass = message.getTypeAsClass();
+                final Collection<Consumer> consumers = handlers.get(typeAsClass);
+                final List<Throwable> exceptions = new ArrayList<>();
+                int handlersTotal = consumers.size();
+                int handlersSucceeded = 0;
+                int handlersFailed = 0;
 
-            // manual acknowledgments
-            // ACK that the message have been delivered and processed successfully
-            if(!autoAck)
-                getChannel().basicAck(deliveryTag, false);
+                for(final Consumer handler : consumers)
+                {
+                    try
+                    {
+                        handler.accept(val);
+                        ++handlersSucceeded;
+                    }
+                    catch (final Exception e)
+                    {
+                        ++handlersFailed;
+                        exceptions.add(e);
+                        log.error("Handler error for message  : " + message, e);
+                    }
+                }
+
+                return new MessageHandlingResult(message, exceptions, handlersTotal, handlersSucceeded, handlersFailed);
+            }, executor).whenComplete((result, thr)-> acknowledgmentHandler.handle(getChannel(), consumerTag, envelope, result, queueOptions)
+            );
+
         }
         catch(final Exception e)
         {
-            getChannel().basicNack(deliveryTag, false, true);
-            throw e;
-        }
-        finally
-        {
-            log.info(" [x] Done");
+            log.error("Unable to process message", e);
         }
     }
 
+    private static class MessageHandlingResult
+    {
+        private int handlersTotal = 0;
+        private int handlersSucceeded = 0;
+        private int handlersFailed = 0;
+        private MessagePayload message;
+        private List<Throwable> exceptions;
+
+        public MessageHandlingResult(final MessagePayload message, final List<Throwable> exceptions,
+                                     final int handlersTotal, final int handlersSucceeded, final int handlersFailed)
+        {
+            this.message = message;
+            this.exceptions = exceptions;
+            this.handlersTotal = handlersTotal;
+            this.handlersFailed = handlersFailed;
+            this.handlersSucceeded = handlersSucceeded;
+        }
+
+        public boolean allHandlersSucceeded()
+        {
+            return handlersTotal == handlersSucceeded;
+        }
+    }
+
+    /**
+     * Add new handler bound to a specific type
+     * @param clazz
+     * @param handler
+     * @param <T>
+     */
     public <T> void addHandler(final Class<T> clazz, final Consumer<T> handler)
     {
-        final HandlerReference ref = new HandlerReference<>();
-        ref.clazz = clazz;
-        ref.handler = handler;
+        Objects.requireNonNull(clazz);
+        Objects.requireNonNull(handler);
 
-        handlers.add(ref);
+        handlers.put(clazz, handler);
     }
 
-    private static class HandlerReference<T>
+    /**
+     * Acknowledgement handling strategy
+     */
+    @FunctionalInterface
+    private interface AcknowledgmentHandler
     {
-        private Class<T> clazz;
+      void handle(final Channel channel, final String consumerTag,
+                  final Envelope envelope,
+                  final MessageHandlingResult result,
+                  final QueueOptions queueOptions);
+    }
 
-        private Consumer<T> handler;
+    /**
+     * Default acknowledgment strategy
+     */
+    private class DefaultAcknowledgmentHandler implements AcknowledgmentHandler
+    {
+
+        @Override
+        public void handle(final Channel channel, final String consumerTag,
+                           final Envelope envelope,
+                           final MessageHandlingResult result,
+                           final QueueOptions queueOptions)
+        {
+            if(result.allHandlersSucceeded())
+                handleAck(channel, envelope.getDeliveryTag(), queueOptions.isAutoAck());
+            else
+                handleExceptionally(consumerTag, envelope, result);
+        }
+
+        private void handleAck(final Channel channel, final long deliveryTag, final boolean autoAck)
+        {
+            if(autoAck)
+                return;
+
+            // manual acknowledgments
+            // ACK that the message have been delivered and processed successfully
+            try
+            {
+                channel.basicAck(deliveryTag, false);
+            }
+            catch(final Exception e)
+            {
+                try
+                {
+                    channel.basicNack(deliveryTag, false, true);
+                }
+                catch (Exception e1)
+                {
+                    log.error("Unable to NACK", e1);
+                }
+            }
+        }
+
+        private void handleExceptionally(final String consumerTag, final Envelope envelope, final MessageHandlingResult message)
+        {
+            try
+            {
+                // TODO : Handle exception handling
+            }
+            catch (final Exception e)
+            {
+                log.error("exception handling error : " +consumerTag, e);
+            }
+        }
+
     }
 }

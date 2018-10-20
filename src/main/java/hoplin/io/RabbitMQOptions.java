@@ -9,8 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Client options
@@ -130,16 +129,16 @@ public class RabbitMQOptions
     {
         final Map<String, Object> props = new HashMap<>();
 
-        addValueIfNotExists("client_api", "hoplin.io");
-        addValueIfNotExists("connection_name", findApplicationName());
-        addValueIfNotExists("platform", OsUtil.platform());
-        addValueIfNotExists("version", findApplicationVersion());
-        addValueIfNotExists("application", findApplicationName());
-        addValueIfNotExists("application_location", findWorkingDirectory());
-        addValueIfNotExists("machine_name", getHostName());
-        addValueIfNotExists("user", System.getProperty("user.name"));
-        addValueIfNotExists("connected", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
-        addValueIfNotExists("requested_heartbeat", Integer.toString(requestedHeartbeat));
+        addValueIfNotExists(props, "client_api", "hoplin.io");
+        addValueIfNotExists(props, "connection_name", findApplicationName());
+        addValueIfNotExists(props, "platform", OsUtil.platform());
+        addValueIfNotExists(props, "version", findApplicationVersion());
+        addValueIfNotExists(props, "application", findApplicationName());
+        addValueIfNotExists(props, "application_location", findWorkingDirectory());
+        addValueIfNotExists(props, "machine_name", getHostName());
+        addValueIfNotExists(props, "user", System.getProperty("user.name"));
+        addValueIfNotExists(props, "connected", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+        addValueIfNotExists(props, "requested_heartbeat", Integer.toString(requestedHeartbeat));
 
         return props;
     }
@@ -173,10 +172,12 @@ public class RabbitMQOptions
         return currentRelativePath.toAbsolutePath().toString();
     }
 
-    private void addValueIfNotExists(final String key, final String value)
+    private void addValueIfNotExists(final Map<String, Object> props,
+                                     final String key,
+                                     final String value)
     {
-        if(!clientProperties.containsKey(key))
-            clientProperties.put(key, value);
+        if(!props.containsKey(key))
+            props.put(key, value);
     }
 
     /**

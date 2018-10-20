@@ -2,7 +2,7 @@ package hoplin.io.json;
 
 import com.google.gson.*;
 import hoplin.io.HoplinRuntimeException;
-import hoplin.io.rpc.MessagePayload;
+import hoplin.io.MessagePayload;
 
 import java.lang.reflect.Type;
 

@@ -1,4 +1,4 @@
-package hoplin.io.rpc;
+package hoplin.io;
 
 import java.util.Objects;
 
@@ -33,6 +33,18 @@ public class MessagePayload<T>
     public String getType()
     {
         return type;
+    }
+
+    public Class<?> getTypeAsClass()
+    {
+        try
+        {
+            return Class.forName(type).getClass();
+        }
+        catch (ClassNotFoundException e)
+        {
+            throw new HoplinRuntimeException(e);
+        }
     }
 
 

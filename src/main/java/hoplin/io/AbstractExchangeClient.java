@@ -11,6 +11,10 @@ abstract class AbstractExchangeClient
 {
     private static final Logger log = LoggerFactory.getLogger(AbstractExchangeClient.class);
 
+    private static String DEFAULT_ERROR_EXCHANGE = "hoplin_default_error_exchange";
+
+    private static String DEFAULT_ERROR_QUEUE = "hoplin_default_error_queue";
+
     Binding binding;
 
     RabbitMQClient client;
@@ -22,8 +26,30 @@ abstract class AbstractExchangeClient
 
         this.client = RabbitMQClient.create(options);
         this.binding = binding;
+
+        setupErrorHandling();
     }
 
+    private void setupErrorHandling()
+    {
+        final String exchangeName = DEFAULT_ERROR_EXCHANGE;
+        // survive a server restart
+        final boolean durable = true;
+        // keep it even if not in user
+        final boolean autoDelete = false;
+        final String type = "direct";
+
+        try
+        {
+            // Make sure that the Exchange is declared
+            client.exchangeDeclare(exchangeName, type, durable, autoDelete);
+        }
+        catch(final Exception e)
+        {
+            log.error("Unable to declare error exchange", e);
+            throw new HoplinRuntimeException("Unable to declare error exchange", e);
+        }
+    }
     void subscribe()
     {
         final String exchangeName = binding.getExchange();

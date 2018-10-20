@@ -2,7 +2,7 @@ package hoplin.io.json;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import hoplin.io.rpc.MessagePayload;
+import hoplin.io.MessagePayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

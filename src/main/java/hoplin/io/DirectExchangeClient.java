@@ -11,7 +11,7 @@ import java.util.function.Consumer;
  */
 public class DirectExchangeClient extends AbstractExchangeClient
 {
-    private static final Logger log = LoggerFactory.getLogger(AbstractExchangeClient.class);
+    private static final Logger log = LoggerFactory.getLogger(DirectExchangeClient.class);
 
     public DirectExchangeClient(final RabbitMQOptions options, final Binding binding)
     {

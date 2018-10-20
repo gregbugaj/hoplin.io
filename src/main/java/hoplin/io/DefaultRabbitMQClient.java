@@ -83,9 +83,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
             channel.basicQos(1);
 
             final Consumer consumer = create(channel, options, clazz, handler);
-            final String consumerTag = channel.basicConsume(queue, autoAck, consumer);
-
-            System.out.println(" consumerTag : " + consumerTag);
+            channel.basicConsume(queue, autoAck, consumer);
         }
         catch (final IOException e)
         {

@@ -5,6 +5,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import hoplin.io.HoplinRuntimeException;
+import hoplin.io.MessagePayload;
 import hoplin.io.json.JsonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
