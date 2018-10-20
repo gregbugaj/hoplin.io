@@ -80,10 +80,15 @@ public class DefaultRabbitMQClient implements RabbitMQClient
 
         try
         {
-            channel.basicQos(1);
 
-            final Consumer consumer = create(channel, options, clazz, handler);
-            channel.basicConsume(queue, autoAck, consumer);
+            final DefaultQueueConsumer consumer = new DefaultQueueConsumer(channel, options);
+            consumer.addHandler(clazz, handler);
+
+            channel.basicQos(1);
+            final String consumerTag = channel.basicConsume(queue, autoAck, consumer);
+
+            if(log.isDebugEnabled())
+                log.debug("Assigned consumer tag : {}", consumerTag);
         }
         catch (final IOException e)
         {
@@ -172,23 +177,6 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         T handle(Channel channel) throws Exception;
     }
 
-    /**
-     * Create queue consumer
-     *
-     * @param channel
-     * @param queueOptions
-     * @param clazz
-     * @param handler
-     * @param <T>
-     * @return
-     */
-    private <T> Consumer create(final Channel channel, final QueueOptions queueOptions, final Class<T> clazz, final java.util.function.Consumer<T> handler)
-    {
-        final DefaultQueueConsumer consumer = new DefaultQueueConsumer(channel, queueOptions);
-        consumer.addHandler(clazz, handler);
-
-        return consumer;
-    }
 
     private void logReceived(final Object message)
     {

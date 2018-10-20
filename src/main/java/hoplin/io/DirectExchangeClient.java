@@ -36,11 +36,11 @@ public class DirectExchangeClient extends AbstractExchangeClient
     }
 
     /**
-     * Consume message from the queue.
+     * Add subscription and consume message from the queue.
      * This methods should not block
      *
-     * @param clazz
-     * @param handler
+     * @param clazz the class type that we are interested in receiving messages for
+     * @param handler the Consumer that will handle the message
      * @param <T>
      */
     public <T> void subscribe(final Class<T> clazz, final Consumer<T> handler)

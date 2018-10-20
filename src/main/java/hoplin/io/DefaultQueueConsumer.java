@@ -1,7 +1,6 @@
 package hoplin.io;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
@@ -29,7 +28,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
 
     private final QueueOptions queueOptions;
 
-    private Multimap<Class<?>, Consumer> handlers = ArrayListMultimap.create();
+    private ArrayListMultimap<Class, Consumer> handlers = ArrayListMultimap.create();
 
     private Executor executor;
 
@@ -99,7 +98,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
                 }
 
                 return new MessageHandlingResult(message, exceptions, handlersTotal, handlersSucceeded, handlersFailed);
-            }, executor).whenComplete((result, thr)-> acknowledgmentHandler.handle(getChannel(), consumerTag, envelope, result, queueOptions)
+            }, executor).whenComplete((result, thr)-> acknowledgmentHandler.acknowledge(getChannel(), consumerTag, envelope, result, queueOptions)
             );
 
         }
@@ -127,9 +126,32 @@ public class DefaultQueueConsumer extends DefaultConsumer
             this.handlersSucceeded = handlersSucceeded;
         }
 
-        public boolean allHandlersSucceeded()
+        /**
+         * All handlers have succeeded without failures
+         * @return
+         */
+        public boolean hasAllHandlersSucceeded()
         {
             return handlersTotal == handlersSucceeded;
+        }
+
+        /**
+         * Some of the handlers have succeeded without failues
+         * @return
+         */
+        public boolean hasPartialHandlersSucceeded()
+        {
+            return handlersTotal > 0 && handlersSucceeded > 0;
+        }
+
+        /**
+         * Errors occured during processing
+         * 
+         * @return
+         */
+        public boolean hasErrors()
+        {
+            return handlersFailed > 0 ;
         }
     }
 
@@ -153,10 +175,11 @@ public class DefaultQueueConsumer extends DefaultConsumer
     @FunctionalInterface
     private interface AcknowledgmentHandler
     {
-      void handle(final Channel channel, final String consumerTag,
-                  final Envelope envelope,
-                  final MessageHandlingResult result,
-                  final QueueOptions queueOptions);
+      void acknowledge(final Channel channel,
+                       final String consumerTag,
+                       final Envelope envelope,
+                       final MessageHandlingResult result,
+                       final QueueOptions queueOptions);
     }
 
     /**
@@ -166,12 +189,12 @@ public class DefaultQueueConsumer extends DefaultConsumer
     {
 
         @Override
-        public void handle(final Channel channel, final String consumerTag,
-                           final Envelope envelope,
-                           final MessageHandlingResult result,
-                           final QueueOptions queueOptions)
+        public void acknowledge(final Channel channel, final String consumerTag,
+                                final Envelope envelope,
+                                final MessageHandlingResult result,
+                                final QueueOptions queueOptions)
         {
-            if(result.allHandlersSucceeded())
+            if(result.hasAllHandlersSucceeded())
                 handleAck(channel, envelope.getDeliveryTag(), queueOptions.isAutoAck());
             else
                 handleExceptionally(consumerTag, envelope, result);

@@ -69,7 +69,7 @@ public interface RabbitMQClient
      *
      * @see com.rabbitmq.client.Channel#basicPublish(String, String, AMQP.BasicProperties, byte[])
      */
-    <T> void basicPublish(String exchange, String routingKey, T message);
+    <T> void basicPublish(final String exchange, final String routingKey, final T message);
 
     /**
      * Acknowledge one or several received messages. Supply the deliveryTag from the AMQP.Basic.GetOk or AMQP.Basic.Deliver
@@ -101,7 +101,7 @@ public interface RabbitMQClient
      *
      * @param queue the queue to consumer messages from
      * @param options the queue options on how messages will be consumed from the queue
-     * @param clazz the class of deserialized message
+     * @param clazz the class of dematerialized message
      * @param handler the handler to call when message have been consumed
      * @param <T> the message type
      */
