@@ -2,21 +2,32 @@ package hoplin.io;
 
 import java.util.Objects;
 
+/**
+ * Message that will be sent over the wire with additional information;
+ *
+ * @param <T> The type of the payload
+ */
 public class MessagePayload<T>
 {
+    // Message being sent
     private T payload;
 
+    // Type of the message : Class
     private String type;
+
+    // Creation time
+    private long ctime;
 
     public MessagePayload()
     {
         // serialization
     }
 
-    public MessagePayload(final T payload)
+    public MessagePayload(final T msg)
     {
-        this.payload = Objects.requireNonNull(payload);
-        this.type = payload.getClass().getName();
+        this.payload = Objects.requireNonNull(msg);
+        this.type = msg.getClass().getName();
+        this.ctime = System.currentTimeMillis();
     }
 
     public T getPayload()
@@ -35,13 +46,17 @@ public class MessagePayload<T>
         return type;
     }
 
+    /**
+     * Get the type of message as class
+     * @return
+     */
     public Class<?> getTypeAsClass()
     {
         try
         {
             return Class.forName(type).getClass();
         }
-        catch (ClassNotFoundException e)
+        catch (final ClassNotFoundException e)
         {
             throw new HoplinRuntimeException(e);
         }
@@ -58,6 +73,11 @@ public class MessagePayload<T>
     {
         this.type = type;
         return this;
+    }
+
+    public long getCtime()
+    {
+        return ctime;
     }
 
 }
