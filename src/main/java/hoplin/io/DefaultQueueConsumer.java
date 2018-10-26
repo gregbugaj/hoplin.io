@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
- * Default consumer with default ACK stategy
+ * Default consumer with default ACK strategy
  */
 public class DefaultQueueConsumer extends DefaultConsumer
 {
@@ -69,6 +69,15 @@ public class DefaultQueueConsumer extends DefaultConsumer
     {
         final AcknowledgmentHandler acknowledgmentHandler = new DefaultAcknowledgmentHandler();
 
+        final MessageReceivedInfo recivedInfo = new MessageReceivedInfo(consumerTag,
+                                                                        envelope.getDeliveryTag(),
+                                                                        envelope.isRedeliver(),
+                                                                        envelope.getExchange(),
+                                                                        envelope.getRoutingKey(),
+                                                                        "",
+                                                                        System.currentTimeMillis()
+        );
+
         try
         {
             CompletableFuture.supplyAsync(()-> {
@@ -98,7 +107,8 @@ public class DefaultQueueConsumer extends DefaultConsumer
                 }
 
                 return new MessageHandlingResult(message, exceptions, handlersTotal, handlersSucceeded, handlersFailed);
-            }, executor).whenComplete((result, thr)-> acknowledgmentHandler.acknowledge(getChannel(), consumerTag, envelope, result, queueOptions)
+            }, executor)
+                    .whenComplete((result, thr)-> acknowledgmentHandler.acknowledge(getChannel(), recivedInfo, result, queueOptions)
             );
 
         }
@@ -175,11 +185,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
     @FunctionalInterface
     private interface AcknowledgmentHandler
     {
-      void acknowledge(final Channel channel,
-                       final String consumerTag,
-                       final Envelope envelope,
-                       final MessageHandlingResult result,
-                       final QueueOptions queueOptions);
+        void acknowledge(Channel channel, MessageReceivedInfo receivedInfo, MessageHandlingResult result, QueueOptions queueOptions);
     }
 
     /**
@@ -188,16 +194,15 @@ public class DefaultQueueConsumer extends DefaultConsumer
     private class DefaultAcknowledgmentHandler implements AcknowledgmentHandler
     {
 
-        @Override
-        public void acknowledge(final Channel channel, final String consumerTag,
-                                final Envelope envelope,
+        public void acknowledge(final Channel channel,
+                                final MessageReceivedInfo receivedInfo,
                                 final MessageHandlingResult result,
                                 final QueueOptions queueOptions)
         {
             if(result.hasAllHandlersSucceeded())
-                handleAck(channel, envelope.getDeliveryTag(), queueOptions.isAutoAck());
+                handleAck(channel,  receivedInfo.getDeliveryTag(), queueOptions.isAutoAck());
             else
-                handleExceptionally(consumerTag, envelope, result);
+                handleExceptionally(receivedInfo, result);
         }
 
         private void handleAck(final Channel channel, final long deliveryTag, final boolean autoAck)
@@ -224,7 +229,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
             }
         }
 
-        private void handleExceptionally(final String consumerTag, final Envelope envelope, final MessageHandlingResult message)
+        private void handleExceptionally(final MessageReceivedInfo receivedInfo, final MessageHandlingResult result)
         {
             try
             {
@@ -232,7 +237,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
             }
             catch (final Exception e)
             {
-                log.error("exception handling error : " +consumerTag, e);
+                log.error("exception handling error : " +receivedInfo, e);
             }
         }
 
