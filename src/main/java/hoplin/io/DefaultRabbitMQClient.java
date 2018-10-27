@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
 
 /**
  * Default implementation of {@link RabbitMQClient}
@@ -65,6 +66,12 @@ public class DefaultRabbitMQClient implements RabbitMQClient
     public <T> void basicConsume(final String queue, final Class<T> clazz, final java.util.function.Consumer<T> handler)
     {
         basicConsume(queue, QueueOptions.of(true), clazz, handler);
+    }
+
+    @Override
+    public <T> void basicConsume(final String queue, final Class<T> clazz, final BiConsumer<T, MessageContext> handler)
+    {
+        throw new HoplinRuntimeException("BiConsumer not implemented");
     }
 
     @Override

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -131,6 +132,14 @@ abstract class AbstractExchangeClient
      * @param <T> the type this Consumer will handle
      */
     public <T> void subscribe(final Class<T> clazz, final Consumer<T> handler)
+    {
+        Objects.requireNonNull(clazz);
+        Objects.requireNonNull(handler);
+
+        client.basicConsume(binding.getQueue(), clazz, handler);
+    }
+
+    public <T, U> void subscribe(final Class<T> clazz, final  BiConsumer<T, MessageContext> handler)
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);

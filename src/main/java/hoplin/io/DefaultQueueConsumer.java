@@ -159,7 +159,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
     private AckStrategy ackFromOptions(final QueueOptions queueOptions)
     {
         if(queueOptions.isAutoAck())
-            return AcknowledgmentStrategies.AUTO_ACK.strategy();
+            return AcknowledgmentStrategies.NOOP.strategy();
 
         return AcknowledgmentStrategies.BASIC_ACK.strategy();
     }

@@ -5,7 +5,7 @@ package hoplin.io;
  */
 public enum AcknowledgmentStrategies
 {
-    AUTO_ACK
+    NOOP
         {
             @Override
             public AckStrategy strategy()

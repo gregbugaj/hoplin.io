@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Basic client that wraps most {@link Channel} operations, and provides number of convenience methods.
@@ -94,7 +96,16 @@ public interface RabbitMQClient
      * @param handler the handler to call when message have been consumed
      * @param <T> the message type
      */
-    <T> void basicConsume(final String queue, final Class<T> clazz, final java.util.function.Consumer<T> handler);
+    <T> void basicConsume(final String queue, final Class<T> clazz, final Consumer<T> handler);
+
+    /**
+     *
+     * @param queue
+     * @param clazz
+     * @param handler
+     * @param <T>
+     */
+    <T> void basicConsume(final String queue, final Class<T> clazz, final  BiConsumer<T, MessageContext> handler);
 
     /**
      * Consume message create the queue
