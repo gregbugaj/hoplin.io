@@ -18,7 +18,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * Consumer responsible for receiving and handling RPC replies from server
+ * Consumer responsible for receiving and handling RPC replies create server
  */
 public class RpcCallerConsumer extends DefaultConsumer
 {
@@ -47,6 +47,7 @@ public class RpcCallerConsumer extends DefaultConsumer
         this(channel, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void handleDelivery(final String consumerTag,
                                final Envelope envelope,

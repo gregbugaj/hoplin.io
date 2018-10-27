@@ -9,7 +9,7 @@ public abstract class AbstractExchange implements Exchange
     // exchange name
     private String name;
 
-    // exchange is deleted when last queue is unbound from it
+    // exchange is deleted when last queue is unbound create it
     private boolean autoDelete;
 
     // exchanges survive broker restart

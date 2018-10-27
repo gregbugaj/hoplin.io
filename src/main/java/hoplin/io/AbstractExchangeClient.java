@@ -6,14 +6,16 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
+/**
+ * Base exchange client
+ */
 abstract class AbstractExchangeClient
 {
     private static final Logger log = LoggerFactory.getLogger(AbstractExchangeClient.class);
 
     private static String DEFAULT_ERROR_EXCHANGE = "hoplin_default_error_exchange";
-
-    private static String DEFAULT_ERROR_QUEUE = "hoplin_default_error_queue";
 
     Binding binding;
 
@@ -30,6 +32,9 @@ abstract class AbstractExchangeClient
         setupErrorHandling();
     }
 
+    /**
+     * setup error handling queues
+     */
     private void setupErrorHandling()
     {
         final String exchangeName = DEFAULT_ERROR_EXCHANGE;
@@ -50,6 +55,7 @@ abstract class AbstractExchangeClient
             throw new HoplinRuntimeException("Unable to declare error exchange", e);
         }
     }
+
     void subscribe()
     {
         final String exchangeName = binding.getExchange();
@@ -88,7 +94,6 @@ abstract class AbstractExchangeClient
     void bind(final boolean consume, final String type)
     {
         Objects.requireNonNull(type);
-
         final String exchangeName = binding.getExchange();
         // prevent changing default queues
         if(Strings.isNullOrEmpty(exchangeName))
@@ -112,5 +117,24 @@ abstract class AbstractExchangeClient
         {
             throw new HoplinRuntimeException("Unable to bind to queue", e);
         }
+    }
+
+    /**
+     * Add subscription and consume messages from the queue
+     * Calling this method repeatably will only initialize consumer once to make sure that the Consumer is setup.
+     * After that this method  will only add the handlers
+     *
+     * Handlers should not block.
+     *
+     * @param clazz the class type that we are interested in receiving messages for
+     * @param handler the Consumer that will handle the message
+     * @param <T> the type this Consumer will handle
+     */
+    public <T> void subscribe(final Class<T> clazz, final Consumer<T> handler)
+    {
+        Objects.requireNonNull(clazz);
+        Objects.requireNonNull(handler);
+
+        client.basicConsume(binding.getQueue(), clazz, handler);
     }
 }

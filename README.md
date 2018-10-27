@@ -27,3 +27,12 @@ To make working with RabbitMQ as simple as possible with minimum dependencies.
 ## Error handling
 
 `hoplin_default_error_queue`
+
+
+# Resources
+
+[RawRabbit]: https://github.com/pardahlman/RawRabbit
+
+[EasyNetQ]: https://github.com/EasyNetQ/EasyNetQ
+
+

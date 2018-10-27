@@ -29,7 +29,7 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
         this.gson = gson;
     }
 
-    @Override
+    @SuppressWarnings("unchecked") @Override
     public MessagePayload deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context) throws JsonParseException
     {
         final MessagePayload msg = new MessagePayload();

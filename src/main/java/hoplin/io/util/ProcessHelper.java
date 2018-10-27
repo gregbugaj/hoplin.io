@@ -87,8 +87,7 @@ public class ProcessHelper
 
         catch (final InterruptedException ex)
         {
-            if (process != null)
-                process.destroyForcibly();
+            process.destroyForcibly();
 
             log.error("Unable to execute process within given timeframe", ex);
             return new ProcessResponse(ex.getMessage(), EXIT_FAILURE);

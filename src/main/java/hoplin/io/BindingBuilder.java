@@ -26,8 +26,7 @@ public class BindingBuilder
 
         public DestinationConfigurer(final Queue queue)
         {
-            Objects.requireNonNull(queue);
-            this.queue = queue;
+            this.queue = Objects.requireNonNull(queue);
         }
 
         public Binding to(final FanoutExchange exchange)
@@ -88,7 +87,6 @@ public class BindingBuilder
     public static class DirectExchangeRoutingKeyConfigurer extends RoutingKeyConfigurer <DirectExchange>
     {
         private boolean autoAck;
-
 
         public DirectExchangeRoutingKeyConfigurer(final DestinationConfigurer configurer, final DirectExchange exchange)
         {

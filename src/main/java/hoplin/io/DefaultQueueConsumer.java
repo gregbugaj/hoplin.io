@@ -10,17 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
- * Default consumer with default ACK strategy
+ * Default consumer
  */
 public class DefaultQueueConsumer extends DefaultConsumer
 {
@@ -34,6 +30,8 @@ public class DefaultQueueConsumer extends DefaultConsumer
 
     private JsonCodec codec;
 
+    private final ConsumerErrorStrategy consumerErrorStrategy;
+
     /**
      * Constructs a new instance and records its association to the passed-in channel.
      *
@@ -42,13 +40,24 @@ public class DefaultQueueConsumer extends DefaultConsumer
      */
     public DefaultQueueConsumer(final Channel channel, final QueueOptions queueOptions)
     {
+        this(channel, queueOptions, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+    }
+
+    /**
+     * Construct a new instance of queue consumer
+     * @param channel
+     * @param queueOptions
+     * @param executor
+     */
+    public DefaultQueueConsumer(final Channel channel, final QueueOptions queueOptions, final Executor executor)
+    {
         super(channel);
 
         this.queueOptions = Objects.requireNonNull(queueOptions);
-        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.executor = Objects.requireNonNull(executor);
         codec = new JsonCodec();
+        consumerErrorStrategy = new DefaultConsumerErrorStrategy(channel);
     }
-
 
     /**
      * If you don't send the ack back, the consumer continues to fetch subsequent messages;
@@ -63,115 +72,121 @@ public class DefaultQueueConsumer extends DefaultConsumer
      * @param body
      * @throws IOException
      */
+    @SuppressWarnings("unchecked")
     @Override
     public void handleDelivery(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException
     {
-        final AcknowledgmentHandler acknowledgmentHandler = new DefaultAcknowledgmentHandler();
-
-        final MessageReceivedInfo recivedInfo = new MessageReceivedInfo(consumerTag,
-                                                                        envelope.getDeliveryTag(),
-                                                                        envelope.isRedeliver(),
-                                                                        envelope.getExchange(),
-                                                                        envelope.getRoutingKey(),
-                                                                        "",
-                                                                        System.currentTimeMillis()
-        );
+        AckStrategy ack;
+        final ConsumerExecutionContext context = ConsumerExecutionContext.create(consumerTag, envelope, properties);
 
         try
         {
-            CompletableFuture.supplyAsync(()-> {
+            ack = ackFromOptions(queueOptions);
 
-                final MessagePayload message = codec.deserialize(body, MessagePayload.class);
-                final Object val = message.getPayload();
-                final Class<?> typeAsClass = message.getTypeAsClass();
-                final Collection<Consumer> consumers = handlers.get(typeAsClass);
-                final List<Throwable> exceptions = new ArrayList<>();
-                int handlersTotal = consumers.size();
-                int handlersSucceeded = 0;
-                int handlersFailed = 0;
+            final MessagePayload message = codec.deserialize(body, MessagePayload.class);
+            final Object val = message.getPayload();
+            final Class<?> typeAsClass = message.getTypeAsClass();
+            final Collection<Consumer> consumers = handlers.get(typeAsClass);
+            final List<Throwable> exceptions = new ArrayList<>();
+            final int handlerSize = consumers.size();
 
-                for(final Consumer handler : consumers)
+            if(handlerSize == 0)
+            {
+                throw new HoplinRuntimeException("No handlers defined for type : " + typeAsClass);
+            }
+            else if(handlerSize == 1)
+            {
+                final Map.Entry<Class, Consumer> entry = handlers.entries().iterator().next();
+                if(!isExpectedType(entry.getKey(), typeAsClass))
                 {
-                    try
-                    {
-                        handler.accept(val);
-                        ++handlersSucceeded;
-                    }
-                    catch (final Exception e)
-                    {
-                        ++handlersFailed;
-                        exceptions.add(e);
-                        log.error("Handler error for message  : " + message, e);
-                    }
+                    throw new IllegalArgumentException("Expected type does not match handler type : "+ entry.getKey()+", " + typeAsClass);
                 }
+            }
 
-                return new MessageHandlingResult(message, exceptions, handlersTotal, handlersSucceeded, handlersFailed);
-            }, executor)
-                    .whenComplete((result, thr)-> acknowledgmentHandler.acknowledge(getChannel(), recivedInfo, result, queueOptions)
-            );
-
+            for(final Consumer handler : consumers)
+            {
+                try
+                {
+                    handler.accept(val);
+                }
+                catch (final Exception e)
+                {
+                    exceptions.add(e);
+                    log.error("Handler error for message  : " + message, e);
+                }
+            }
         }
         catch(final Exception e)
         {
             log.error("Unable to process message", e);
+            try
+            {
+                ack = consumerErrorStrategy.handleConsumerError(context, e);
+            }
+            catch (final Exception ex2)
+            {
+                log.error("Exception in error strategy", ex2);
+                ack = AcknowledgmentStrategies.BASIC_ACK.strategy();
+            }
+        }
+
+        acknowledge(getChannel(), context, ack);
+    }
+
+    /**
+     * Acknowledge given message
+     *
+     * @param channel the channel to send acknowledgment on
+     * @param context the context to use for ack
+     * @param ack the {@link AckStrategy} to use
+     */
+    private void acknowledge(final Channel channel,
+                             final ConsumerExecutionContext context,
+                             final AckStrategy ack)
+    {
+        try
+        {
+            log.info("Acking : {}" , context.getReceivedInfo().getDeliveryTag());
+            ack.accept(channel, context.getReceivedInfo().getDeliveryTag());
+        }
+        catch (final Exception e)
+        {
+            log.error("Unable to ACK ", e);
         }
     }
 
-    private static class MessageHandlingResult
+    private AckStrategy ackFromOptions(final QueueOptions queueOptions)
     {
-        private int handlersTotal = 0;
-        private int handlersSucceeded = 0;
-        private int handlersFailed = 0;
-        private MessagePayload message;
-        private List<Throwable> exceptions;
+        if(queueOptions.isAutoAck())
+            return AcknowledgmentStrategies.AUTO_ACK.strategy();
 
-        public MessageHandlingResult(final MessagePayload message, final List<Throwable> exceptions,
-                                     final int handlersTotal, final int handlersSucceeded, final int handlersFailed)
-        {
-            this.message = message;
-            this.exceptions = exceptions;
-            this.handlersTotal = handlersTotal;
-            this.handlersFailed = handlersFailed;
-            this.handlersSucceeded = handlersSucceeded;
-        }
+        return AcknowledgmentStrategies.BASIC_ACK.strategy();
+    }
 
-        /**
-         * All handlers have succeeded without failures
-         * @return
-         */
-        public boolean hasAllHandlersSucceeded()
-        {
-            return handlersTotal == handlersSucceeded;
-        }
+    /**
+     * Check if given handled is of the correct type
+     *
+     * @param handler
+     * @param typeAsClass
+     * @return
+     */
+    private boolean isExpectedType(final Class<?> handler, final Class<?> typeAsClass)
+    {
+        Objects.requireNonNull(handler);
+        Objects.requireNonNull(typeAsClass);
 
-        /**
-         * Some of the handlers have succeeded without failues
-         * @return
-         */
-        public boolean hasPartialHandlersSucceeded()
-        {
-            return handlersTotal > 0 && handlersSucceeded > 0;
-        }
-
-        /**
-         * Errors occured during processing
-         * 
-         * @return
-         */
-        public boolean hasErrors()
-        {
-            return handlersFailed > 0 ;
-        }
+        return true;
     }
 
     /**
      * Add new handler bound to a specific type
+     *
      * @param clazz
      * @param handler
      * @param <T>
      */
-    public <T> void addHandler(final Class<T> clazz, final Consumer<T> handler)
+    public synchronized <T> void addHandler(final Class<T> clazz, final Consumer<T> handler)
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
@@ -179,67 +194,10 @@ public class DefaultQueueConsumer extends DefaultConsumer
         handlers.put(clazz, handler);
     }
 
-    /**
-     * Acknowledgement handling strategy
-     */
-    @FunctionalInterface
-    private interface AcknowledgmentHandler
+    @Override
+    public void handleCancel(String consumerTag) throws IOException
     {
-        void acknowledge(Channel channel, MessageReceivedInfo receivedInfo, MessageHandlingResult result, QueueOptions queueOptions);
-    }
-
-    /**
-     * Default acknowledgment strategy
-     */
-    private class DefaultAcknowledgmentHandler implements AcknowledgmentHandler
-    {
-
-        public void acknowledge(final Channel channel,
-                                final MessageReceivedInfo receivedInfo,
-                                final MessageHandlingResult result,
-                                final QueueOptions queueOptions)
-        {
-            if(result.hasAllHandlersSucceeded())
-                handleAck(channel,  receivedInfo.getDeliveryTag(), queueOptions.isAutoAck());
-            else
-                handleExceptionally(receivedInfo, result);
-        }
-
-        private void handleAck(final Channel channel, final long deliveryTag, final boolean autoAck)
-        {
-            if(autoAck)
-                return;
-
-            // manual acknowledgments
-            // ACK that the message have been delivered and processed successfully
-            try
-            {
-                channel.basicAck(deliveryTag, false);
-            }
-            catch(final Exception e)
-            {
-                try
-                {
-                    channel.basicNack(deliveryTag, false, true);
-                }
-                catch (Exception e1)
-                {
-                    log.error("Unable to NACK", e1);
-                }
-            }
-        }
-
-        private void handleExceptionally(final MessageReceivedInfo receivedInfo, final MessageHandlingResult result)
-        {
-            try
-            {
-                // TODO : Handle exception handling
-            }
-            catch (final Exception e)
-            {
-                log.error("exception handling error : " +receivedInfo, e);
-            }
-        }
-
+        // consumer has been cancelled unexpectedly
+        throw new HoplinRuntimeException("Not yet implemented");
     }
 }

@@ -7,10 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
 /**
- * A {@code Codec} that can encode and decode objects to and from JSON
+ * A {@code Codec} that can encode and decode objects to and create JSON
  */
 public class JsonCodec implements Codec
 {
@@ -76,8 +77,7 @@ public class JsonCodec implements Codec
         final long s = System.currentTimeMillis();
         try
         {
-            final String input = new String(data, "UTF-8");
-            return  gson.fromJson(input, clazz);
+            return gson.fromJson(new String(data, StandardCharsets.UTF_8), clazz);
         }
         catch (final Exception t)
         {
@@ -98,8 +98,7 @@ public class JsonCodec implements Codec
 
         try
         {
-            final String input = new String(data, "UTF-8");
-            return gson.fromJson(input, type);
+            return gson.fromJson(new String(data, StandardCharsets.UTF_8), type);
         }
         catch (final Exception t)
         {

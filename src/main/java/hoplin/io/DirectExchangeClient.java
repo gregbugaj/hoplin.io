@@ -4,10 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
- * Client is bound to individual {@link Binding}
+ *  Direct exchange client
  */
 public class DirectExchangeClient extends AbstractExchangeClient
 {
@@ -33,22 +32,6 @@ public class DirectExchangeClient extends AbstractExchangeClient
     public <T> void publish(final T message, final String routingKey)
     {
         client.basicPublish(binding.getExchange(), routingKey, message);
-    }
-
-    /**
-     * Add subscription and consume message from the queue.
-     * This methods should not block
-     *
-     * @param clazz the class type that we are interested in receiving messages for
-     * @param handler the Consumer that will handle the message
-     * @param <T>
-     */
-    public <T> void subscribe(final Class<T> clazz, final Consumer<T> handler)
-    {
-        Objects.requireNonNull(clazz);
-        Objects.requireNonNull(handler);
-
-        client.basicConsume(binding.getQueue(), clazz, handler);
     }
 
     /**

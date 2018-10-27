@@ -3,7 +3,6 @@ package hoplin.io;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Consumer;
 import hoplin.io.json.JsonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +18,8 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Default implementation of {@link RabbitMQClient}
+ *
+ * https://www.rabbitmq.com/consumer-prefetch.html
  */
 public class DefaultRabbitMQClient implements RabbitMQClient
 {
@@ -32,9 +33,11 @@ public class DefaultRabbitMQClient implements RabbitMQClient
 
     private JsonCodec codec;
 
+    private DefaultQueueConsumer consumer;
+
     public DefaultRabbitMQClient(final RabbitMQOptions options)
     {
-        this.options = Objects.requireNonNull(options, "Options are required and  can't be null");
+        this.options = Objects.requireNonNull(options, "Options are required and can't be null");
         this.provider = create();
         this.channel = provider.acquire();
         this.codec = new JsonCodec();
@@ -54,7 +57,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         }
         catch (final IOException | TimeoutException  e)
         {
-            throw new RuntimeException("Unable to connect to broker", e);
+            throw new HoplinRuntimeException("Unable to connect to broker", e);
         }
     }
 
@@ -65,7 +68,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
     }
 
     @Override
-    public <T> void basicConsume(final String queue,
+    public synchronized <T> void basicConsume(final String queue,
                                  final QueueOptions options,
                                  final Class<T> clazz,
                                  final java.util.function.Consumer<T> handler)
@@ -75,24 +78,32 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         Objects.requireNonNull(handler);
         Objects.requireNonNull(options);
 
-        final boolean autoAck = options.isAutoAck();
-        log.info("autoAck : {} ", autoAck);
-
         try
         {
+            if(consumer == null)
+            {
+                //basic.qos method to allow you to limit the number of unacknowledged messages
+                final boolean autoAck = options.isAutoAck();
+                int prefetchCount = 1;
 
-            final DefaultQueueConsumer consumer = new DefaultQueueConsumer(channel, options);
+                log.info("basicConsume autoAck : {} ", autoAck);
+                log.info("basicConsume prefetchCount : {} ", prefetchCount);
+
+                consumer = new DefaultQueueConsumer(channel, options);
+                channel.basicQos(prefetchCount);
+
+                final String consumerTag = channel.basicConsume(queue, autoAck, consumer);
+                if (log.isDebugEnabled())
+                    log.debug("Assigned consumer tag : {}", consumerTag);
+            }
+
+            // add the handler
             consumer.addHandler(clazz, handler);
-
-            channel.basicQos(1);
-            final String consumerTag = channel.basicConsume(queue, autoAck, consumer);
-
-            if(log.isDebugEnabled())
-                log.debug("Assigned consumer tag : {}", consumerTag);
         }
         catch (final IOException e)
         {
             log.error("Unable to subscribe messages", e);
+            throw new HoplinRuntimeException("Unable to subscribe messages", e);
         }
     }
 

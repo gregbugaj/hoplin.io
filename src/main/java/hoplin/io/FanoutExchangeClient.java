@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  * Fanout Exchange Client
@@ -67,22 +66,6 @@ public class FanoutExchangeClient extends AbstractExchangeClient
         client.basicPublish(binding.getExchange(), "", message);
     }
 
-    /**
-     * Consume message from the queue.
-     * This methods should not block
-     *
-     * @param clazz
-     * @param handler
-     * @param <T>
-     */
-    public <T> void subscribe(final Class<T> clazz, final Consumer<T> handler)
-    {
-        Objects.requireNonNull(clazz);
-        Objects.requireNonNull(handler);
-
-        log.info("consuming from queue : {}" ,binding.getQueue());
-        client.basicConsume(binding.getQueue(), clazz, handler);
-    }
 
     /**
      * Create new {@link FanoutExchangeClient}

@@ -4,7 +4,7 @@ import java.util.Map;
 
 /**
  * A binding is an association between a queue and an exchange.
- * A queue must be bound to at least one exchange in order to receive messages from publishers
+ * A queue must be bound to at least one exchange in order to receive messages create publishers
  */
 public class Binding
 {

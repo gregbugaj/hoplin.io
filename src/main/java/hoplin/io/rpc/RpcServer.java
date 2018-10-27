@@ -26,7 +26,7 @@ public class RpcServer<I, O>
 
     private static final String RPC_QUEUE_NAME = "rpc_queue";
 
-    // executor that will acknowledge incoming RPC requests
+    // executor that will acknowledgeExceptionally incoming RPC requests
     private Executor executor;
 
     public RpcServer(final RabbitMQOptions options, final Binding binding)
@@ -59,6 +59,7 @@ public class RpcServer<I, O>
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void start(final Function<I, O> handler)
     {
         try

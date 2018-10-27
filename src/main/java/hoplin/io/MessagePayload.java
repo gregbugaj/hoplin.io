@@ -54,11 +54,11 @@ public class MessagePayload<T>
     {
         try
         {
-            return Class.forName(type).getClass();
+            return Class.forName(type);
         }
         catch (final ClassNotFoundException e)
         {
-            throw new HoplinRuntimeException(e);
+            throw new HoplinRuntimeException("Can't create class for type :" + type, e);
         }
     }
 

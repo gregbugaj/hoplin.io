@@ -1,7 +1,7 @@
 package hoplin.io.util;
 
 /**
- * Response from executed process
+ * Response create executed process
  */
 public class ProcessResponse
 {

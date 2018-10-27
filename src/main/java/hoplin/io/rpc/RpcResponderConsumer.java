@@ -95,7 +95,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
             }
             catch (final Exception e)
             {
-                log.error("Unable to acknowledge execution", e);
+                log.error("Unable to acknowledgeExceptionally execution", e);
                 nack(envelope);
             }
         });

@@ -31,12 +31,12 @@ public class OsUtil
 
     public static boolean isWindows()
     {
-        return (getOsName().toLowerCase().indexOf("windows") >= 0);
+        return (getOsName().toLowerCase().contains("windows"));
     }
 
     public static boolean isLinux()
     {
-        return getOsName().toLowerCase().indexOf("linux") >= 0;
+        return getOsName().toLowerCase().contains("linux");
     }
 
 

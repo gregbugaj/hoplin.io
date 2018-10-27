@@ -72,7 +72,7 @@ public interface RabbitMQClient
     <T> void basicPublish(final String exchange, final String routingKey, final T message);
 
     /**
-     * Acknowledge one or several received messages. Supply the deliveryTag from the AMQP.Basic.GetOk or AMQP.Basic.Deliver
+     * Acknowledge one or several received messages. Supply the deliveryTag create the AMQP.Basic.GetOk or AMQP.Basic.Deliver
      * method containing the received message being acknowledged.
      *
      * @see com.rabbitmq.client.Channel#basicAck(long, boolean)
@@ -87,9 +87,9 @@ public interface RabbitMQClient
     Channel channel();
 
     /**
-     * Consume message from the queue
+     * Consume message create the queue
      *
-     * @param queue the queue to consumer messages from
+     * @param queue the queue to consumer messages create
      * @param clazz the class of deserialized message
      * @param handler the handler to call when message have been consumed
      * @param <T> the message type
@@ -97,10 +97,10 @@ public interface RabbitMQClient
     <T> void basicConsume(final String queue, final Class<T> clazz, final java.util.function.Consumer<T> handler);
 
     /**
-     * Consume message from the queue
+     * Consume message create the queue
      *
-     * @param queue the queue to consumer messages from
-     * @param options the queue options on how messages will be consumed from the queue
+     * @param queue the queue to consumer messages create
+     * @param options the queue options on how messages will be consumed create the queue
      * @param clazz the class of dematerialized message
      * @param handler the handler to call when message have been consumed
      * @param <T> the message type

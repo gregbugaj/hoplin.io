@@ -113,6 +113,12 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
                     if(attempt >= retries)
                     {
                         log.info("Max number of connect attempts ({}) reached. Will not attempt to connect again", retries);
+                        String msg = "Please check connection information and that the RabbitMQ Service is running at the specified endpoint.\n" +
+                                     String.format("\tHostname: '{0}'\n", config.getHost()) +
+                                     String.format("\tVirtualHost: '{0}'\n", config.getVirtualHost()) +
+                                     String.format("\tUserName: '{0}'\n",  config.getUser());
+
+                        log.info(msg);
                         return false;
                     }
 
@@ -188,7 +194,7 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
 
         try
         {
-            log.debug("Disconnecting from rabbitmq...");
+            log.debug("Disconnecting create rabbitmq...");
 
             if (connection != null)
             {
@@ -204,7 +210,7 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
                 }
             }
 
-            log.debug("Disconnected from rabbitmq !");
+            log.debug("Disconnected create rabbitmq !");
         }
         finally
         {
