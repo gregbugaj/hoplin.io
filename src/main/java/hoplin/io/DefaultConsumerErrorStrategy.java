@@ -10,5 +10,4 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy
     {
         this.channel = channel;
     }
-
 }

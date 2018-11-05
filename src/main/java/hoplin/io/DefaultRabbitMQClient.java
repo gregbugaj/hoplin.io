@@ -42,6 +42,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         this.provider = create();
         this.channel = provider.acquire();
         this.codec = new JsonCodec();
+
+        channel.addReturnListener(new UnroutableMessageReturnListener(options));
     }
 
     private ConnectionProvider create()

@@ -195,7 +195,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
     }
 
     @Override
-    public void handleCancel(String consumerTag) throws IOException
+    public void handleCancel(final String consumerTag) throws IOException
     {
         // consumer has been cancelled unexpectedly
         throw new HoplinRuntimeException("Not yet implemented");
