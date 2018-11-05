@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  * Topic exchanges route messages to queues based on wildcard matches
