@@ -2,7 +2,7 @@ package examples.logtopic;
 
 import examples.BaseExample;
 import examples.LogDetail;
-import hoplin.io.TopicExchangeClient;
+import io.hoplin.TopicExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,6 +1,6 @@
 package examples;
 
-import hoplin.io.RabbitMQOptions;
+import io.hoplin.RabbitMQOptions;
 
 public abstract class BaseExample
 {

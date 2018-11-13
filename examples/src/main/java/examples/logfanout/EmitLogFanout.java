@@ -1,10 +1,10 @@
 package examples.logfanout;
 
 import examples.BaseExample;
-import hoplin.io.Binding;
-import hoplin.io.BindingBuilder;
-import hoplin.io.FanoutExchange;
-import hoplin.io.FanoutExchangeClient;
+import io.hoplin.Binding;
+import io.hoplin.BindingBuilder;
+import io.hoplin.FanoutExchange;
+import io.hoplin.FanoutExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

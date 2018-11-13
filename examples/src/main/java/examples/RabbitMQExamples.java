@@ -1,7 +1,8 @@
 package examples;
 
-import hoplin.io.RabbitMQClient;
-import hoplin.io.RabbitMQOptions;
+
+import io.hoplin.RabbitMQClient;
+import io.hoplin.RabbitMQOptions;
 
 public class RabbitMQExamples
 {
