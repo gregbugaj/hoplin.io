@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -33,14 +32,8 @@ public class UnroutableMessageReturnListener implements ReturnListener
     public UnroutableMessageReturnListener(final RabbitMQOptions options)
     {
         this.options = Objects.requireNonNull(options);
-        bootstrap();
-    }
+        this.unroutableDirectory = options.getUnroutableDirectory();
 
-
-    private void bootstrap()
-    {
-        final Path path = FileSystems.getDefault().getPath(".");
-        unroutableDirectory = new File(path.toFile(), "unroutable-messages").toPath();
     }
 
     @Override
@@ -52,8 +45,12 @@ public class UnroutableMessageReturnListener implements ReturnListener
                       byte[] body)
             throws IOException
     {
-        log.warn("Message not delivered : {}, {}", exchange, routingKey);
+        log.warn("Message not delivered : {}, {}, {}", options.isKeepUnroutableMessages(), exchange, routingKey);
+        if(!options.isKeepUnroutableMessages())
+            return;
+
         final File out = new File(unroutableDirectory.toFile(), System.currentTimeMillis()+".msg");
+
         try(final BufferedWriter writer = Files.newBufferedWriter(out.toPath(), defaultCharset()))
         {
             final StringBuilder debugProps = new StringBuilder();

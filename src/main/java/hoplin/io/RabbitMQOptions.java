@@ -3,8 +3,10 @@ package hoplin.io;
 import com.rabbitmq.client.ConnectionFactory;
 import hoplin.io.util.OsUtil;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -100,6 +102,11 @@ public class RabbitMQOptions
 
     private Map<String, Object> clientProperties;
 
+    // location where the unroutable messages will be stored
+    private Path unroutableDirectory = new File(FileSystems.getDefault().getPath(".").toFile(), "unroutable-messages").toPath();
+
+    private boolean keepUnroutableMessages = true;
+
     public RabbitMQOptions()
     {
         clientProperties = createClientProperties();
@@ -123,6 +130,8 @@ public class RabbitMQOptions
         includeProperties = that.includeProperties;
         requestedChannelMax = that.requestedChannelMax;
         clientProperties = that.clientProperties;
+        keepUnroutableMessages = that.keepUnroutableMessages;
+        unroutableDirectory = that.unroutableDirectory;
     }
 
     private Map<String, Object> createClientProperties()
@@ -362,6 +371,28 @@ public class RabbitMQOptions
     public RabbitMQOptions setClientProperties(final Map<String, Object> clientProperties)
     {
         this.clientProperties = clientProperties;
+        return this;
+    }
+
+    public Path getUnroutableDirectory()
+    {
+        return unroutableDirectory;
+    }
+
+    public RabbitMQOptions setUnroutableDirectory(final Path unroutableDirectory)
+    {
+        this.unroutableDirectory = unroutableDirectory;
+        return this;
+    }
+
+    public boolean isKeepUnroutableMessages()
+    {
+        return keepUnroutableMessages;
+    }
+
+    public RabbitMQOptions setKeepUnroutableMessages(final boolean keepUnroutableMessages)
+    {
+        this.keepUnroutableMessages = keepUnroutableMessages;
         return this;
     }
 }
