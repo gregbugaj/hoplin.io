@@ -1,13 +1,13 @@
-package examples.logfanout;
+package examples.customexception;
 
 import examples.BaseExample;
-import hoplin.io.FanoutExchangeClient;
+import io.hoplin.FanoutExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ReceiveLogsFanoutWithCustomException extends BaseExample
 {
-    private static final Logger log = LoggerFactory.getLogger(EmitLogFanout.class);
+    private static final Logger log = LoggerFactory.getLogger(ReceiveLogsFanoutWithCustomException.class);
 
     private static final String EXCHANGE = "fanout_logs";
 
@@ -15,7 +15,7 @@ public class ReceiveLogsFanoutWithCustomException extends BaseExample
     {
         final FanoutExchangeClient client = FanoutExchangeClient.subscriber(options(), EXCHANGE);
 
-        client.subscribe(String.class, ReceiveLogsFanout::handle);
+        client.subscribe(String.class, ReceiveLogsFanoutWithCustomException::handle);
         Thread.currentThread().join();
     }
 

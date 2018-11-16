@@ -1,12 +1,12 @@
 package examples.rpc;
 
-import hoplin.io.Binding;
 import examples.BaseExample;
 import examples.LogDetail;
-import hoplin.io.BindingBuilder;
-import hoplin.io.FanoutExchange;
-import hoplin.io.rpc.Rpc;
-import hoplin.io.rpc.RpcServer;
+import io.hoplin.Binding;
+import io.hoplin.BindingBuilder;
+import io.hoplin.FanoutExchange;
+import io.hoplin.rpc.Rpc;
+import io.hoplin.rpc.RpcServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

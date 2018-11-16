@@ -2,7 +2,7 @@ package examples.logdirect;
 
 import examples.BaseExample;
 import examples.LogDetail;
-import hoplin.io.*;
+import io.hoplin.DirectExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

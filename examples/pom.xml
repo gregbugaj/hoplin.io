@@ -4,9 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>hoplin.io</groupId>
+    <parent>
+        <groupId>io.hoplin</groupId>
+        <artifactId>hoplin-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>io.hoplin</groupId>
     <artifactId>hoplin-examples</artifactId>
-    <version>1.0-SNAPSHOT</version>
 
     <properties>
         <java.version>1.8</java.version>
@@ -29,10 +34,12 @@
     <dependencies>
 
         <dependency>
-            <groupId>hoplin.io</groupId>
+            <groupId>io.hoplin</groupId>
             <artifactId>hoplin-client</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
+
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -45,7 +52,6 @@
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
         </dependency>
-
 
     </dependencies>
 </project>
