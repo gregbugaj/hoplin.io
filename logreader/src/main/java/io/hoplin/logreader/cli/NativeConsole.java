@@ -11,8 +11,7 @@ public class NativeConsole extends ConsoleDevice
 
     public NativeConsole(final Console console)
     {
-        Objects.requireNonNull(console);
-        this.delegate = console;
+        this.delegate = Objects.requireNonNull(console);
     }
 
     @Override

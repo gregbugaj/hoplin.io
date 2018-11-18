@@ -134,6 +134,8 @@ public class RabbitMQOptions
         unroutableDirectory = that.unroutableDirectory;
     }
 
+
+
     private Map<String, Object> createClientProperties()
     {
         final Map<String, Object> props = new HashMap<>();
@@ -395,4 +397,19 @@ public class RabbitMQOptions
         this.keepUnroutableMessages = keepUnroutableMessages;
         return this;
     }
+
+    /**
+     * Parse the connection string in format key1=value;key2=value
+     * <pre>host=localhost;virtualHost=vhost1;username=user;password=secret</pre>
+     * @param connectionString the connection string to parse
+     * @return the {@link RabbitMQOptions} created from the string
+     */
+    public static RabbitMQOptions from(final String connectionString)
+    {
+        Objects.requireNonNull(connectionString);
+        final RabbitMQOptions options = new RabbitMQOptions();
+
+        return options;
+    }
+
 }

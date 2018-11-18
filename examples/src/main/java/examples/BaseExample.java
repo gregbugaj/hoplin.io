@@ -13,4 +13,9 @@ public abstract class BaseExample
         return options;
     }
 
+    protected static RabbitMQOptions options(String connectionString)
+    {
+       return RabbitMQOptions.from(connectionString);
+    }
+
 }
