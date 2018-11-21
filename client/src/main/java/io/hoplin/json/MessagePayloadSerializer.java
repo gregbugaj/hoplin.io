@@ -34,6 +34,7 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
     {
         final MessagePayload msg = new MessagePayload();
 
+        System.out.println(json);
         // determine correct payload type
         if (json.isJsonObject())
         {

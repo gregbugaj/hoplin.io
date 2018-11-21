@@ -3,6 +3,7 @@ package examples.logdirect;
 import examples.BaseExample;
 import examples.LogDetail;
 import io.hoplin.DirectExchangeClient;
+import io.hoplin.ExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +24,9 @@ public class EmitLogDirect extends BaseExample
     public static void main(final String... args) throws InterruptedException
     {
         log.info("Starting producer on exchange : {}", EXCHANGE);
-        final DirectExchangeClient client = DirectExchangeClient.publisher(options(), EXCHANGE);
+        final ExchangeClient client = DirectExchangeClient.publisher(options(), EXCHANGE);
 
-//        while(true)
+       // while(true)
         {
             client.publish(createMessage("info"), "info");
             client.publish(createMessage("debug"), "debug");
@@ -40,6 +41,5 @@ public class EmitLogDirect extends BaseExample
     {
       return new LogDetail("Msg : " + System.nanoTime(), level);
     }
-
 }
 

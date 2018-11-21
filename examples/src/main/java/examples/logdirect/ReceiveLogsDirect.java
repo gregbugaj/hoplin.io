@@ -3,6 +3,7 @@ package examples.logdirect;
 import examples.BaseExample;
 import examples.LogDetail;
 import io.hoplin.DirectExchangeClient;
+import io.hoplin.ExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,25 +15,25 @@ public class ReceiveLogsDirect extends BaseExample
 
     public static void main(final String... args) throws InterruptedException
     {
-        final DirectExchangeClient client = critical();
+        final ExchangeClient client = critical();
         client.subscribe(LogDetail.class, msg-> log.info("Message received [{}]", msg));
 
         Thread.currentThread().join();
     }
 
-    private static DirectExchangeClient critical()
+    private static ExchangeClient critical()
     {
         return DirectExchangeClient
                 .subscriberWithQueue(options(), EXCHANGE, "log.critical","error", "warning");
     }
 
-    private static DirectExchangeClient informative()
+    private static ExchangeClient informative()
     {
         return DirectExchangeClient
                 .subscriberWithQueue(options(), EXCHANGE, "log.informative","info", "debug");
     }
 
-    private static DirectExchangeClient all()
+    private static ExchangeClient all()
     {
         return DirectExchangeClient
                 .subscriberWithQueue(options(), EXCHANGE, "log.all","info", "debug", "error", "warning");

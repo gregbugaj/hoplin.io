@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -12,7 +13,7 @@ import java.util.function.Consumer;
 /**
  * Base exchange client
  */
-abstract class AbstractExchangeClient
+abstract class AbstractExchangeClient implements ExchangeClient
 {
     private static final Logger log = LoggerFactory.getLogger(AbstractExchangeClient.class);
 
@@ -120,22 +121,10 @@ abstract class AbstractExchangeClient
         }
     }
 
-    /**
-     * Add subscription and consume messages from the queue
-     * Calling this method repeatably will only initialize consumer once to make sure that the Consumer is setup.
-     * After that this method  will only add the handlers
-     *
-     * Handlers should not block.
-     *
-     * @param clazz the class type that we are interested in receiving messages for
-     * @param handler the Consumer that will handle the message
-     * @param <T> the type this Consumer will handle
-     */
     public <T> void subscribe(final Class<T> clazz, final Consumer<T> handler)
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
-
         client.basicConsume(binding.getQueue(), clazz, handler);
     }
 
@@ -143,7 +132,37 @@ abstract class AbstractExchangeClient
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
-
         client.basicConsume(binding.getQueue(), clazz, handler);
+    }
+
+    @Override
+    public <T> void publish(final T message, final String routingKey)
+    {
+        publish(message, routingKey, Collections.emptyMap());
+    }
+
+    @Override
+    public <T> void publish(final T message)
+    {
+        publish(message, Collections.emptyMap());
+    }
+
+    @Override
+    public <T> void publish(final T message, final Map<String, Object> headers)
+    {
+        publish(message, "", headers);
+    }
+
+    @Override
+    public <T> void publish(final T message, final String routingKey, final Map<String, Object> headers)
+    {
+        Objects.requireNonNull(message);
+        Objects.requireNonNull(headers);
+
+        // Wrap our message original message
+        final MessagePayload<T> payload = new MessagePayload<>(message);
+        payload.setType(message.getClass());
+
+        client.basicPublish(binding.getExchange(), routingKey, payload);
     }
 }

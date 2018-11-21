@@ -19,8 +19,7 @@ public class RpcServerExample extends BaseExample
 {
     private static final Logger log = LoggerFactory.getLogger(RpcServerExample.class);
 
-    public static void main(final String... args) throws IOException
-    {
+    public static void main(final String... args) {
         final Binding binding = bind();
         log.info("Binding : {}", binding);
 

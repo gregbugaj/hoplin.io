@@ -56,25 +56,15 @@ public class FanoutExchangeClient extends AbstractExchangeClient
         }
     }
 
-    /**
-     * Publish message to the queue with defined routingKey
-     *
-     * @param message
-     */
-    public <T> void publish(final T message)
-    {
-        client.basicPublish(binding.getExchange(), "", message);
-    }
-
 
     /**
-     * Create new {@link FanoutExchangeClient}
+     * Create new {@link FanoutExchangeClient} given supplied options and {@link Binding}
      *
      * @param options the connection options to use
      * @param binding the {@link Binding} to use
      * @return new Direct Exchange client setup in server mode
      */
-    public static FanoutExchangeClient publisher(final RabbitMQOptions options, final Binding binding)
+    public static ExchangeClient publisher(final RabbitMQOptions options, final Binding binding)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(binding);
@@ -89,7 +79,7 @@ public class FanoutExchangeClient extends AbstractExchangeClient
      * @param exchange the exchange to use
      * @return
      */
-    public static FanoutExchangeClient publisher(final RabbitMQOptions options, final String exchange)
+    public static ExchangeClient publisher(final RabbitMQOptions options, final String exchange)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(exchange);
@@ -110,7 +100,7 @@ public class FanoutExchangeClient extends AbstractExchangeClient
      * @param exchangeName the exchangeName to use
      * @return
      */
-    public static FanoutExchangeClient subscriber(final RabbitMQOptions options, final String exchangeName)
+    public static ExchangeClient subscriber(final RabbitMQOptions options, final String exchangeName)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(exchangeName);

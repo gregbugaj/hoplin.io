@@ -30,7 +30,7 @@ public class ConnectionStringParser
         {
             final String[] kv = part.split("=");
             if(kv.length != 2)
-                throw new RuntimeException("Invalid KeyValue pair expected connection string in format 'host=localhost;virtualHost=vhost1' but got : " + part);
+                throw new HoplinRuntimeException("Invalid KeyValue pair, expected connection string is in format 'host=localhost;virtualHost=vhost1' but got : " + part);
 
             final String key = kv[0].trim();
             final String value = kv[1].trim();

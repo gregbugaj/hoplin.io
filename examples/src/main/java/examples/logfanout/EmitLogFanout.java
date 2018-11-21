@@ -1,10 +1,7 @@
 package examples.logfanout;
 
 import examples.BaseExample;
-import io.hoplin.Binding;
-import io.hoplin.BindingBuilder;
-import io.hoplin.FanoutExchange;
-import io.hoplin.FanoutExchangeClient;
+import io.hoplin.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +21,7 @@ public class EmitLogFanout extends BaseExample
         final Binding binding = bind();
         log.info("Binding : {}", binding);
 
-        final FanoutExchangeClient client = FanoutExchangeClient.publisher(options(), binding);
+        final ExchangeClient client = FanoutExchangeClient.publisher(options(), binding);
 
         while(true)
         {

@@ -3,6 +3,7 @@ package examples.logtopic;
 import examples.BaseExample;
 import examples.LogDetail;
 import examples.logdirect.EmitLogDirect;
+import io.hoplin.ExchangeClient;
 import io.hoplin.TopicExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,25 +16,25 @@ public class ReceiveLogsTopic extends BaseExample
 
     public static void main(final String... args) throws InterruptedException
     {
-        final TopicExchangeClient client = all();
+        final ExchangeClient client = all();
         client.subscribe(LogDetail.class, msg-> log.info("Message received [{}]", msg));
 
         Thread.currentThread().join();
     }
 
-    private static TopicExchangeClient critical()
+    private static ExchangeClient critical()
     {
         return TopicExchangeClient
                 .subscriberWithQueue(options(), EXCHANGE, "log.critical","log.critical.*");
     }
 
-    private static TopicExchangeClient informative()
+    private static ExchangeClient informative()
     {
         return TopicExchangeClient
                 .subscriberWithQueue(options(), EXCHANGE, "log.informative","log.info.*");
     }
 
-    private static TopicExchangeClient all()
+    private static ExchangeClient all()
     {
         return TopicExchangeClient
                 .subscriberWithQueue(options(), EXCHANGE, "log.all","log.*.*");

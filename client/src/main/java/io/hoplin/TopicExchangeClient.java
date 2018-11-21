@@ -26,17 +26,6 @@ public class TopicExchangeClient extends  AbstractExchangeClient
     }
 
     /**
-     * Publish message to the queue with defined routingKey
-     *
-     * @param message
-     * @param routingKey
-     */
-    public <T> void publish(final T message, final String routingKey)
-    {
-        client.basicPublish(binding.getExchange(), routingKey, message);
-    }
-
-    /**
      * Create new {@link DirectExchangeClient}
      *
      * @param options the connection options to use

@@ -70,13 +70,10 @@ public class DefaultQueueConsumer extends DefaultConsumer
      * @param envelope
      * @param properties
      * @param body
-     * @throws IOException
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void handleDelivery(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-            throws IOException
-    {
+    public void handleDelivery(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
         AckStrategy ack;
         final ConsumerExecutionContext context = ConsumerExecutionContext.create(consumerTag, envelope, properties);
 
@@ -195,8 +192,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
     }
 
     @Override
-    public void handleCancel(final String consumerTag) throws IOException
-    {
+    public void handleCancel(final String consumerTag) {
         // consumer has been cancelled unexpectedly
         throw new HoplinRuntimeException("Not yet implemented");
     }

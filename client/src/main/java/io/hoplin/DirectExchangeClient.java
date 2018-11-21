@@ -24,24 +24,13 @@ public class DirectExchangeClient extends AbstractExchangeClient
     }
 
     /**
-     * Publish message to the queue with defined routingKey
-     *
-     * @param message
-     * @param routingKey
-     */
-    public <T> void publish(final T message, final String routingKey)
-    {
-        client.basicPublish(binding.getExchange(), routingKey, message);
-    }
-
-    /**
      * Create new {@link DirectExchangeClient}
      *
      * @param options the connection options to use
      * @param binding the {@link Binding} to use
      * @return new Direct Exchange client setup in server mode
      */
-    public static DirectExchangeClient publisher(final RabbitMQOptions options, final Binding binding)
+    public static ExchangeClient publisher(final RabbitMQOptions options, final Binding binding)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(binding);
@@ -56,7 +45,7 @@ public class DirectExchangeClient extends AbstractExchangeClient
      * @param exchange the exchange to use
      * @return
      */
-    public static DirectExchangeClient publisher(final RabbitMQOptions options, final String exchange)
+    public static ExchangeClient publisher(final RabbitMQOptions options, final String exchange)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(exchange);
@@ -79,7 +68,7 @@ public class DirectExchangeClient extends AbstractExchangeClient
      * @param bindingKeys the bindingKeys to bind to the exchange
      * @return new DirectExchangeClient
      */
-    public static DirectExchangeClient subscriber(final RabbitMQOptions options, final String exchangeName, final String... bindingKeys)
+    public static ExchangeClient subscriber(final RabbitMQOptions options, final String exchangeName, final String... bindingKeys)
     {
         return subscriberWithQueue(options, exchangeName, "", bindingKeys);
     }
@@ -93,7 +82,7 @@ public class DirectExchangeClient extends AbstractExchangeClient
      * @param bindingKeys the bindingKeys to bind to the exchange
      * @return new DirectExchangeClient
      */
-    public static DirectExchangeClient subscriberWithQueue(final RabbitMQOptions options, final String exchangeName, final String queue, final String... bindingKeys)
+    public static ExchangeClient subscriberWithQueue(final RabbitMQOptions options, final String exchangeName, final String queue, final String... bindingKeys)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(exchangeName);

@@ -28,7 +28,6 @@ package io.hoplin;
  */
 public class DirectExchange extends AbstractExchange
 {
-
     public DirectExchange(final String name)
     {
         super(name);

@@ -42,9 +42,7 @@ public class UnroutableMessageReturnListener implements ReturnListener
                       String exchange,
                       String routingKey,
                       AMQP.BasicProperties properties,
-                      byte[] body)
-            throws IOException
-    {
+                      byte[] body) {
         log.warn("Message not delivered : {}, {}, {}", options.isKeepUnroutableMessages(), exchange, routingKey);
         if(!options.isKeepUnroutableMessages())
             return;

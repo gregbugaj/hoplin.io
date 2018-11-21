@@ -74,6 +74,14 @@ public interface RabbitMQClient
     <T> void basicPublish(final String exchange, final String routingKey, final T message);
 
     /**
+     * Publish a message. Publishing to a non-existent exchange will result in a channel-level protocol exception,
+     * which closes the channel. Invocations of Channel#request will eventually block if a resource-driven alarm is in effect.
+     *
+     * @see com.rabbitmq.client.Channel#basicPublish(String, String, AMQP.BasicProperties, byte[])
+     */
+    <T> void basicPublish(final String exchange, final String routingKey, final T message, final Map<String, Object> headers);
+
+    /**
      * Acknowledge one or several received messages. Supply the deliveryTag create the AMQP.Basic.GetOk or AMQP.Basic.Deliver
      * method containing the received message being acknowledged.
      *

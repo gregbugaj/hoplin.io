@@ -52,9 +52,7 @@ public class RpcCallerConsumer extends DefaultConsumer
     public void handleDelivery(final String consumerTag,
                                final Envelope envelope,
                                final AMQP.BasicProperties properties,
-                               final byte[] body)
-            throws IOException
-    {
+                               final byte[] body) {
         final String messageIdentifier = properties.getCorrelationId();
         final CompletableFuture<Object> action = bindings.remove(messageIdentifier);
 

@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
  * Default implementation of {@link RabbitMQClient}
@@ -133,7 +134,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
                                 final Map<String, Object> arguments)
     {
         with((channel) -> {
-            channel.exchangeDeclare(exchange, type, durable);
+            channel.exchangeDeclare(exchange, type, durable, autoDelete, arguments);
             return null;
         });
     }
@@ -246,6 +247,12 @@ public class DefaultRabbitMQClient implements RabbitMQClient
     @Override
     public <T> void basicPublish(final String exchange, final String routingKey, final T message)
     {
+        basicPublish(exchange, routingKey, message, Collections.emptyMap());
+    }
+
+    @Override
+    public <T> void basicPublish(final String exchange, final String routingKey, final T message, final Map<String,Object> headers)
+    {
         try
         {
             final String messageId = UUID.randomUUID().toString();
@@ -254,6 +261,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
                     .contentEncoding("UTF-8")
                     .messageId(messageId)
                     .deliveryMode(2)
+                    .headers(headers)
                     .build();
 
             log.info("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey, messageId);
@@ -263,7 +271,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         }
         catch (final IOException e)
         {
-            throw new HoplinRuntimeException("Unable to request message", e);
+            // Should try to send to the Error Handling queue ??
+            throw new HoplinRuntimeException("Unable to publish message", e);
         }
     }
 

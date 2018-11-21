@@ -53,8 +53,7 @@ public class NativeConsole extends ConsoleDevice
     }
 
     @Override
-    public void close() throws Exception
-    {
+    public void close() {
         // noop
     }
 

@@ -2,6 +2,7 @@ package examples.logtopic;
 
 import examples.BaseExample;
 import examples.LogDetail;
+import io.hoplin.ExchangeClient;
 import io.hoplin.TopicExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public class EmitLogTopic extends BaseExample
     public static void main(final String... args) throws InterruptedException
     {
         log.info("Starting producer on exchange : {}", EXCHANGE);
-        final TopicExchangeClient client = TopicExchangeClient.publisher(options(), EXCHANGE);
+        final ExchangeClient client = TopicExchangeClient.publisher(options(), EXCHANGE);
 
         while(true)
         {

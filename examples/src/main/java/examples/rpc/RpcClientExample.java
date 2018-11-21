@@ -20,7 +20,7 @@ public class RpcClientExample extends BaseExample
 {
     private static final Logger log = LoggerFactory.getLogger(RpcClientExample.class);
 
-    public static void main(final String... args) throws InterruptedException, IOException
+    public static void main(final String... args) throws IOException
     {
         final Binding binding = bind();
         log.info("Binding : {}", binding);
