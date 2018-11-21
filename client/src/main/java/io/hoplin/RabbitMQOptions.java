@@ -109,7 +109,22 @@ public class RabbitMQOptions
 
     public RabbitMQOptions()
     {
-        clientProperties = createClientProperties();
+        this.clientProperties = createDefaultClientProperties();
+    }
+
+    public RabbitMQOptions(final Map<String, Object> clientProperties, boolean overwrite)
+    {
+        Objects.requireNonNull(clientProperties);
+        this.clientProperties = createDefaultClientProperties();
+
+        clientProperties.entrySet().forEach(entry->{
+            final String key = entry.getKey();
+            final Object value = entry.getValue();
+            if(overwrite)
+                this.clientProperties.put(key, value);
+            else
+                addValueIfNotExists(this.clientProperties, key, value);
+        });
     }
 
     public RabbitMQOptions(final RabbitMQOptions that)
@@ -134,24 +149,44 @@ public class RabbitMQOptions
         unroutableDirectory = that.unroutableDirectory;
     }
 
-
-
-    private Map<String, Object> createClientProperties()
+    private Map<String, Object> createDefaultClientProperties()
     {
         final Map<String, Object> props = new HashMap<>();
 
-        addValueIfNotExists(props, "client_api", "hoplin.io");
-        addValueIfNotExists(props, "connection_name", findApplicationName());
-        addValueIfNotExists(props, "platform", OsUtil.platform());
-        addValueIfNotExists(props, "version", findApplicationVersion());
-        addValueIfNotExists(props, "application", findApplicationName());
-        addValueIfNotExists(props, "application_location", findWorkingDirectory());
-        addValueIfNotExists(props, "machine_name", getHostName());
-        addValueIfNotExists(props, "user", System.getProperty("user.name"));
-        addValueIfNotExists(props, "connected", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
-        addValueIfNotExists(props, "requested_heartbeat", Integer.toString(requestedHeartbeat));
+        props.put("client_api", "hoplin.io");
+        props.put("connection_name", findApplicationName());
+        props.put("platform", OsUtil.platform());
+        props.put("version", findApplicationVersion());
+        props.put("application", findApplicationName());
+        props.put("application_location", findWorkingDirectory());
+        props.put("machine_name", getHostName());
+        props.put("user", System.getProperty("user.name"));
+        props.put("connected", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+        props.put("requested_heartbeat", Integer.toString(requestedHeartbeat));
 
         return props;
+    }
+
+    /**
+     * Add/Set a client property
+     * @param key the key to set
+     * @param value the value to set to
+     * @param overwrite  {@code true} indicates that the value will be set otherwise it will be added
+     */
+    public void setClientProperty(final String key, final Object value, boolean overwrite)
+    {
+        Objects.requireNonNull(key);
+        if(overwrite)
+            this.clientProperties.put(key, value);
+        else
+            addValueIfNotExists(this.clientProperties, key, value);
+    }
+
+
+    public Object getClientProperty(final String key)
+    {
+        Objects.requireNonNull(key);
+        return clientProperties.get(key);
     }
 
     private String findApplicationVersion()
@@ -174,18 +209,18 @@ public class RabbitMQOptions
         {
             // suppressed
         }
+
         return "localhost";
     }
 
     private String findWorkingDirectory()
     {
-        final Path currentRelativePath = Paths.get("");
-        return currentRelativePath.toAbsolutePath().toString();
+        return Paths.get("").toAbsolutePath().toString();
     }
 
     private void addValueIfNotExists(final Map<String, Object> props,
                                      final String key,
-                                     final String value)
+                                     final Object value)
     {
         if(!props.containsKey(key))
             props.put(key, value);
@@ -406,10 +441,7 @@ public class RabbitMQOptions
      */
     public static RabbitMQOptions from(final String connectionString)
     {
-        Objects.requireNonNull(connectionString);
-        final RabbitMQOptions options = new RabbitMQOptions();
-
-        return options;
+       return ConnectionStringParser.parse(connectionString);
     }
 
 }
