@@ -7,6 +7,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class ConnectionStringParserTest {
 
     @Test
+    void base000()
+    {
+        final RabbitMQOptions options = ConnectionStringParser
+                .parse("host=localhost");
+
+        assertEquals("localhost", options.getHost());
+    }
+
+   @Test
     void base001()
     {
         final RabbitMQOptions options = ConnectionStringParser
