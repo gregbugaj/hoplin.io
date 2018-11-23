@@ -15,6 +15,9 @@ import java.util.*;
 
 /**
  * Client options
+ *
+ * Currently Channel and Client options are mixed here.
+ *
  * @see {@ConnectionFactory}
  */
 public class RabbitMQOptions
@@ -108,6 +111,8 @@ public class RabbitMQOptions
     private boolean keepUnroutableMessages = true;
 
     private boolean publisherConfirms = false;
+
+    private int prefetchCount = 10;
 
     public RabbitMQOptions()
     {
@@ -455,5 +460,13 @@ public class RabbitMQOptions
     public void setPublisherConfirms(boolean publisherConfirms)
     {
         this.publisherConfirms = publisherConfirms;
+    }
+
+    public int getPrefetchCount() {
+        return prefetchCount;
+    }
+
+    public void setPrefetchCount(int prefetchCount) {
+        this.prefetchCount = prefetchCount;
     }
 }
