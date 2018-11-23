@@ -10,6 +10,9 @@ import java.util.Objects;
  * <ul>
  *     <li>host (e.g. host=localhost or host=192.168.2.56) </li?>
  *     <li>virtualHost (e.g. virtualHost=myVirtualHost) default is the default virtual host '/' </li?>
+ *     <li>prefetchcount (e.g. prefetchcount=1) default is 10. This is the number of messages that will be delivered by RabbitMQ before an ack is sent </li?>
+ *     <li>publisherConfirms (e.g. publisherConfirms=true) default is false.</li?>
+ *     <li>persistentMessages (e.g. persistentMessages=false) default is true. This determines how the delivery_mode in basic.properties is set when a message is published. false=1, true=2. When set to true, messages will be persisted to disk by RabbitMQ and survive a server restart. Performance gains can be expected when set to false.</li?>
  * </ul>
  */
 public class ConnectionStringParser

@@ -39,6 +39,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient
 
     private  boolean publisherConfirms;
 
+    private final int prefetchCount;
+
     public DefaultRabbitMQClient(final RabbitMQOptions options)
     {
         this.options = Objects.requireNonNull(options, "Options are required and can't be null");
@@ -47,6 +49,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         this.codec = new JsonCodec();
 
         publisherConfirms = options.isPublisherConfirms();
+        prefetchCount = options.getPrefetchCount();
         channel.addReturnListener(new UnroutableMessageReturnListener(options));
     }
 
@@ -97,8 +100,6 @@ public class DefaultRabbitMQClient implements RabbitMQClient
             {
                 //basic.qos method to allow you to limit the number of unacknowledged messages
                 final boolean autoAck = options.isAutoAck();
-
-                int prefetchCount = 1;
 
                 log.info("basicConsume autoAck : {} ", autoAck);
                 log.info("basicConsume prefetchCount : {} ", prefetchCount);
