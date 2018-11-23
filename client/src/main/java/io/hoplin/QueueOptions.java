@@ -3,7 +3,7 @@ package io.hoplin;
 import java.util.function.Consumer;
 
 /**
- *  specify queue consumer settings when calling
+ * Specify queue consumer settings when calling
  * {@link RabbitMQClient#basicConsume(String, Class, Consumer)}
  */
 public class QueueOptions

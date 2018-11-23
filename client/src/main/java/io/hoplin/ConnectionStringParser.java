@@ -55,6 +55,8 @@ public class ConnectionStringParser
                 options.setConnectionRetries(Integer.parseInt(value));
             else if("connectionRetryDelay".equalsIgnoreCase(key))
                 options.setConnectionRetryDelay(Long.parseLong(value));
+            else if("publisherConfirms".equalsIgnoreCase(key))
+                options.setPublisherConfirms(Boolean.parseBoolean(value));
             else
                 throw new IllegalArgumentException("Unknown option : " + key);
         }

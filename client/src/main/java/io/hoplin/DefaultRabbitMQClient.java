@@ -37,6 +37,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient
 
     private DefaultQueueConsumer consumer;
 
+    private  boolean publisherConfirms;
+
     public DefaultRabbitMQClient(final RabbitMQOptions options)
     {
         this.options = Objects.requireNonNull(options, "Options are required and can't be null");
@@ -44,6 +46,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         this.channel = provider.acquire();
         this.codec = new JsonCodec();
 
+        publisherConfirms = options.isPublisherConfirms();
         channel.addReturnListener(new UnroutableMessageReturnListener(options));
     }
 
@@ -94,10 +97,19 @@ public class DefaultRabbitMQClient implements RabbitMQClient
             {
                 //basic.qos method to allow you to limit the number of unacknowledged messages
                 final boolean autoAck = options.isAutoAck();
+
                 int prefetchCount = 1;
 
                 log.info("basicConsume autoAck : {} ", autoAck);
                 log.info("basicConsume prefetchCount : {} ", prefetchCount);
+                log.info("basicConsume publisherConfirms : {} ", publisherConfirms);
+
+                // Enables publisher acknowledgements on this channel
+                if(publisherConfirms)
+                {
+                    channel.confirmSelect();
+                    channel.addConfirmListener(this::confirmedAck, this::confirmedNack);
+                }
 
                 consumer = new DefaultQueueConsumer(channel, options);
                 channel.basicQos(prefetchCount);
@@ -115,6 +127,16 @@ public class DefaultRabbitMQClient implements RabbitMQClient
             log.error("Unable to subscribe messages", e);
             throw new HoplinRuntimeException("Unable to subscribe messages", e);
         }
+    }
+
+    private void confirmedAck(long deliveryTag, boolean multiple)
+    {
+        log.info("Confirmed ACK :: {}", deliveryTag);
+    }
+
+    private void confirmedNack(long deliveryTag, boolean multiple)
+    {
+        log.info("Confirmed NACK :: {}", deliveryTag);
     }
 
     @Override
