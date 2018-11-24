@@ -144,10 +144,12 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
 
     private void establishConnection(final RabbitMQOptions config) throws IOException, TimeoutException
     {
+        long s = System.currentTimeMillis();
         log.debug("Connecting to rabbitmq...");
         connection = newConnection(config);
         channel = connection.createChannel();
-        log.debug("Connected to rabbitmq !");
+        long ms = System.currentTimeMillis() - s;
+        log.debug("Connected to rabbitmq in {} ms", ms);
     }
 
     private static Connection newConnection(final RabbitMQOptions config) throws IOException, TimeoutException

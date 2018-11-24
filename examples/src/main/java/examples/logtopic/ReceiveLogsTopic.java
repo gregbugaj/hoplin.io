@@ -3,8 +3,7 @@ package examples.logtopic;
 import examples.BaseExample;
 import examples.LogDetail;
 import examples.logdirect.EmitLogDirect;
-import io.hoplin.ExchangeClient;
-import io.hoplin.TopicExchangeClient;
+import io.hoplin.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,28 +15,36 @@ public class ReceiveLogsTopic extends BaseExample
 
     public static void main(final String... args) throws InterruptedException
     {
-        final ExchangeClient client = all();
+//      final ExchangeClient client = clientFromExchange(EXCHANGE, "log.critical", "log.critical.*");
+        final ExchangeClient client = clientFromBinding(EXCHANGE, "log.critical", "log.critical.*");
         client.subscribe(LogDetail.class, msg-> log.info("Message received [{}]", msg));
 
         Thread.currentThread().join();
     }
 
-    private static ExchangeClient critical()
+    private static ExchangeClient clientFromExchange(final String exchange, final String queue, final String routingKey)
     {
-        return TopicExchangeClient
-                .subscriberWithQueue(options(), EXCHANGE, "log.critical","log.critical.*");
+        return ExchangeClient.topic(options(), exchange, queue, routingKey);
     }
 
-    private static ExchangeClient informative()
+    /**
+     * Creating client with binding allows us for more granular control
+     * @param exchange
+     * @param queue
+     * @param routingKey
+     * @return
+     */
+    private static ExchangeClient clientFromBinding(final String exchange, final String queue, final String routingKey)
     {
-        return TopicExchangeClient
-                .subscriberWithQueue(options(), EXCHANGE, "log.informative","log.info.*");
-    }
+        final Binding binding = BindingBuilder
+                .bind(queue)
+                .to(new TopicExchange(exchange))
+                .withAutoAck(true)
+                .withPrefetchCount(1)
+                .withPublisherConfirms(true)
+                .with(routingKey)
+                .build();
 
-    private static ExchangeClient all()
-    {
-        return TopicExchangeClient
-                .subscriberWithQueue(options(), EXCHANGE, "log.all","log.*.*");
+        return ExchangeClient.topic(options(), binding);
     }
-
 }

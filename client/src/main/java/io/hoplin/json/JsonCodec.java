@@ -50,8 +50,8 @@ public class JsonCodec implements Codec
         }
         finally
         {
-            if(log.isDebugEnabled())
-                log.debug("serialize time (ms) {}", (System.currentTimeMillis() - s));
+            if(log.isTraceEnabled())
+                log.trace("serialize time (ms) {}", (System.currentTimeMillis() - s));
         }
     }
 
@@ -66,8 +66,8 @@ public class JsonCodec implements Codec
         }
         finally
         {
-            if(log.isDebugEnabled())
-                log.debug("serialize time (ms) {}",  (System.currentTimeMillis() - s));
+            if(log.isTraceEnabled())
+                log.trace("serialize time (ms) {}",  (System.currentTimeMillis() - s));
         }
     }
 
@@ -85,8 +85,8 @@ public class JsonCodec implements Codec
         }
         finally
         {
-            if(log.isDebugEnabled())
-                log.debug("de-serialize time (ms) {}", (System.currentTimeMillis() - s));
+            if(log.isTraceEnabled())
+                log.trace("de-serialize time (ms) {}", (System.currentTimeMillis() - s));
         }
         return null;
     }
@@ -106,7 +106,8 @@ public class JsonCodec implements Codec
         }
         finally
         {
-            log.debug("de-serialize time (ms) {}", (System.currentTimeMillis() - s));
+            if(log.isTraceEnabled())
+                log.trace("de-serialize time (ms) {}", (System.currentTimeMillis() - s));
         }
 
         return null;

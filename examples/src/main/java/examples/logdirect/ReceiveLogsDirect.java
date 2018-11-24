@@ -23,20 +23,13 @@ public class ReceiveLogsDirect extends BaseExample
 
     private static ExchangeClient critical()
     {
-        return DirectExchangeClient
-                .subscriberWithQueue(options(), EXCHANGE, "log.critical","error", "warning");
+        return ExchangeClient
+                .direct(options(), EXCHANGE, "log.critical", "error");
     }
 
     private static ExchangeClient informative()
     {
-        return DirectExchangeClient
-                .subscriberWithQueue(options(), EXCHANGE, "log.informative","info", "debug");
+        return ExchangeClient
+                .direct(options(), EXCHANGE, "log.informative", "info");
     }
-
-    private static ExchangeClient all()
-    {
-        return DirectExchangeClient
-                .subscriberWithQueue(options(), EXCHANGE, "log.all","info", "debug", "error", "warning");
-    }
-
 }

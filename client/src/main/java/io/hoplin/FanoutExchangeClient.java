@@ -16,13 +16,8 @@ public class FanoutExchangeClient extends AbstractExchangeClient
 
     public FanoutExchangeClient(final RabbitMQOptions options, final Binding binding)
     {
-        this(options, binding, false);
-    }
-
-    public FanoutExchangeClient(final RabbitMQOptions options, final Binding binding, boolean consume)
-    {
         super(options, binding);
-        bind(consume, "fanout");
+        bind("fanout");
     }
 
     void subscribe()
@@ -56,7 +51,6 @@ public class FanoutExchangeClient extends AbstractExchangeClient
         }
     }
 
-
     /**
      * Create new {@link FanoutExchangeClient} given supplied options and {@link Binding}
      *
@@ -64,7 +58,7 @@ public class FanoutExchangeClient extends AbstractExchangeClient
      * @param binding the {@link Binding} to use
      * @return new Direct Exchange client setup in server mode
      */
-    public static ExchangeClient publisher(final RabbitMQOptions options, final Binding binding)
+    public static ExchangeClient create(final RabbitMQOptions options, final Binding binding)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(binding);
@@ -73,13 +67,13 @@ public class FanoutExchangeClient extends AbstractExchangeClient
     }
 
     /**
-     * Create new {@link FanoutExchangeClient}
+     * Create new {@link FanoutExchangeClient} client, this will create default RabbitMQ queues.
      *
      * @param options the connection options to use
      * @param exchange the exchange to use
      * @return
      */
-    public static ExchangeClient publisher(final RabbitMQOptions options, final String exchange)
+    public static ExchangeClient create(final RabbitMQOptions options, final String exchange)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(exchange);
@@ -89,26 +83,6 @@ public class FanoutExchangeClient extends AbstractExchangeClient
                 .bind()
                 .to(new FanoutExchange(exchange));
 
-        return publisher(options, binding);
-    }
-
-    /**
-     *Create new {@link FanoutExchangeClient} client, this will create default RabbitMQ queues.
-     *
-     * @param options the options used for connection
-     * @param exchangeName
-     * @param exchangeName the exchangeName to use
-     * @return
-     */
-    public static ExchangeClient subscriber(final RabbitMQOptions options, final String exchangeName)
-    {
-        Objects.requireNonNull(options);
-        Objects.requireNonNull(exchangeName);
-
-        final Binding binding = BindingBuilder
-                .bind()
-                .to(new FanoutExchange(exchangeName));
-
-        return new FanoutExchangeClient(options, binding, true);
+        return create(options, binding);
     }
 }

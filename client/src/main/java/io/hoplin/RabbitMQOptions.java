@@ -110,10 +110,6 @@ public class RabbitMQOptions
 
     private boolean keepUnroutableMessages = true;
 
-    private boolean publisherConfirms = false;
-
-    private int prefetchCount = 10;
-
     public RabbitMQOptions()
     {
         this.clientProperties = createDefaultClientProperties();
@@ -154,7 +150,6 @@ public class RabbitMQOptions
         clientProperties = that.clientProperties;
         keepUnroutableMessages = that.keepUnroutableMessages;
         unroutableDirectory = that.unroutableDirectory;
-        publisherConfirms = that.publisherConfirms;
     }
 
     private Map<String, Object> createDefaultClientProperties()
@@ -452,21 +447,4 @@ public class RabbitMQOptions
        return ConnectionStringParser.parse(connectionString);
     }
 
-    public boolean isPublisherConfirms()
-    {
-        return publisherConfirms;
-    }
-
-    public void setPublisherConfirms(boolean publisherConfirms)
-    {
-        this.publisherConfirms = publisherConfirms;
-    }
-
-    public int getPrefetchCount() {
-        return prefetchCount;
-    }
-
-    public void setPrefetchCount(int prefetchCount) {
-        this.prefetchCount = prefetchCount;
-    }
 }

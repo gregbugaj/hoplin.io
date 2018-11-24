@@ -1,10 +1,12 @@
 package io.hoplin;
 
 import com.google.common.base.Strings;
+import com.rabbitmq.client.AMQP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -61,23 +63,34 @@ abstract class AbstractExchangeClient implements ExchangeClient
     void subscribe()
     {
         final String exchangeName = binding.getExchange();
-        final String queueName = binding.getQueue();
-        final String routingKey = binding.getRoutingKey();
+        String queueName = binding.getQueue();
+        String routingKey = binding.getRoutingKey();
         final Map<String, Object> arguments = binding.getArguments();
-        final String[] bindingKeys = routingKey.split(",");
 
         try
         {
-            client.queueDeclare(queueName, true, false, false, arguments);
+            // binding
+            String bindingKey = routingKey;
+            if(Strings.isNullOrEmpty(routingKey))
+                bindingKey = "#";
 
-            for (final String bindingKey : bindingKeys)
-            {
-                client.queueBind(queueName, exchangeName, bindingKey);
-                log.info("Binding client [exchangeName, queueName, bindingKey] : {}, {}, {}",
-                         exchangeName,
-                         queueName,
-                         bindingKey);
-            }
+            boolean autoDelete = false;
+            if(Strings.isNullOrEmpty(queueName))
+                autoDelete = true;
+
+            // when the queue name is empty we will create a queue dynamically and bind to that queue
+            final AMQP.Queue.DeclareOk queueDeclare = client
+                    .queueDeclare(queueName, true, false, autoDelete, arguments);
+
+            queueName = queueDeclare.getQueue();
+
+            client.queueBind(queueName, exchangeName, bindingKey);
+            log.info("Binding client [exchangeName, queueName, bindingKey, autoDelete] : {}, {}, {}, {}",
+                     exchangeName,
+                     queueName,
+                     bindingKey,
+                     autoDelete
+                     );
         }
         catch (final Exception e)
         {
@@ -90,13 +103,12 @@ abstract class AbstractExchangeClient implements ExchangeClient
      *
      * a durable, non-autodelete exchange of "direct" type
      * a durable, non-exclusive, non-autodelete queue with a well-known name
-     *
-     * @param consume
      */
-    void bind(final boolean consume, final String type)
+    void bind(final String type)
     {
         Objects.requireNonNull(type);
         final String exchangeName = binding.getExchange();
+
         // prevent changing default queues
         if(Strings.isNullOrEmpty(exchangeName))
             throw new IllegalArgumentException("Exchange name can't be empty");
@@ -108,12 +120,13 @@ abstract class AbstractExchangeClient implements ExchangeClient
             // keep it even if not in user
             final boolean autoDelete = false;
 
+            final Map<String, Object> arguments = new HashMap<>();
             // Make sure that the Exchange is declared
-            client.exchangeDeclare(exchangeName, type, durable, autoDelete);
+
+            client.exchangeDeclare(exchangeName, type, durable, autoDelete, arguments);
 
             // setup consumer options
-            if (consume)
-                subscribe();
+            subscribe();
         }
         catch (final Exception e)
         {
@@ -144,13 +157,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
     @Override
     public <T> void publish(final T message)
     {
-        publish(message, Collections.emptyMap());
-    }
-
-    @Override
-    public <T> void publish(final T message, final Map<String, Object> headers)
-    {
-        publish(message, "", headers);
+        publishAsync(message, cfg->{});
     }
 
     @Override
@@ -164,5 +171,15 @@ abstract class AbstractExchangeClient implements ExchangeClient
         payload.setType(message.getClass());
 
         client.basicPublish(binding.getExchange(), routingKey, payload);
+    }
+
+    @Override
+    public <T> void publishAsync(final T message, final Consumer<MessageConfiguration> cfg)
+    {
+        // Wrap our message original message
+        final MessagePayload<T> payload = new MessagePayload<>(message);
+        payload.setType(message.getClass());
+
+        client.basicPublish(binding.getExchange(), "", payload);
     }
 }

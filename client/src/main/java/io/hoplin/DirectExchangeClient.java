@@ -14,13 +14,8 @@ public class DirectExchangeClient extends AbstractExchangeClient
 
     public DirectExchangeClient(final RabbitMQOptions options, final Binding binding)
     {
-        this(options, binding, false);
-    }
-
-    public DirectExchangeClient(final RabbitMQOptions options, final Binding binding, boolean consume)
-    {
         super(options, binding);
-        bind(consume, "direct");
+        bind("direct");
     }
 
     /**
@@ -30,7 +25,7 @@ public class DirectExchangeClient extends AbstractExchangeClient
      * @param binding the {@link Binding} to use
      * @return new Direct Exchange client setup in server mode
      */
-    public static ExchangeClient publisher(final RabbitMQOptions options, final Binding binding)
+    public static ExchangeClient create(final RabbitMQOptions options, final Binding binding)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(binding);
@@ -45,18 +40,12 @@ public class DirectExchangeClient extends AbstractExchangeClient
      * @param exchange the exchange to use
      * @return
      */
-    public static ExchangeClient publisher(final RabbitMQOptions options, final String exchange)
+    public static ExchangeClient create(final RabbitMQOptions options, final String exchange)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(exchange);
-
         // Producer does not bind to the queue only to the exchange when using DirectExchange
-        final Binding binding = BindingBuilder
-                .bind()
-                .to(new DirectExchange(exchange))
-                .with(""); // no-routing key required for publishers
-
-        return publisher(options, binding);
+        return create(options, createSensibleBindings(exchange, "", ""));
     }
 
     /**
@@ -65,35 +54,41 @@ public class DirectExchangeClient extends AbstractExchangeClient
      *
      * @param options the options used for connection
      * @param exchangeName the exchangeName to use
-     * @param bindingKeys the bindingKeys to bind to the exchange
+     * @param bindingKey the bindingKeys to bind to the exchange
      * @return new DirectExchangeClient
      */
-    public static ExchangeClient subscriber(final RabbitMQOptions options, final String exchangeName, final String... bindingKeys)
+    public static ExchangeClient create(final RabbitMQOptions options, final String exchangeName, final String bindingKey)
     {
-        return subscriberWithQueue(options, exchangeName, "", bindingKeys);
+        return create(options, exchangeName, "", bindingKey);
     }
 
     /**
      *Create new {@link DirectExchangeClient} client, this will create default RabbitMQ queues.
      *
      * @param options the options used for connection
-     * @param exchangeName
-     * @param exchangeName the exchangeName to use
-     * @param bindingKeys the bindingKeys to bind to the exchange
+     * @param exchange the exchange to use
+     * @param queue   the queue to use
+     * @param routingKey the bindingKeys to bind to the exchange
      * @return new DirectExchangeClient
      */
-    public static ExchangeClient subscriberWithQueue(final RabbitMQOptions options, final String exchangeName, final String queue, final String... bindingKeys)
+    public static ExchangeClient create(final RabbitMQOptions options, final String exchange, final String queue, final String routingKey)
     {
         Objects.requireNonNull(options);
-        Objects.requireNonNull(exchangeName);
-        Objects.requireNonNull(bindingKeys);
+        Objects.requireNonNull(exchange);
+        Objects.requireNonNull(routingKey);
 
-        final Binding binding = BindingBuilder
-                .bind(new Queue(queue))
-                .to(new DirectExchange(exchangeName))
-                .withAutoAck(true)
-                .with(String.join(",", bindingKeys));
+        return new DirectExchangeClient(options, createSensibleBindings(exchange, queue, routingKey));
+    }
 
-        return new DirectExchangeClient(options, binding, true);
+    static Binding createSensibleBindings(final String exchange, final String queue, final String routingKey)
+    {
+        return BindingBuilder
+                    .bind(queue)
+                    .to(new DirectExchange(exchange))
+                    .withAutoAck(true)
+                    .withPrefetchCount(1)
+                    .withPublisherConfirms(true)
+                    .with(routingKey)
+                    .build();
     }
 }

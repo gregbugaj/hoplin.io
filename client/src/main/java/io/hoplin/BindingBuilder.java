@@ -23,6 +23,11 @@ public class BindingBuilder
         return new DestinationConfigurer(new Queue(""));
     }
 
+    public static DestinationConfigurer bind(final String queue)
+    {
+        return new DestinationConfigurer(new Queue(queue));
+    }
+
     public static class DestinationConfigurer
     {
         private Queue queue;
@@ -34,7 +39,7 @@ public class BindingBuilder
 
         public Binding to(final FanoutExchange exchange)
         {
-            return new Binding(queue.getName(),  exchange.getName(), Collections.emptyMap());
+            return new Binding(queue.getName(), exchange.getName(), Collections.emptyMap());
         }
 
         public TopicExchangeRoutingKeyConfigurer to(final TopicExchange exchange)
@@ -53,11 +58,19 @@ public class BindingBuilder
         }
     }
 
-    private abstract static class RoutingKeyConfigurer<E extends Exchange>
+    public abstract static class RoutingKeyConfigurer<E extends Exchange, T>
     {
         protected final BindingBuilder.DestinationConfigurer destination;
 
         protected final String exchange;
+
+        protected boolean autoAck;
+
+        protected int prefetchCount  = 1;
+
+        protected boolean publisherConfirms;
+
+        protected String routingKey;
 
         public RoutingKeyConfigurer(final BindingBuilder.DestinationConfigurer destination, final String exchange)
         {
@@ -65,66 +78,67 @@ public class BindingBuilder
             this.exchange = exchange;
         }
 
+        public T withAutoAck(final boolean autoAck)
+        {
+            this.autoAck = autoAck;
+            return (T) this;
+        }
+
+        public T withPrefetchCount(final int prefetchCount)
+        {
+            this.prefetchCount = prefetchCount;
+            return (T) this;
+        }
+
+        public T withPublisherConfirms(final boolean publisherConfirms)
+        {
+            this.publisherConfirms = publisherConfirms;
+            return (T) this;
+        }
+
+        public T with(final String routingKey)
+        {
+            this.routingKey = routingKey;
+            return (T) this;
+        }
+
+        public T with(final Enum<?> routingKey)
+        {
+            this.routingKey = routingKey.toString();
+            return (T) this;
+        }
+
+        public abstract Binding build();
     }
 
-    public static class TopicExchangeRoutingKeyConfigurer extends RoutingKeyConfigurer <TopicExchange>
+    public static class TopicExchangeRoutingKeyConfigurer extends RoutingKeyConfigurer <TopicExchange, TopicExchangeRoutingKeyConfigurer>
     {
-        private boolean autoAck;
-
         public TopicExchangeRoutingKeyConfigurer(final DestinationConfigurer configurer, final TopicExchange exchange)
         {
             super(configurer, exchange.getName());
         }
 
-        public TopicExchangeRoutingKeyConfigurer withAutoAck(final boolean autoAck)
+        public Binding build()
         {
-            this.autoAck = autoAck;
-            return this;
-        }
-         
-        public Binding with(final String routingKey)
-        {
-           return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap());
-        }
-
-        public Binding with(final Enum<?> routingKey)
-        {
-           return new Binding(destination.queue.getName(), exchange, routingKey.toString(), Collections.emptyMap());
+            return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap());
         }
     }
 
-    public static class DirectExchangeRoutingKeyConfigurer extends RoutingKeyConfigurer <DirectExchange>
+    public static class DirectExchangeRoutingKeyConfigurer extends RoutingKeyConfigurer <DirectExchange, DirectExchangeRoutingKeyConfigurer>
     {
-        private boolean autoAck;
-
         public DirectExchangeRoutingKeyConfigurer(final DestinationConfigurer configurer, final DirectExchange exchange)
         {
             super(configurer, exchange.getName());
         }
 
-        public Binding with(final String routingKey)
-        {
-            return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap());
-        }
-
-        public DirectExchangeRoutingKeyConfigurer withAutoAck(final boolean autoAck)
-        {
-            this.autoAck = autoAck;
-            return this;
-        }
-
-        public Binding with(final Enum<?> routingKey)
-        {
-            return new Binding(destination.queue.getName(), exchange, routingKey.toString(), Collections.emptyMap());
-        }
-
-        public Binding withQueueName()
+        @Override
+        public Binding build()
         {
             return new Binding(destination.queue.getName(), exchange, destination.queue.getName(), Collections.emptyMap());
         }
     }
 
-    public static class HeaderExchangeRoutingKeyConfigurer extends RoutingKeyConfigurer <HeaderExchange>
+    public static class HeaderExchangeRoutingKeyConfigurer extends RoutingKeyConfigurer <HeaderExchange, HeaderExchangeRoutingKeyConfigurer>
     {
         private Map<String, String> arguments = new HashMap<>();
 
@@ -166,9 +180,10 @@ public class BindingBuilder
             return this;
         }
 
-        public Binding bind()
+        @Override
+        public Binding build()
         {
-            final Map<String, Object> args = arguments.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()));
+            final Map<String, Object> args = arguments.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             return new Binding(destination.queue.getName(), exchange, "", args);
         }
     }

@@ -48,8 +48,10 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         this.channel = provider.acquire();
         this.codec = new JsonCodec();
 
-        publisherConfirms = options.isPublisherConfirms();
-        prefetchCount = options.getPrefetchCount();
+        // TODO this needs to be passed in
+        publisherConfirms = true;
+        prefetchCount = 1;
+
         channel.addReturnListener(new UnroutableMessageReturnListener(options));
     }
 
@@ -105,7 +107,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
                 log.info("basicConsume prefetchCount : {} ", prefetchCount);
                 log.info("basicConsume publisherConfirms : {} ", publisherConfirms);
 
-                // Enables publisher acknowledgements on this channel
+                // Enables create acknowledgements on this channel
                 if(publisherConfirms)
                 {
                     channel.confirmSelect();

@@ -21,14 +21,13 @@ public class EmitLogFanout extends BaseExample
         final Binding binding = bind();
         log.info("Binding : {}", binding);
 
-        final ExchangeClient client = FanoutExchangeClient.publisher(options(), binding);
+        final ExchangeClient client = ExchangeClient.fanout(options(), binding);
 
         while(true)
         {
             client.publish("Msg : " + System.currentTimeMillis());
-            Thread.sleep(1000L);
+            Thread.sleep(100L);
         }
-
         //        Thread.currentThread().join();
     }
 

@@ -24,7 +24,7 @@ public class EmitLogDirect extends BaseExample
     public static void main(final String... args) throws InterruptedException
     {
         log.info("Starting producer on exchange : {}", EXCHANGE);
-        final ExchangeClient client = DirectExchangeClient.publisher(options(), EXCHANGE);
+        final ExchangeClient client = DirectExchangeClient.create(options(), EXCHANGE);
 
        // while(true)
         {

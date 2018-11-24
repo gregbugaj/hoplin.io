@@ -2,8 +2,7 @@ package examples.logtopic;
 
 import examples.BaseExample;
 import examples.LogDetail;
-import io.hoplin.ExchangeClient;
-import io.hoplin.TopicExchangeClient;
+import io.hoplin.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +22,9 @@ public class EmitLogTopic extends BaseExample
 
     public static void main(final String... args) throws InterruptedException
     {
-        log.info("Starting producer on exchange : {}", EXCHANGE);
-        final ExchangeClient client = TopicExchangeClient.publisher(options(), EXCHANGE);
+        log.info("Starting producer for exchange : {}", EXCHANGE);
+
+        final ExchangeClient client = clientFromBinding();
 
         while(true)
         {
@@ -33,17 +33,30 @@ public class EmitLogTopic extends BaseExample
             client.publish(createMessage("warning"), "log.critical.warning");
             client.publish(createMessage("error"), "log.critical.error");
 
-            if(true)
-                break;
-
-            Thread.sleep(1000L);
+            Thread.sleep(100L);
         }
+    }
+
+    private static ExchangeClient clientFromExchange()
+    {
+        return ExchangeClient.topic(options(), EXCHANGE);
+    }
+
+    private static ExchangeClient clientFromBinding()
+    {
+        final Binding binding = BindingBuilder
+                .bind()
+                .to(new TopicExchange(EXCHANGE))
+                .withAutoAck(true)
+                .withPrefetchCount(1)
+                .withPublisherConfirms(true)
+                .build();
+
+        return ExchangeClient.topic(options(), binding);
     }
 
     private static LogDetail createMessage(final String level)
     {
       return new LogDetail("Msg : " + System.nanoTime(), level);
     }
-
 }
-

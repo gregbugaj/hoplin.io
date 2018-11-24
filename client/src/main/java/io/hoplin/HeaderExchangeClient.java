@@ -1,13 +1,9 @@
 package io.hoplin;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  * Default header exchange client
@@ -18,20 +14,15 @@ public class HeaderExchangeClient extends AbstractExchangeClient
 
     public HeaderExchangeClient(final RabbitMQOptions options, final Binding binding)
     {
-        this(options, binding, false);
-    }
-
-    public HeaderExchangeClient(final RabbitMQOptions options, final Binding binding, boolean consume)
-    {
         super(options, binding);
-        bind(consume, "header");
+        bind("header");
     }
     /**
      * Create new {@link HeaderExchangeClient}
      *
      * @param options the connection options to use
      * @param binding the {@link Binding} to use
-     * @return new Header Exchange client setup in publisher mode
+     * @return new Header Exchange client setup in create mode
      */
     public static ExchangeClient publisher(final RabbitMQOptions options, final Binding binding)
     {
@@ -48,7 +39,7 @@ public class HeaderExchangeClient extends AbstractExchangeClient
      * @param exchange the exchange to use
      * @return
      */
-    public static ExchangeClient publisher(final RabbitMQOptions options, final String exchange, Map<String, String> arguments)
+    public static ExchangeClient publisher(final RabbitMQOptions options, final String exchange)
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(exchange);
@@ -57,7 +48,7 @@ public class HeaderExchangeClient extends AbstractExchangeClient
         final Binding binding = BindingBuilder
                 .bind()
                 .to(new HeaderExchange(exchange))
-                .bind();
+                .build();
 
         return publisher(options, binding);
     }

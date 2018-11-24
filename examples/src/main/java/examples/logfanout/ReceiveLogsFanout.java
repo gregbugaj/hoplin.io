@@ -14,7 +14,7 @@ public class ReceiveLogsFanout extends BaseExample
 
     public static void main(final String... args) throws InterruptedException
     {
-        final ExchangeClient client = FanoutExchangeClient.subscriber(options(), EXCHANGE);
+        final ExchangeClient client = FanoutExchangeClient.create(options(), EXCHANGE);
 
         client.subscribe(String.class, ReceiveLogsFanout::handle);
         Thread.currentThread().join();

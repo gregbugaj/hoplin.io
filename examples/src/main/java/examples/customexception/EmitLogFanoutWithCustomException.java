@@ -21,7 +21,7 @@ public class EmitLogFanoutWithCustomException extends BaseExample
         final Binding binding = bind();
         log.info("Binding : {}", binding);
 
-        final ExchangeClient client = FanoutExchangeClient.publisher(options(), binding);
+        final ExchangeClient client = ExchangeClient.fanout(options(), binding);
 
         while(true)
         {
