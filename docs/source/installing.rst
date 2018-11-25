@@ -1,6 +1,15 @@
 Installation
 ============
 
+
+RabittMQ
+-----------------------
+We are going to setup RabittMQ in a Docker container
+
+
+
+
+
 *****
 mvn
 *****
