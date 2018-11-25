@@ -8,6 +8,8 @@ Welcome to hoplin.io RabbitMQ client's documentation!
    installing
    contributing
    examples
+   connecting
+   publisher-confirms
    support
 
 
