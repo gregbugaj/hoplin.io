@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
  *
  * Log producer
  */
-public class EmitLogFanoutWithCustomException extends BaseExample
+public class EmitLogFanoutWithCustomError extends BaseExample
 {
-    private static final Logger log = LoggerFactory.getLogger(EmitLogFanoutWithCustomException.class);
+    private static final Logger log = LoggerFactory.getLogger(EmitLogFanoutWithCustomError.class);
 
     private static final String EXCHANGE = "fanout_logs";
 

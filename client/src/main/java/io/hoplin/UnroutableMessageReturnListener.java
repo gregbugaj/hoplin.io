@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -65,7 +66,7 @@ public class UnroutableMessageReturnListener implements ReturnListener
             writer.write(debugProps.toString());
             writer.write(System.lineSeparator());
             writer.write("------------------------");
-            writer.write(new String(body));
+            writer.write(new String(body, Charset.defaultCharset()));
         }
         catch(final Exception e)
         {

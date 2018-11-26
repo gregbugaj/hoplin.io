@@ -114,9 +114,9 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
                     {
                         log.info("Max number of connect attempts ({}) reached. Will not attempt to connect again", retries);
                         String msg = "Please check connection information and that the RabbitMQ Service is running at the specified endpoint.\n" +
-                                     String.format("\tHostname: '%s'\n", config.getHost()) +
-                                     String.format("\tVirtualHost: '%s'\n", config.getVirtualHost()) +
-                                     String.format("\tUserName: '%s'\n",  config.getUser());
+                                     String.format("\tHostname: '%s'%n", config.getHost()) +
+                                     String.format("\tVirtualHost: '%s'%n", config.getVirtualHost()) +
+                                     String.format("\tUserName: '%s'%n",  config.getUser());
 
                         log.info(msg);
                         return false;

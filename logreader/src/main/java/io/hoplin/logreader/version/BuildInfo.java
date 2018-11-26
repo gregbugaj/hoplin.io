@@ -49,8 +49,6 @@ public class BuildInfo
     public static Map<String, String> getBuildInfoAsMap()
     {
         final String buildInfo = getBuildInfo();
-        if(buildInfo == null)
-            return Collections.emptyMap();
 
         return Arrays.stream(buildInfo.split(System.lineSeparator()))
                 .map(s -> s.split("=")).collect(

@@ -5,9 +5,9 @@ import io.hoplin.ExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReceiveLogsFanoutWithCustomException extends BaseExample
+public class ReceiveLogsFanoutWithCustomError extends BaseExample
 {
-    private static final Logger log = LoggerFactory.getLogger(ReceiveLogsFanoutWithCustomException.class);
+    private static final Logger log = LoggerFactory.getLogger(ReceiveLogsFanoutWithCustomError.class);
 
     private static final String EXCHANGE = "fanout_logs";
 
@@ -15,7 +15,7 @@ public class ReceiveLogsFanoutWithCustomException extends BaseExample
     {
         final ExchangeClient client = ExchangeClient.fanout(options(), EXCHANGE);
 
-        client.subscribe(String.class, ReceiveLogsFanoutWithCustomException::handle);
+        client.subscribe(String.class, ReceiveLogsFanoutWithCustomError::handle);
         Thread.currentThread().join();
     }
 
