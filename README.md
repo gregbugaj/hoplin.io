@@ -15,7 +15,6 @@ To make working with RabbitMQ as simple as possible with minimum dependencies.
 ## Fanout Exchange Client
 ## Direct Exchange Client
 
-
 # RPC Client / Server
 
 ## RPC client
@@ -31,8 +30,11 @@ To make working with RabbitMQ as simple as possible with minimum dependencies.
 
 # Resources
 
-[RawRabbit]: https://github.com/pardahlman/RawRabbit
+[RabbitMQ](https://www.rabbitmq.com/)
 
-[EasyNetQ]: https://github.com/EasyNetQ/EasyNetQ
+[RawRabbit](https://github.com/pardahlman/RawRabbit)
+
+[EasyNetQ](https://github.com/EasyNetQ/EasyNetQ)
 
 
+OSSRH-43588

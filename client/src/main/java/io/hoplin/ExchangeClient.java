@@ -1,10 +1,9 @@
 package io.hoplin;
 
-import com.rabbitmq.client.AMQP;
 import io.hoplin.util.ClassUtil;
 
-import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -27,15 +26,6 @@ public interface ExchangeClient
     <T> void publish(final T message);
 
     /**
-     * Publish message to the queue with default routing key and supplied headers
-     * @param message the message to publish
-     * @param cfg the configurations associated with each message
-     * @param <T> the type of the message to publish
-     */
-
-    <T> void publishAsync(final T message, final Consumer<MessageConfiguration> cfg);
-
-    /**
      * Publish message to the queue with defined routingKey
      *
      * @param message the message to publish
@@ -45,14 +35,57 @@ public interface ExchangeClient
     <T> void publish(final T message, final String routingKey);
 
     /**
-     * Publish message to the queue with defined routingKey and headers
+     * Publish message to the queue with default routing key and supplied {@link MessageConfiguration}
+     *
+     * @param message the message to publish
+     * @param cfg the configurations associated with each message
+     * @param <T>
+     */
+    <T> void publish(final T message, final Consumer<MessageConfiguration> cfg);
+
+    /**
+     * Publish message to the queue with defined routingKey
      *
      * @param message the message to publish
      * @param routingKey the routing key to associate the message with
-     * @param headers the headers to add to the {@link AMQP.BasicProperties}
+     * @param cfg the configurations associated with each message
      * @param <T> the type of the message to publish
      */
-    <T> void publish(final T message, final String routingKey, final Map<String, Object> headers);
+    <T> void publish(final T message, final String routingKey, final Consumer<MessageConfiguration> cfg);
+
+    /**
+     * Publish message to the queue with default routing key and supplied {@link MessageConfiguration}
+     * @param message the message to publish
+     * @param <T> the type of the message to publish
+     */
+    <T> CompletableFuture<Void> publishAsync(final T message);
+
+    /**
+     * Publish message to the queue with defined routingKey
+     *
+     * @param message the message to publish
+     * @param routingKey the routing key to associate the message with
+     * @param <T> the type of the message to publish
+     */
+    <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey);
+
+    /**
+     * Publish message to the queue with default routing key and supplied {@link MessageConfiguration}
+     * @param message the message to publish
+     * @param cfg the configurations associated with each message
+     * @param <T> the type of the message to publish
+     */
+    <T> CompletableFuture<Void> publishAsync(final T message, final Consumer<MessageConfiguration> cfg);
+
+    /**
+     * Publish message to the queue with defined routingKey
+     *
+     * @param message the message to publish
+     * @param routingKey the routing key to associate the message with
+     * @param cfg the configurations associated with each message
+     * @param <T> the type of the message to publish
+     */
+    <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey, final Consumer<MessageConfiguration> cfg);
 
     /**
      * Add subscription and consume messages from the queue
@@ -83,16 +116,15 @@ public interface ExchangeClient
     /**
      * Create instance of {@link ExchangeClient}
      *
-     * @param type
-     * @param options
-     * @param binding
+     * @param options the connection options
+     * @param binding the binding to use
      * @return
      */
-    static ExchangeClient create(final ExchangeType type, final RabbitMQOptions options, final Binding binding)
+    static ExchangeClient create(final RabbitMQOptions options, final Binding binding)
     {
-        switch (type)
+        final String exchange = binding.getExchange();
+        switch (ExchangeType.fromValue(exchange))
         {
-
             case DIRECT:
                 return DirectExchangeClient.create(options, binding);
             case FANOUT:
@@ -100,10 +132,10 @@ public interface ExchangeClient
             case TOPIC:
                 return TopicExchangeClient.create(options, binding);
             case HEADER:
-                return null;
+                return HeaderExchangeClient.create(options, binding);
         }
 
-        throw new HoplinRuntimeException("Unhandled exchange type : "+ type);
+        throw new HoplinRuntimeException("Unhandled exchange type : "+ exchange);
     }
 
     /**
@@ -209,5 +241,23 @@ public interface ExchangeClient
             throw new IllegalArgumentException("Unable to determine exchange name");
 
         return topic(options, caller);
+    }
+
+    /**
+     * Create new {@link TopicExchangeClient}
+     * @see  HeaderExchangeClient#create(RabbitMQOptions, Binding)
+     */
+    static ExchangeClient header(final RabbitMQOptions options, final Binding binding)
+    {
+        return HeaderExchangeClient.create(options, binding);
+    }
+
+    /**
+     * Create new {@link TopicExchangeClient}
+     * @see  TopicExchangeClient#create(RabbitMQOptions, String)}
+     */
+    static ExchangeClient header(final RabbitMQOptions options, final String exchange)
+    {
+        return HeaderExchangeClient.create(options, exchange);
     }
 }

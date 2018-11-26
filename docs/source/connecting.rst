@@ -86,6 +86,7 @@ For complete control we can use the Exchange to Queue Binding builder.
 Client Types
 --------------
 
+
 * Direct
 * Fanout
 * Topic

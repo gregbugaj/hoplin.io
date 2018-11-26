@@ -140,27 +140,31 @@ public class BindingBuilder
 
     public static class HeaderExchangeRoutingKeyConfigurer extends RoutingKeyConfigurer <HeaderExchange, HeaderExchangeRoutingKeyConfigurer>
     {
-        private Map<String, String> arguments = new HashMap<>();
+        private Map<String, Object> arguments = new HashMap<>();
 
         public HeaderExchangeRoutingKeyConfigurer(final DestinationConfigurer configurer, final HeaderExchange exchange)
         {
             super(configurer, exchange.getName());
+            // setup defaults for the queue
             arguments.put("x-match", "all");
         }
 
         /**
-         * Add binding arguments
+         * Add binding arguments, for known property types and values
          * x-match property  can have 2 values: "any" or "all"
          *
          * @param key the key to add
          * @param value the value to add
          * @return
          */
-        public HeaderExchangeRoutingKeyConfigurer arg(final String key, final String value)
+        public HeaderExchangeRoutingKeyConfigurer withArgument(final String key, final Object value)
         {
+            if(key == null)
+                throw new IllegalArgumentException("Key can't be null");
+
             if("x-match".equalsIgnoreCase(key))
             {
-                if(!("any".equalsIgnoreCase(value) && "all".equalsIgnoreCase(value)))
+                if(!("any".equalsIgnoreCase(value.toString()) || "all".equalsIgnoreCase(value.toString())))
                     throw new IllegalArgumentException("x-match property  can have 2 values: \"any\" or \"all\" but got :" +value);
             }
 
@@ -174,17 +178,17 @@ public class BindingBuilder
          * @param arguments
          * @return
          */
-        public HeaderExchangeRoutingKeyConfigurer args(final Map<String, String> arguments)
+        public HeaderExchangeRoutingKeyConfigurer withArguments(final Map<String, String> arguments)
         {
-            arguments.forEach(this::arg);
+            Objects.requireNonNull(arguments);
+            arguments.forEach(this::withArgument);
             return this;
         }
 
         @Override
         public Binding build()
         {
-            final Map<String, Object> args = arguments.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            return new Binding(destination.queue.getName(), exchange, "", args);
+            return new Binding(destination.queue.getName(), exchange, "", arguments);
         }
     }
 }

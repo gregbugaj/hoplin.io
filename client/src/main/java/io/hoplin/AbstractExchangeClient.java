@@ -5,10 +5,10 @@ import com.rabbitmq.client.AMQP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -148,38 +148,69 @@ abstract class AbstractExchangeClient implements ExchangeClient
         client.basicConsume(binding.getQueue(), clazz, handler);
     }
 
-    @Override
-    public <T> void publish(final T message, final String routingKey)
-    {
-        publish(message, routingKey, Collections.emptyMap());
-    }
 
     @Override
     public <T> void publish(final T message)
     {
-        publishAsync(message, cfg->{});
+        publish(message, "", cfg->{});
     }
 
     @Override
-    public <T> void publish(final T message, final String routingKey, final Map<String, Object> headers)
+    public <T> void publish(final T message, final String routingKey)
+    {
+        publish(message, routingKey, cfg->{});
+    }
+
+    @Override
+    public <T> void publish(final T message, final Consumer<MessageConfiguration> cfg)
+    {
+        publish(message, "", cfg);
+    }
+
+    @Override
+    public <T> void publish(final T message, final String routingKey, final Consumer<MessageConfiguration> cfg)
     {
         Objects.requireNonNull(message);
-        Objects.requireNonNull(headers);
+        Objects.requireNonNull(routingKey);
+        Objects.requireNonNull(cfg);
 
         // Wrap our message original message
         final MessagePayload<T> payload = new MessagePayload<>(message);
         payload.setType(message.getClass());
-
         client.basicPublish(binding.getExchange(), routingKey, payload);
     }
 
     @Override
-    public <T> void publishAsync(final T message, final Consumer<MessageConfiguration> cfg)
+    public <T> CompletableFuture<Void> publishAsync(T message)
     {
+        return publishAsync(message, "", cfg->{});
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey)
+    {
+        return publishAsync(message, routingKey, cfg->{});
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> publishAsync(final T message, final Consumer<MessageConfiguration> cfg)
+    {
+        return publishAsync(message, "", cfg);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey, final Consumer<MessageConfiguration> cfg)
+    {
+        Objects.requireNonNull(message);
+        Objects.requireNonNull(routingKey);
+        Objects.requireNonNull(cfg);
+
+        final CompletableFuture<Void> promise = new CompletableFuture<>();
         // Wrap our message original message
         final MessagePayload<T> payload = new MessagePayload<>(message);
         payload.setType(message.getClass());
-
         client.basicPublish(binding.getExchange(), "", payload);
+
+        return promise;
     }
 }

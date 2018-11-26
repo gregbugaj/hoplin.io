@@ -212,7 +212,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         }
         catch (final Exception e)
         {
-            log.error("Unable to execute operation on  channel");
+            log.error("Unable to execute operation on  channel", e);
         }
 
         return null;
