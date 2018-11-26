@@ -14,20 +14,52 @@ Basic connection will look as follow
 
     host=localhost;virtualHost=vhost1;username=user;password=secret
 
+Below is the list of connection string options. When constructing a connection string, these options should be separated by a semicolon.
+
+
 
 Available keys
 --------------
 
-* host
-* virtualHost
-* username
-* password
-* requestedHeartbeat
-* timeout
-* product
-* platform
-* connectionRetries
-* connectionRetryDelay
+host
+++++
+The host name of the broker.
+This Host value is required.
+
+virtualHost
++++++++++++
+The virtual host to use.
+Default: /
+
+Port
+++++
+The port where the broker listens.
+Default: 5671 if the UseTls setting is set to true, otherwise the default value is 5672
+
+UserName
+++++++++
+The user name to use to connect to the broker.
+Default: guest
+
+Password
+++++++++
+The password to use to connect to the broker.
+Default: guest
+
+RequestedHeartbeat
+++++++++++++++++++
+The interval for the heartbeats between the client and the server.
+Default: 3 seconds
+
+ConnectionRetries
++++++++++++++++++++
+Number of connection retries
+Default: 3 seconds
+
+ConnectionRetryDelay
++++++++++++++++++++
+The time to wait before trying to reconnect to the broker if the connection is lost.
+Default: 10 seconds
 
 
 To set properties via code. Sensible default will be provided when new `RabbitMQOptions` object is created.

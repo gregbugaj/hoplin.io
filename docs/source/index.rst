@@ -22,8 +22,9 @@ A permissive MIT license allows using the library both in open-source and commer
    support
 
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`search`
+Help Us Improve the Docs
+------------------------
+
+If you'd like to contribute an improvement to the site, its source is `available on GitHub <https://github.com/gregbugaj/hoplin.io>`_.
+Simply fork the repository and submit a pull request. Thank you!
