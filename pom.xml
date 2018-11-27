@@ -2,17 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-<!--
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>8</version>
-    </parent>
--->
     <groupId>io.hoplin</groupId>
     <artifactId>hoplin-parent</artifactId>
-    <!--version>1.0-SNAPSHOT</version-->
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -34,9 +26,9 @@
     </licenses>
 
     <scm>
+        <url>https://github.com/gregbugaj/hoplin.io.git</url>
         <connection>scm:git:git://github.com/gregbugaj/hoplin.io.git</connection>
         <developerConnection>scm:git:ssh://git@github.com:gregbugaj/hoplin.io.git</developerConnection>
-        <url>https://github.com/gregbugaj/hoplin.io.git</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -82,6 +74,12 @@
         <version.maven-javadoc-plugin>2.10.4</version.maven-javadoc-plugin>
         <version.maven-deploy-plugin>2.8.2</version.maven-deploy-plugin>
         <version.nexus-staging-maven-plugin>1.6.7</version.nexus-staging-maven-plugin>
+
+        <!-- Don't sign artifacts unless the 'stage' or 'release' profile is active -->
+        <gpg.skip>true</gpg.skip>
+
+        <!-- When deploying, don't promote artifacts from staging repository unless 'release' profile is active -->
+        <autoReleaseAfterClose>false</autoReleaseAfterClose>
     </properties>
 
     <build>
@@ -187,6 +185,21 @@
     </build>
 
     <profiles>
+
+        <profile>
+            <id>release</id>
+            <properties>
+                <gpg.skip>false</gpg.skip>
+                <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </properties>
+        </profile>
+        <profile>
+            <id>stage</id>
+            <properties>
+                <gpg.skip>false</gpg.skip>
+            </properties>
+        </profile>
+
         <!-- GPG Signature on release -->
         <profile>
             <id>release-sign-artifacts</id>
