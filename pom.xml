@@ -64,6 +64,10 @@
     </distributionManagement>
 
     <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <jdk.version>1.8</jdk.version>
+
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.project.outputEncoding>UTF-8</project.project.outputEncoding>
@@ -94,11 +98,22 @@
                     <encoding>UTF-8</encoding>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <debug>true</debug>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${version.maven-deploy-plugin}</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
 
+          <!--
             <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>${version.maven-deploy-plugin}</version>
@@ -112,6 +127,7 @@
                     </execution>
                 </executions>
             </plugin>
+          -->
 
 
             <plugin>
@@ -119,13 +135,36 @@
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <version>${version.nexus-staging-maven-plugin}</version>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <serverId>sonatype-nexus-staging</serverId>
+                    <nexusUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2/</nexusUrl>
                 </configuration>
             </plugin>
 
+
+        <!--
+              <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>${version.nexus-staging-maven-plugin}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>${autoReleaseAfterClose}</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+
+        -->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -138,6 +177,7 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.3</version>
                 <configuration>
+                    <stagingRepository>/tmp/maven-snapshot</stagingRepository>
                     <localCheckout>true</localCheckout>
                     <pushChanges>false</pushChanges>
                     <mavenExecutorId>forked-path</mavenExecutorId>
@@ -168,6 +208,7 @@
 
                 <configuration>
                     <encoding>UTF-8</encoding>
+                    <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
 
                 <executions>
@@ -177,6 +218,7 @@
                         </goals>
                     </execution>
                 </executions>
+
             </plugin>
 
         </plugins>
