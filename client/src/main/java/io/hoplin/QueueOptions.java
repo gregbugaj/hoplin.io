@@ -14,6 +14,10 @@ public class QueueOptions
 
     private int maxInternalQueueSize = Integer.MAX_VALUE;
 
+    private  boolean publisherConfirms;
+
+    private int prefetchCount = 10;
+
     public static QueueOptions of(boolean autoAck, boolean keepMostRecent, int maxInternalQueueSize)
     {
         return new QueueOptions()
@@ -84,5 +88,21 @@ public class QueueOptions
     public boolean isKeepMostRecent()
     {
         return keepMostRecent;
+    }
+
+    public boolean isPublisherConfirms() {
+        return publisherConfirms;
+    }
+
+    public void setPublisherConfirms(boolean publisherConfirms) {
+        this.publisherConfirms = publisherConfirms;
+    }
+
+    public int getPrefetchCount() {
+        return prefetchCount;
+    }
+
+    public void setPrefetchCount(int prefetchCount) {
+        this.prefetchCount = prefetchCount;
     }
 }
