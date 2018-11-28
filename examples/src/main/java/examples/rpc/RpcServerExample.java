@@ -1,16 +1,13 @@
 package examples.rpc;
 
 import examples.BaseExample;
-import examples.LogDetail;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
 import io.hoplin.FanoutExchange;
-import io.hoplin.rpc.Rpc;
-import io.hoplin.rpc.RpcServer;
+import io.hoplin.rpc.DefaultRpcClient;
+import io.hoplin.rpc.RpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * RPC Server example
@@ -19,26 +16,27 @@ public class RpcServerExample extends BaseExample
 {
     private static final Logger log = LoggerFactory.getLogger(RpcServerExample.class);
 
-    public static void main(final String... args) {
+    public static void main(final String... args) throws InterruptedException
+    {
         final Binding binding = bind();
         log.info("Binding : {}", binding);
 
-        final RpcServer<LogDetail, String> server = Rpc.server(options(), binding);
-        server.start(RpcServerExample::handler);
+        final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient.create(options(), binding);
+        client.respondAsync(RpcServerExample::handler);
 
-        //Thread.currentThread().join();
+        Thread.currentThread().join();
     }
 
-    private static String handler(final LogDetail log)
+    private static LogDetailResponse handler(final LogDetailRequest log)
     {
-        return "ABC :"+ log;
+        return new LogDetailResponse("response", "info");
     }
 
     private static Binding bind()
     {
         return BindingBuilder
-                .bind()
-                .to(new FanoutExchange(""));
+                .bind("rpc.request.log")
+                .to(new FanoutExchange("rpc.logs"));
     }
 }
 

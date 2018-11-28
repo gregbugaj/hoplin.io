@@ -60,10 +60,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         try
         {
             final ConnectionProvider provider = ConnectionProvider.create(options);
-            final boolean results = provider.connect();
-
-            if(!results)
-                throw new IllegalStateException("Unable to connect to broker");
+            if(!provider.connect())
+                throw new IllegalStateException("Unable to connect to broker : "+ options);
 
             return provider;
         }

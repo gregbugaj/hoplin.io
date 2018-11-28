@@ -12,7 +12,7 @@ package io.hoplin;
  */
 public class FanoutExchange extends AbstractExchange
 {
-    public FanoutExchange(String name)
+    public FanoutExchange(final String name)
     {
         super(name);
     }

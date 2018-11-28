@@ -135,10 +135,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
         {
             final MessagePayload<?> requestMsg = codec.deserialize(body, MessagePayload.class);
             final O reply = handler.apply((I) requestMsg.getPayload());
-            final MessagePayload<O> replyMsg = new MessagePayload();
-            replyMsg.setPayload(reply);
-
-            return codec.serialize(replyMsg, MessagePayload.class);
+            return codec.serialize(new MessagePayload(reply), MessagePayload.class);
         }
         catch (final Exception e)
         {

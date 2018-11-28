@@ -43,28 +43,31 @@ public class ConnectionStringParser
             final String key = kv[0].trim();
             final String value = kv[1].trim();
 
-            if("host".equalsIgnoreCase(key))
-                options.setHost(value);
-            else if("virtualHost".equalsIgnoreCase(key))
-                options.setVirtualHost(value);
-            else if("username".equalsIgnoreCase(key))
-                options.setUser(value);
-            else if("password".equalsIgnoreCase(key))
-                options.setPassword(value); 
-            else if("requestedHeartbeat".equalsIgnoreCase(key))
-                options.setRequestedHeartbeat(Integer.parseInt(value));
-            else if("timeout".equalsIgnoreCase(key))
-                options.setConnectionTimeout(Integer.parseInt(value));
-             else if("product".equalsIgnoreCase(key))
-                options.setClientProperty("product", value, true);
-            else if("platform".equalsIgnoreCase(key))
-                options.setClientProperty("platform", value, true);
-            else if("connectionRetries".equalsIgnoreCase(key))
-                options.setConnectionRetries(Integer.parseInt(value));
-            else if("connectionRetryDelay".equalsIgnoreCase(key))
-                options.setConnectionRetryDelay(Long.parseLong(value));
-            else
-                throw new IllegalArgumentException("Unknown option : " + key);
+            switch (key.toLowerCase())
+            {
+                case "host" :
+                    options.setHost(value); break;
+                case "virtualhost" :
+                    options.setVirtualHost(value); break;
+                case "username" :
+                    options.setUser(value); break;
+                case "password" :
+                    options.setPassword(value); break;
+                case "requestedheartbeat" :
+                    options.setRequestedHeartbeat(Integer.parseInt(value)); break;
+                case "timeout" :
+                    options.setConnectionTimeout(Integer.parseInt(value)); break;
+                case "product" :
+                    options.setClientProperty("product", value, true); break;
+                case "platform" :
+                    options.setClientProperty("platform", value, true); break;
+                case "connectionretries" :
+                    options.setConnectionRetries(Integer.parseInt(value)); break;
+                case "connectionretrydelay" :
+                    options.setConnectionRetryDelay(Long.parseLong(value));break;
+                default:
+                    throw new IllegalArgumentException("Unknown option : " + key);
+            }
         }
 
         return options;

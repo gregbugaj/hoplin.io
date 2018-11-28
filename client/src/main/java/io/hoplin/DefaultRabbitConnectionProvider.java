@@ -94,6 +94,7 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
                 return false;
             }
         }
+
         else
         {
             long attempt = 0;

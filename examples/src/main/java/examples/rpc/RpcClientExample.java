@@ -5,7 +5,7 @@ import examples.LogDetail;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
 import io.hoplin.FanoutExchange;
-import io.hoplin.rpc.Rpc;
+import io.hoplin.rpc.DefaultRpcClient;
 import io.hoplin.rpc.RpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +24,12 @@ public class RpcClientExample extends BaseExample
     {
         final Binding binding = bind();
         log.info("Binding : {}", binding);
-        final RpcClient<LogDetail, String> client = Rpc.client(options(), binding);
 
-        request(client);
-//        asyncRequest(client);
+        // Blocking
+        final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient.create(options(), binding);
+        final LogDetailResponse response = client.request(new LogDetailRequest("Request message", "info"));
 
-        client.disconnect();
+        log.info("RPC response : {} ", response);
     }
 
     private static void request(RpcClient<LogDetail, String> client)
@@ -71,12 +71,12 @@ public class RpcClientExample extends BaseExample
         System.out.printf("time : " + e);
     }
 
+
     private static Binding bind()
     {
         return BindingBuilder
-                .bind()
-                .to(new FanoutExchange(""));
+                .bind("rpc.request.log")
+                .to(new FanoutExchange("rpc.logs"));
     }
-
 }
 

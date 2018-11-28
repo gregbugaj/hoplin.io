@@ -18,7 +18,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * Consumer responsible for receiving and handling RPC replies create server
+ * Consumer responsible for receiving and handling RPC replies created by the server
  */
 public class RpcCallerConsumer extends DefaultConsumer
 {
@@ -30,12 +30,14 @@ public class RpcCallerConsumer extends DefaultConsumer
 
     private final Executor executor;
 
+    private boolean strictAction = true;
+
     /**
      * Constructs a new instance and records its association to the passed-in channel.
      *
      * @param channel the channel to which this consumer is attached
      */
-    public RpcCallerConsumer(final Channel channel, Executor executor)
+    public RpcCallerConsumer(final Channel channel, final Executor executor)
     {
         super(channel);
         codec = new JsonCodec();
@@ -52,14 +54,17 @@ public class RpcCallerConsumer extends DefaultConsumer
     public void handleDelivery(final String consumerTag,
                                final Envelope envelope,
                                final AMQP.BasicProperties properties,
-                               final byte[] body) {
+                               final byte[] body)
+    {
         final String messageIdentifier = properties.getCorrelationId();
         final CompletableFuture<Object> action = bindings.remove(messageIdentifier);
 
-        if(action == null)
+        if(strictAction && action == null)
             throw new HoplinRuntimeException("Reply received without corresponding action : " + messageIdentifier);
-
-        handleReply(body, action);
+        else if(!strictAction && action == null)
+            return;
+        else
+            handleReply(body, action);
     }
 
     private void handleReply(final byte[] body, final CompletableFuture<Object> action)
@@ -68,7 +73,7 @@ public class RpcCallerConsumer extends DefaultConsumer
 
             if(log.isDebugEnabled())
             {
-                log.info("reply body : {}", new String(body));
+                log.debug("reply body : {}", new String(body));
             }
 
             try
