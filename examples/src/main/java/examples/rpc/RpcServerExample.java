@@ -3,9 +3,9 @@ package examples.rpc;
 import examples.BaseExample;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
-import io.hoplin.FanoutExchange;
-import io.hoplin.rpc.DefaultRpcClient;
-import io.hoplin.rpc.RpcClient;
+import io.hoplin.DirectExchange;
+import io.hoplin.rpc.DefaultRpcServer;
+import io.hoplin.rpc.RpcServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +21,8 @@ public class RpcServerExample extends BaseExample
         final Binding binding = bind();
         log.info("Binding : {}", binding);
 
-        final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient.create(options(), binding);
-        client.respondAsync(RpcServerExample::handler);
+        final RpcServer<LogDetailRequest, LogDetailResponse> server = DefaultRpcServer.create(options(), binding);
+        server.respondAsync(RpcServerExample::handler);
 
         Thread.currentThread().join();
     }
@@ -36,7 +36,9 @@ public class RpcServerExample extends BaseExample
     {
         return BindingBuilder
                 .bind("rpc.request.log")
-                .to(new FanoutExchange("rpc.logs"));
+                .to(new DirectExchange("exchange.rpc.logs"))
+                .build()
+                ;
     }
 }
 

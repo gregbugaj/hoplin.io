@@ -8,19 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.function.Function;
 
 /**
  * Default implementation of RPC client
- *
- * Todo : implement direct reply to pattern
- * https://www.rabbitmq.com/direct-reply-to.html
  *
  * @param <I> the request type
  * @param <O> the response type
@@ -31,10 +26,10 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
 
     private final RabbitMQClient client;
 
+    private JsonCodec codec;
+
     /** Channel we are communicating on */
     private final Channel channel;
-
-    private JsonCodec codec;
 
     /** Queue where we will listen for our RPC replies */
     private String replyToQueueName;
@@ -42,18 +37,9 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
     /** Exchange to send requests to */
     private final String exchange;
 
-    /** Routing key to use for requests */
-    private  String routingKey;
-
-    /** Queue name used for incoming request*/
-    private String requestQueueName;
-
     private RpcCallerConsumer consumer;
 
-    // executor that will acknowledgeExceptionally incoming RPC requests
-    private Executor executor;
-
-    private boolean replyConsumerInited;
+    private boolean directReply;
 
     public DefaultRpcClient(final RabbitMQOptions options, final Binding binding)
     {
@@ -63,16 +49,12 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         this.client = RabbitMQClient.create(options);
         this.channel = client.channel();
         this.codec = new JsonCodec();
-        this.executor  = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         this.exchange = binding.getExchange();
-        this.routingKey = binding.getRoutingKey();
         this.replyToQueueName = binding.getQueue();
 
-        if(routingKey == null)
-            routingKey = "";
-
         bind();
+        consumeReply();
     }
 
     /**
@@ -81,7 +63,6 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
      */
     private void bind()
     {
-        boolean directReply = false;
         if(replyToQueueName == null ||
                 replyToQueueName.isEmpty() ||
                 "amq.rabbitmq.reply-to".equalsIgnoreCase(replyToQueueName))
@@ -94,25 +75,18 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
             replyToQueueName = replyToQueueName+".reply-to." + UUID.randomUUID();
         }
 
-
-        requestQueueName = replyToQueueName;
-
-        log.info("Param ReplyTo     {}", replyToQueueName);
-        log.info("Param Request     {}", requestQueueName);
-        log.info("Param RoutingKey  {}", routingKey);
-        log.info("Param Exchange    {}", exchange);
+        log.info("Param Exchange    : {}", exchange);
+        log.info("Param ReplyTo     : {}", replyToQueueName);
+        log.info("Param directReply : {}", directReply);
 
         try
         {
-            channel.exchangeDeclare(exchange, "fanout",false, true, null);
-            // Declare the request queue where the responder will be waiting for the RPC requests
             if(!directReply)
             {
+                channel.exchangeDeclare(exchange, "direct",false, true, null);
                 channel.queueDeclare(replyToQueueName, false, false, true, null);
-                channel.queueDeclare(requestQueueName, false, false, true, null);
             }
         }
-
         catch (final Exception e)
         {
             throw new HoplinRuntimeException("Unable to bind queue", e);
@@ -121,45 +95,41 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
 
     private void consumeReply()
     {
-        if(replyConsumerInited)
-            return;
-
         try
         {
             consumer = new RpcCallerConsumer(channel);
             channel.basicConsume(replyToQueueName, true, consumer);
-            replyConsumerInited = true;
         }
         catch (final Exception e)
         {
-            throw new HoplinRuntimeException("Unable to start RPC client consumer", e);
-        }
-    }
-
-    private void consumeRequest(final Function<I, O> handler)
-    {
-        try
-        {
-
-            final AMQP.Queue.BindOk bindStatus = channel.queueBind(requestQueueName, exchange, routingKey);
-            log.info("consumeRequest requestQueueName :: {}", requestQueueName);
-            log.info("consumeRequest BindOk :: {}", bindStatus);
-
-            channel.basicQos(1);
-            channel.basicConsume(requestQueueName, false, new RpcResponderConsumer(channel, handler, executor));
-        }
-        catch (final Exception e)
-        {
-            throw new HoplinRuntimeException("Unable to start RPC server consumer", e);
+            throw new HoplinRuntimeException("Unable to start RPC client reply consumer", e);
         }
     }
 
     @Override
     public O request(I request)
     {
+       return request(request, "", Duration.ZERO);
+    }
+
+    @Override
+    public O request(I request, String routingKey)
+    {
+        return request(request, routingKey, Duration.ZERO);
+    }
+
+    @Override
+    public O request(I request, Duration timeout)
+    {
+        return request(request, "", timeout);
+    }
+
+    @Override
+    public O request(I request, String routingKey, Duration timeout)
+    {
         try
         {
-            return requestAsync(request).get();
+            return requestAsync(request, routingKey, timeout).get();
         }
         catch (final InterruptedException e)
         {
@@ -175,11 +145,31 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
 
     public CompletableFuture<O> requestAsync(final I request)
     {
-        consumeReply();
+        return requestAsync(request, "");
+    }
+
+    @Override
+    public CompletableFuture<O> requestAsync(final I request, final String routingKey)
+    {
+        return requestAsync(request, routingKey, Duration.ZERO);
+    }
+
+    @Override
+    public CompletableFuture<O> requestAsync(I request, Duration timeout)
+    {
+        return requestAsync(request, "", timeout);
+    }
+
+    @Override
+    public CompletableFuture<O> requestAsync(I request, String routingKey, Duration timeout)
+    {
+        if(routingKey == null)
+            throw new IllegalArgumentException("routingKey should not be null");
+
         final CompletableFuture<O> promise = new CompletableFuture<>();
         try
         {
-            log.info("Publishing to reply_to_queue, msg > {}, {}", replyToQueueName, request);
+            log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
             final String messageIdentifier =  UUID.randomUUID().toString();
 
             final AMQP.BasicProperties props = new AMQP.BasicProperties
@@ -198,12 +188,6 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         }
 
         return promise;
-    }
-
-    @Override
-    public void respondAsync(final Function<I, O> handler)
-    {
-        consumeRequest(handler);
     }
 
     /**

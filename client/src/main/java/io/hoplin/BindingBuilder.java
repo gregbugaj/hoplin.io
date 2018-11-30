@@ -134,7 +134,7 @@ public class BindingBuilder
         @Override
         public Binding build()
         {
-            return new Binding(destination.queue.getName(), exchange, destination.queue.getName(), Collections.emptyMap());
+            return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap());
         }
     }
 

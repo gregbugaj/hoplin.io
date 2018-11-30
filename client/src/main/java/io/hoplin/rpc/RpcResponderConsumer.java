@@ -104,7 +104,6 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
         });
     }
 
-
     private void nack(final Envelope envelope)
     {
         try

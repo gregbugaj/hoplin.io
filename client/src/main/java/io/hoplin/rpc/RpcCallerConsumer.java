@@ -57,6 +57,8 @@ public class RpcCallerConsumer extends DefaultConsumer
                                final byte[] body)
     {
         log.info(" handleDelivery : {}", envelope);
+        log.info(" handleDelivery : {}", properties);
+
         final String messageIdentifier = properties.getCorrelationId();
         final CompletableFuture<Object> action = bindings.remove(messageIdentifier);
 

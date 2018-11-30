@@ -1,7 +1,5 @@
 package io.hoplin;
 
-import io.hoplin.rpc.DefaultRpcClient;
-import io.hoplin.rpc.RpcClient;
 import io.hoplin.util.ClassUtil;
 
 import java.util.Objects;
@@ -261,17 +259,5 @@ public interface ExchangeClient
     static ExchangeClient header(final RabbitMQOptions options, final String exchange)
     {
         return HeaderExchangeClient.create(options, exchange);
-    }
-
-    /**
-     * Create new RPC client
-     *
-     * @param options the connection options
-     * @param binding the binding to use
-     * @return
-     */
-    static RpcClient rpc(final RabbitMQOptions options, final Binding binding)
-    {
-        return DefaultRpcClient.create(options, binding);
     }
 }

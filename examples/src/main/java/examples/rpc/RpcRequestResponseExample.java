@@ -22,6 +22,7 @@ public class RpcRequestResponseExample extends BaseExample
 
     public static void main(final String... args) throws IOException, InterruptedException
     {
+        /*
         final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient.create(options(), bind());
         // rpc response
         client.respondAsync((request)->
@@ -35,6 +36,7 @@ public class RpcRequestResponseExample extends BaseExample
         log.info("RPC response : {} ", response);
 
         Thread.currentThread().join();
+        */
     }
 
     private static Binding bind()

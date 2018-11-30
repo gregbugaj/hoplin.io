@@ -4,7 +4,7 @@ import examples.BaseExample;
 import examples.LogDetail;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
-import io.hoplin.FanoutExchange;
+import io.hoplin.DirectExchange;
 import io.hoplin.rpc.DefaultRpcClient;
 import io.hoplin.rpc.RpcClient;
 import org.slf4j.Logger;
@@ -71,12 +71,17 @@ public class RpcClientExample extends BaseExample
         System.out.printf("time : " + e);
     }
 
-
     private static Binding bind()
     {
+        // Queue = Name of the queue we will use for 'Reply-To' messages
+        // For Direct-Reply leave blank or use 'amq.rabbitmq.reply-to'
+        // If direct-reply is not used new queue will be create in format '{queumame}.response.{UUID}'
+        // Exchange = name of the exchange we want to bind our queue to
         return BindingBuilder
                 .bind("rpc.request.log")
-                .to(new FanoutExchange("rpc.logs"));
+                .to(new DirectExchange("exchange.rpc.logs"))
+                .build()
+                ;
     }
 }
 
