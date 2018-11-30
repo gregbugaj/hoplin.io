@@ -56,6 +56,7 @@ public class RpcCallerConsumer extends DefaultConsumer
                                final AMQP.BasicProperties properties,
                                final byte[] body)
     {
+        log.info(" handleDelivery : {}", envelope);
         final String messageIdentifier = properties.getCorrelationId();
         final CompletableFuture<Object> action = bindings.remove(messageIdentifier);
 

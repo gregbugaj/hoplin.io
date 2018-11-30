@@ -31,17 +31,22 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
 
     private final RabbitMQClient client;
 
-    private final Binding binding;
-
+    /** Channel we are communicating on */
     private final Channel channel;
 
     private JsonCodec codec;
 
-    // Queue where we send our request to
-    private String requestQueueName;
+    /** Queue where we will listen for our RPC replies */
+    private String replyToQueueName;
 
-    // Queue where we will listen for our RPC replies
-    private String replyQueue;
+    /** Exchange to send requests to */
+    private final String exchange;
+
+    /** Routing key to use for requests */
+    private  String routingKey;
+
+    /** Queue name used for incoming request*/
+    private String requestQueueName;
 
     private RpcCallerConsumer consumer;
 
@@ -57,9 +62,15 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
 
         this.client = RabbitMQClient.create(options);
         this.channel = client.channel();
-        this.binding = binding;
         this.codec = new JsonCodec();
         this.executor  = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        this.exchange = binding.getExchange();
+        this.routingKey = binding.getRoutingKey();
+        this.replyToQueueName = binding.getQueue();
+
+        if(routingKey == null)
+            routingKey = "";
 
         bind();
     }
@@ -70,29 +81,45 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
      */
     private void bind()
     {
-        requestQueueName = binding.getQueue();
-        if(requestQueueName == null || requestQueueName.isEmpty())
-            throw new IllegalStateException("Queue name was expected");
+        boolean directReply = false;
+        if(replyToQueueName == null ||
+                replyToQueueName.isEmpty() ||
+                "amq.rabbitmq.reply-to".equalsIgnoreCase(replyToQueueName))
+        {
+            replyToQueueName =  "amq.rabbitmq.reply-to";
+            directReply = true;
+        }
+        else
+        {
+            replyToQueueName = replyToQueueName+".reply-to." + UUID.randomUUID();
+        }
 
-        replyQueue = requestQueueName+".response." + UUID.randomUUID();
-        log.info("Request/Reply queues : {}, {}", requestQueueName, replyQueue);
+
+        requestQueueName = replyToQueueName;
+
+        log.info("Param ReplyTo     {}", replyToQueueName);
+        log.info("Param Request     {}", requestQueueName);
+        log.info("Param RoutingKey  {}", routingKey);
+        log.info("Param Exchange    {}", exchange);
 
         try
         {
+            channel.exchangeDeclare(exchange, "fanout",false, true, null);
             // Declare the request queue where the responder will be waiting for the RPC requests
-            final Channel channel = client.channel();
-            channel.queueDeclare(requestQueueName, false, false, false, null);
-            // delete data
-            channel.queueDeclare(replyQueue, false, false, true, null);
+            if(!directReply)
+            {
+                channel.queueDeclare(replyToQueueName, false, false, true, null);
+                channel.queueDeclare(requestQueueName, false, false, true, null);
+            }
         }
+
         catch (final Exception e)
         {
             throw new HoplinRuntimeException("Unable to bind queue", e);
         }
     }
 
-
-    private synchronized void consumeReply()
+    private void consumeReply()
     {
         if(replyConsumerInited)
             return;
@@ -100,8 +127,7 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         try
         {
             consumer = new RpcCallerConsumer(channel);
-            final Channel channel = client.channel();
-            channel.basicConsume(replyQueue, true, consumer);
+            channel.basicConsume(replyToQueueName, true, consumer);
             replyConsumerInited = true;
         }
         catch (final Exception e)
@@ -110,11 +136,14 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         }
     }
 
-    private void consumeRequest(Function<I, O> handler)
+    private void consumeRequest(final Function<I, O> handler)
     {
         try
         {
-            final Channel channel = client.channel();
+
+            final AMQP.Queue.BindOk bindStatus = channel.queueBind(requestQueueName, exchange, routingKey);
+            log.info("consumeRequest requestQueueName :: {}", requestQueueName);
+            log.info("consumeRequest BindOk :: {}", bindStatus);
 
             channel.basicQos(1);
             channel.basicConsume(requestQueueName, false, new RpcResponderConsumer(channel, handler, executor));
@@ -147,24 +176,20 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
     public CompletableFuture<O> requestAsync(final I request)
     {
         consumeReply();
-
         final CompletableFuture<O> promise = new CompletableFuture<>();
-
         try
         {
-            log.info("Publishing reply_queue, msg > {}, {}", replyQueue, request);
-
-            final UUID uuid = UUID.randomUUID();
-            final String messageIdentifier = uuid.toString();
+            log.info("Publishing to reply_to_queue, msg > {}, {}", replyToQueueName, request);
+            final String messageIdentifier =  UUID.randomUUID().toString();
 
             final AMQP.BasicProperties props = new AMQP.BasicProperties
                     .Builder()
                     .correlationId(messageIdentifier)
-                    .replyTo(replyQueue)
+                    .replyTo(replyToQueueName)
                     .build();
 
             consumer.bind(messageIdentifier, promise);
-            channel.basicPublish("", requestQueueName, props, createRequestPayload(request));
+            channel.basicPublish(exchange, routingKey, props, createRequestPayload(request));
         }
         catch (final IOException e)
         {
@@ -203,7 +228,7 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         return codec.serialize(msg);
     }
 
-    public void disconnect() throws IOException
+    public void close() throws IOException
     {
         if(client != null)
             client.disconnect();

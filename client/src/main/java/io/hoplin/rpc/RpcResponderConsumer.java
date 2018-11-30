@@ -63,6 +63,9 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
                                final AMQP.BasicProperties properties,
                                final byte[] body)
     {
+
+        log.info("handleDelivery : {}", envelope);
+
         // 1 : Perform the action required in the RPC request
         CompletableFuture
                 .supplyAsync(()-> dispatch(body), executor)
