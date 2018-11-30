@@ -3,6 +3,7 @@ package io.hoplin.rpc;
 import io.hoplin.Binding;
 import io.hoplin.RabbitMQOptions;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -40,6 +41,18 @@ public class DefaultRpClientServer<I, O> implements  RpClientServer<I, O>
     }
 
     @Override
+    public O request(I request, Duration timeout)
+    {
+        return client.request(request, timeout);
+    }
+
+    @Override
+    public O request(I request, String routingKey, Duration timeout)
+    {
+        return client.request(request, routingKey, timeout);
+    }
+
+    @Override
     public CompletableFuture<O> requestAsync(I request)
     {
         return client.requestAsync(request);
@@ -49,6 +62,18 @@ public class DefaultRpClientServer<I, O> implements  RpClientServer<I, O>
     public CompletableFuture<O> requestAsync(I request, String routingKey)
     {
         return client.requestAsync(request, routingKey);
+    }
+
+    @Override
+    public CompletableFuture<O> requestAsync(I request, Duration timeout)
+    {
+        return client.requestAsync(request, timeout);
+    }
+
+    @Override
+    public CompletableFuture<O> requestAsync(I request, String routingKey, Duration timeout)
+    {
+        return client.requestAsync(request, routingKey, timeout);
     }
 
     @Override
