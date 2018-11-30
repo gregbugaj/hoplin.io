@@ -19,6 +19,12 @@ public class DefaultBatchClient implements BatchClient
     }
 
     @Override
+    public UUID continueWith(UUID batchId, Consumer<BatchContext> context)
+    {
+        return null;
+    }
+
+    @Override
     public void cancel(UUID batchId)
     {
 
