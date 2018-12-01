@@ -25,7 +25,7 @@ public interface BatchClient
      * @param context the {@link BatchContext} associated with the request
      * @return
      */
-    UUID continueWith(UUID batchId, final Consumer<BatchContext> context);
+    UUID continueWith(final UUID batchId, final Consumer<BatchContext> context);
 
     /**
      * Cancel pending or not started batches

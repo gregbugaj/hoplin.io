@@ -115,6 +115,11 @@ public interface RabbitMQClient
      */
     <T> void basicConsume(final String queue, final Class<T> clazz, final  BiConsumer<T, MessageContext> handler);
 
+    <T> void basicConsume(String queue,
+                          QueueOptions options,
+                          Class<T> clazz,
+                          BiConsumer<T, MessageContext> handler);
+
     /**
      * Consume message create the queue
      *

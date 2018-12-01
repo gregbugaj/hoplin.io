@@ -22,7 +22,7 @@ public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy
 
     @SuppressWarnings("unchecked")
     @Override
-    public AckStrategy handleConsumerError(final ConsumerExecutionContext context, final Throwable throwable)
+    public AckStrategy handleConsumerError(final MessageContext context, final Throwable throwable)
     {
         if(context != null)
         {

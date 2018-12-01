@@ -27,6 +27,7 @@ public class EmitLogFanout extends BaseExample
         {
             client.publish("Msg : " + System.currentTimeMillis());
             Thread.sleep(100L);
+            break;
         }
         //        Thread.currentThread().join();
     }

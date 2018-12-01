@@ -17,6 +17,13 @@ import java.util.function.Consumer;
  */
 public interface ExchangeClient
 {
+
+    /**
+     * Get the underlying RabbitMq client
+     * @return
+     */
+    RabbitMQClient getMqClient();
+
     /**
      * Publish message to the queue with default routing key
      *

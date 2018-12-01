@@ -9,10 +9,10 @@ import io.hoplin.json.JsonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -24,7 +24,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
 
     private final QueueOptions queueOptions;
 
-    private ArrayListMultimap<Class, Consumer> handlers = ArrayListMultimap.create();
+    private ArrayListMultimap<Class, BiConsumer> handlers = ArrayListMultimap.create();
 
     private Executor executor;
 
@@ -73,9 +73,10 @@ public class DefaultQueueConsumer extends DefaultConsumer
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void handleDelivery(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+    public void handleDelivery(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+    {
         AckStrategy ack;
-        final ConsumerExecutionContext context = ConsumerExecutionContext.create(consumerTag, envelope, properties);
+        final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
 
         try
         {
@@ -84,7 +85,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
             final MessagePayload message = codec.deserialize(body, MessagePayload.class);
             final Object val = message.getPayload();
             final Class<?> typeAsClass = message.getTypeAsClass();
-            final Collection<Consumer> consumers = handlers.get(typeAsClass);
+            final Collection<BiConsumer> consumers = handlers.get(typeAsClass);
             final List<Throwable> exceptions = new ArrayList<>();
             final int handlerSize = consumers.size();
 
@@ -94,18 +95,18 @@ public class DefaultQueueConsumer extends DefaultConsumer
             }
             else if(handlerSize == 1)
             {
-                final Map.Entry<Class, Consumer> entry = handlers.entries().iterator().next();
+                final Map.Entry<Class, BiConsumer> entry = handlers.entries().iterator().next();
                 if(!isExpectedType(entry.getKey(), typeAsClass))
                 {
                     throw new IllegalArgumentException("Expected type does not match handler type : "+ entry.getKey()+", " + typeAsClass);
                 }
             }
 
-            for(final Consumer handler : consumers)
+            for(final BiConsumer handler : consumers)
             {
                 try
                 {
-                    handler.accept(val);
+                    handler.accept(val, context);
                 }
                 catch (final Exception e)
                 {
@@ -139,7 +140,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
      * @param ack the {@link AckStrategy} to use
      */
     private void acknowledge(final Channel channel,
-                             final ConsumerExecutionContext context,
+                             final MessageContext context,
                              final AckStrategy ack)
     {
         try
@@ -183,7 +184,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
      * @param handler
      * @param <T>
      */
-    public synchronized <T> void addHandler(final Class<T> clazz, final Consumer<T> handler)
+    public synchronized <T> void addHandler(final Class<T> clazz, final BiConsumer<T, MessageContext> handler)
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
@@ -192,8 +193,9 @@ public class DefaultQueueConsumer extends DefaultConsumer
     }
 
     @Override
-    public void handleCancel(final String consumerTag) {
-        // consumer has been cancelled unexpectedly
+    public void handleCancel(final String consumerTag)
+    {
+        // TODO : consumer has been cancelled unexpectedly
         throw new HoplinRuntimeException("Not yet implemented");
     }
 }

@@ -71,8 +71,8 @@ abstract class AbstractExchangeClient implements ExchangeClient
         {
             // binding
             String bindingKey = routingKey;
-            if(Strings.isNullOrEmpty(routingKey))
-                bindingKey = "#";
+            if(routingKey == null)
+                bindingKey = "";
 
             boolean autoDelete = false;
             if(Strings.isNullOrEmpty(queueName))
@@ -148,6 +148,11 @@ abstract class AbstractExchangeClient implements ExchangeClient
         client.basicConsume(binding.getQueue(), clazz, handler);
     }
 
+    @Override
+    public RabbitMQClient getMqClient()
+    {
+        return client;
+    }
 
     @Override
     public <T> void publish(final T message)

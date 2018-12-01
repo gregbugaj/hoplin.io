@@ -9,7 +9,7 @@ public interface ConsumerErrorStrategy
     * @param throwable the exception that we try to handle
     * @return
     */
-   default AckStrategy handleConsumerError(final ConsumerExecutionContext context, final Throwable throwable)
+   default AckStrategy handleConsumerError(final MessageContext context, final Throwable throwable)
    {
       return AcknowledgmentStrategies.NACK_WITH_REQUEUE.strategy();
    }
@@ -20,7 +20,7 @@ public interface ConsumerErrorStrategy
     * @param context
     * @return
     */
-   default AckStrategy handleConsumerCancelled(final ConsumerExecutionContext context)
+   default AckStrategy handleConsumerCancelled(final MessageContext context)
    {
       return AcknowledgmentStrategies.NACK_WITH_REQUEUE.strategy();
    }

@@ -16,7 +16,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 /**
  * Default implementation of {@link RabbitMQClient}
@@ -72,14 +71,15 @@ public class DefaultRabbitMQClient implements RabbitMQClient
     @Override
     public <T> void basicConsume(final String queue, final Class<T> clazz, final BiConsumer<T, MessageContext> handler)
     {
-        throw new HoplinRuntimeException("BiConsumer not implemented");
+        basicConsume(queue, QueueOptions.of(true), clazz, handler);
     }
+
 
     @Override
     public synchronized <T> void basicConsume(final String queue,
-                                 final QueueOptions options,
-                                 final Class<T> clazz,
-                                 final java.util.function.Consumer<T> handler)
+                                              final QueueOptions options,
+                                              final Class<T> clazz,
+                                              final BiConsumer<T, MessageContext> handler)
     {
         Objects.requireNonNull(queue);
         Objects.requireNonNull(clazz);
@@ -123,6 +123,16 @@ public class DefaultRabbitMQClient implements RabbitMQClient
             throw new HoplinRuntimeException("Unable to subscribe messages", e);
         }
     }
+
+    @Override
+    public synchronized <T> void basicConsume(final String queue,
+                                 final QueueOptions options,
+                                 final Class<T> clazz,
+                                 final java.util.function.Consumer<T> handler)
+    {
+        basicConsume( queue, options, clazz, (val, context) ->  handler.accept(val));
+    }
+
 
     private void confirmedAck(long deliveryTag, boolean multiple)
     {

@@ -1,8 +1,10 @@
 package examples.logfanout;
 
+import com.rabbitmq.client.AMQP;
 import examples.BaseExample;
 import io.hoplin.ExchangeClient;
 import io.hoplin.FanoutExchangeClient;
+import io.hoplin.MessageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +22,9 @@ public class ReceiveLogsFanout extends BaseExample
         Thread.currentThread().join();
     }
 
-    private static void handle(final String msg)
+    private static void handle(final String msg, final MessageContext context)
     {
-        log.info("Incoming msg : {}", msg);
+        log.info("Incoming context >  {}", context);
+        log.info("Incoming msg     >  {}", msg);
     }
 }

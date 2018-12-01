@@ -18,23 +18,25 @@ public class BatchProcessingExample extends BaseExample
 {
     private static final Logger log = LoggerFactory.getLogger(RpcClientExample.class);
 
-    public static void main(final String... args) throws IOException
+    public static void main(final String... args) throws IOException, InterruptedException
     {
         final Binding binding = bind();
         log.info("Binding : {}", binding);
 
-        final BatchClient client = new DefaultBatchClient();
+        final BatchClient client = new DefaultBatchClient(options(), bind());
         final UUID batchId = client.startNew(context ->
         {
-            context.enque(() -> new LogDetail("Msg : " + System.nanoTime(), "info"));
-            context.enque(() -> new LogDetail("Msg : " + System.nanoTime(), "warn"));
+            context.enque(() -> new LogDetail("Msg >> " + System.nanoTime(), "info"));
+            context.enque(() -> new LogDetail("Msg  >> " + System.nanoTime(), "warn"));
         });
+
+        Thread.currentThread().join();
     }
 
     private static Binding bind()
     {
         return BindingBuilder
-                .bind("batch.request")
+                .bind("batch.documents")
                 .to(new DirectExchange("exchange.batch"))
                 .build()
                 ;
