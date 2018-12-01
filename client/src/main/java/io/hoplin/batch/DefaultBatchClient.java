@@ -1,19 +1,18 @@
 package io.hoplin.batch;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.*;
 import io.hoplin.json.JsonCodec;
 import io.hoplin.rpc.DefaultRpcClient;
-import io.hoplin.rpc.RpcCallerConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -35,6 +34,8 @@ public class DefaultBatchClient implements BatchClient
     private final String exchange;
 
     private boolean directReply;
+
+    private Multimap<UUID, UUID> batches = ArrayListMultimap.create();
 
     public DefaultBatchClient(final RabbitMQOptions options, final Binding binding)
     {
@@ -95,47 +96,67 @@ public class DefaultBatchClient implements BatchClient
         Objects.requireNonNull(consumer);
         final UUID batchId = UUID.randomUUID();
         final BatchContext context = new BatchContext();
+
         consumer.accept(context);
 
         final List<Object> tasks = context.getSubmittedTasks();
         if(tasks != null)
         {
+            int total = tasks.size();
+            int index = 0;
+
             for (final Object task : tasks)
             {
-                log.info("Task : {}", task);
-                basicPublish(task, "", Duration.ZERO);
+                final Optional<UUID> taskId = basicPublish(batchId, task, "");
+                if (taskId.isPresent())
+                {
+                    batches.put(batchId, taskId.get());
+                }
+                ++index;
+
+                log.info("Added task [{} of {}]: {} : {}", index, total, taskId, task);
             }
         }
 
         return batchId;
     }
 
-    public CompletableFuture basicPublish(Object request, String routingKey, Duration timeout)
+    /**
+     *
+     * @param batchId
+     * @param request
+     * @param routingKey
+     * @param <T>
+     * @return
+     */
+    private <T> Optional<UUID> basicPublish(final UUID batchId, T request, String routingKey)
     {
         if(routingKey == null)
             throw new IllegalArgumentException("routingKey should not be null");
 
-        final CompletableFuture promise = new CompletableFuture<>();
         try
         {
             log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
             final String messageIdentifier =  UUID.randomUUID().toString();
+            final Map<String, Object> headers = new HashMap<>();
+            headers.put("x-batch-id", batchId);
 
             final AMQP.BasicProperties props = new AMQP.BasicProperties
                     .Builder()
                     .correlationId(messageIdentifier)
                     .replyTo(replyToQueueName)
+                    .headers(headers)
                     .build();
 
             channel.basicPublish(exchange, routingKey, props, createRequestPayload(request));
+            return Optional.of(batchId);
         }
         catch (final IOException e)
         {
-            promise.completeExceptionally(e);
             log.error("Unable to send request", e);
         }
 
-        return promise;
+        return Optional.empty();
     }
 
     @Override

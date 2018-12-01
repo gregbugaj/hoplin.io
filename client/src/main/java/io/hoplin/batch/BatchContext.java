@@ -19,15 +19,26 @@ public class BatchContext
     /** Time the batch was completed */
     private Date completedAt;
 
-    public <T> void enque(final Supplier<T> task)
+    /**
+     * Enque new batch request
+     *
+     * @param taskSupplier
+     * @param <T>
+     */
+    public <T> void enque(final Supplier<T> taskSupplier)
     {
-        Objects.requireNonNull(task);
-        final T value = task.get();
-        if(value == null)
-            throw new NullPointerException("Task can't be null");
-        tasks.add(value);
+        Objects.requireNonNull(taskSupplier);
+        final T taskMessage = taskSupplier.get();
+        if(taskMessage == null)
+            throw new NullPointerException("Task message can't be null");
+
+        tasks.add(taskMessage);
     }
 
+    /**
+     * Get list of sumbitted tasks
+     * @return
+     */
     protected List<Object> getSubmittedTasks()
     {
         return tasks;
