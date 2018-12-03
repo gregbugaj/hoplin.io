@@ -32,12 +32,17 @@ public class ReceiveBatchJob extends BaseExample
     {
         final AMQP.BasicProperties properties = context.getProperties();
         final String replyTo = properties.getReplyTo();
+        final String correlationId = properties.getCorrelationId();
+        final Object batchId = properties.getHeaders().get("x-batch-id");
 
-        log.info("Incoming context >  {}", context);
-        log.info("Incoming replyTo >  {}", replyTo);
-        log.info("Incoming msg     >  {}", msg);
+        log.info("Incoming context        >  {}", context);
+        log.info("Incoming replyTo        >  {}", replyTo);
+        log.info("Incoming msg            >  {}", msg);
+        log.info("Incoming correlationId  >  {}", correlationId);
+        log.info("Incoming batchId        >  {}", batchId);
 
         LogDetail reply = new LogDetail("Reply Message", "WARN");
+        
         mqClient.basicPublish("", replyTo, reply);
     }
 

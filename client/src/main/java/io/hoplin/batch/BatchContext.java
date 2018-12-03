@@ -1,9 +1,6 @@
 package io.hoplin.batch;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -11,7 +8,9 @@ import java.util.function.Supplier;
  */
 public class BatchContext
 {
-    private List<Object> tasks = new ArrayList<>();
+    private final UUID batchId = UUID.randomUUID();
+
+    private List<BatchContextTask> tasks = new ArrayList<>();
 
     /** Time the batch was started */
     private Date startedAt;
@@ -29,18 +28,28 @@ public class BatchContext
     {
         Objects.requireNonNull(taskSupplier);
         final T taskMessage = taskSupplier.get();
+
         if(taskMessage == null)
             throw new NullPointerException("Task message can't be null");
 
-        tasks.add(taskMessage);
+        tasks.add(new BatchContextTask(taskMessage));
     }
 
     /**
-     * Get list of sumbitted tasks
+     * Get list of submitted tasks
      * @return
      */
-    protected List<Object> getSubmittedTasks()
+    protected List<BatchContextTask> getSubmittedTasks()
     {
         return tasks;
+    }
+
+    /**
+     * Id that identifies this batch
+     * @return
+     */
+    public UUID getBatchId()
+    {
+        return batchId;
     }
 }

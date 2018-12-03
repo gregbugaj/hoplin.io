@@ -1,4 +1,4 @@
-package io.hoplin.rpc;
+package io.hoplin.batch;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -10,7 +10,9 @@ import io.hoplin.json.JsonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -19,34 +21,31 @@ import java.util.concurrent.Executors;
 /**
  * Consumer responsible for receiving and handling RPC replies created by the server
  */
-public class RpcCallerConsumer extends DefaultConsumer
+public class BatchReplyConsumer extends DefaultConsumer
 {
-    private static final Logger log = LoggerFactory.getLogger(RpcCallerConsumer.class);
-
-    private ConcurrentHashMap<String, CompletableFuture> bindings = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(BatchReplyConsumer.class);
 
     private JsonCodec codec;
 
     private final Executor executor;
-
-    private boolean strictAction = true;
 
     /**
      * Constructs a new instance and records its association to the passed-in channel.
      *
      * @param channel the channel to which this consumer is attached
      */
-    public RpcCallerConsumer(final Channel channel, final Executor executor)
+    public BatchReplyConsumer(final Channel channel, final ConcurrentHashMap<UUID, BatchContext> batches, final Executor executor)
     {
         super(channel);
         codec = new JsonCodec();
         this.executor = Objects.requireNonNull(executor);
     }
 
-    public RpcCallerConsumer(final Channel channel)
+    public BatchReplyConsumer(final Channel channel, final ConcurrentHashMap<UUID, BatchContext> batches)
     {
-        this(channel, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+        this(channel, batches, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
     }
+
 
     @SuppressWarnings("unchecked")
     @Override
@@ -55,19 +54,15 @@ public class RpcCallerConsumer extends DefaultConsumer
                                final AMQP.BasicProperties properties,
                                final byte[] body)
     {
-        log.info(" handleDelivery : {}", envelope);
-        log.info(" handleDelivery : {}", properties);
+        log.info("handleDelivery : {} > {}", properties , envelope);
 
+        final Map<String, Object> headers = properties.getHeaders();
+        final String batchId = headers.getOrDefault("x-batch-id", "").toString();
         final String messageIdentifier = properties.getCorrelationId();
-        final CompletableFuture<Object> action = bindings.remove(messageIdentifier);
 
-        if(strictAction && action == null)
-            throw new HoplinRuntimeException("Reply received without corresponding action : " + messageIdentifier);
-        else if(!strictAction && action == null)
-            return;
-        else
-            handleReply(body, action);
+        log.info("handleDelivery [batchId, messageIdentifier] : {} > {}", batchId , messageIdentifier);
     }
+
 
     private void handleReply(final byte[] body, final CompletableFuture<Object> action)
     {
@@ -90,20 +85,6 @@ public class RpcCallerConsumer extends DefaultConsumer
             }
 
         }, executor);
-    }
-
-    /**
-     * Bind new message to specific {@link CompletableFuture}
-     *
-     * @param correlationId the id to bind reply message to
-     * @param promise the future to complete
-     */
-    public void bind(final String correlationId, final CompletableFuture<?> promise)
-    {
-        Objects.requireNonNull(correlationId);
-        Objects.requireNonNull(promise);
-
-        bindings.put(correlationId, promise);
     }
 
     private MessagePayload<?> deserializeReplyPayload(final byte[] payload)

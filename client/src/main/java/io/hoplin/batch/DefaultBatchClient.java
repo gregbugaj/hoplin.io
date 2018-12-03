@@ -1,7 +1,5 @@
 package io.hoplin.batch;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.*;
@@ -11,9 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class DefaultBatchClient implements BatchClient
@@ -35,7 +32,9 @@ public class DefaultBatchClient implements BatchClient
 
     private boolean directReply;
 
-    private Multimap<UUID, UUID> batches = ArrayListMultimap.create();
+    private ConcurrentHashMap<UUID, BatchContext> batches = new ConcurrentHashMap<>();
+
+    private BatchReplyConsumer consumer;
 
     public DefaultBatchClient(final RabbitMQOptions options, final Binding binding)
     {
@@ -50,7 +49,7 @@ public class DefaultBatchClient implements BatchClient
         this.replyToQueueName = binding.getQueue();
 
         bind();
-        //consumeReply();
+        consumeReply();
     }
 
     /**
@@ -94,26 +93,29 @@ public class DefaultBatchClient implements BatchClient
     public UUID startNew(final Consumer<BatchContext> consumer)
     {
         Objects.requireNonNull(consumer);
-        final UUID batchId = UUID.randomUUID();
         final BatchContext context = new BatchContext();
+        final UUID batchId = context.getBatchId();
 
         consumer.accept(context);
+        batches.put(batchId, context);
 
-        final List<Object> tasks = context.getSubmittedTasks();
+        final List<BatchContextTask> tasks = context.getSubmittedTasks();
+
         if(tasks != null)
         {
             int total = tasks.size();
             int index = 0;
 
-            for (final Object task : tasks)
+            for (final BatchContextTask task : tasks)
             {
-                final Optional<UUID> taskId = basicPublish(batchId, task, "");
+                final Object message = task.getMessage();
+                final Optional<UUID> taskId = basicPublish(batchId, message, "");
+
                 if (taskId.isPresent())
                 {
-                    batches.put(batchId, taskId.get());
+                    task.setTaskId(taskId.get());
                 }
                 ++index;
-
                 log.info("Added task [{} of {}]: {} : {}", index, total, taskId, task);
             }
         }
@@ -129,7 +131,7 @@ public class DefaultBatchClient implements BatchClient
      * @param <T>
      * @return
      */
-    private <T> Optional<UUID> basicPublish(final UUID batchId, T request, String routingKey)
+    private <T> Optional<UUID> basicPublish(final UUID batchId, final T request, final String routingKey)
     {
         if(routingKey == null)
             throw new IllegalArgumentException("routingKey should not be null");
@@ -139,7 +141,7 @@ public class DefaultBatchClient implements BatchClient
             log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
             final String messageIdentifier =  UUID.randomUUID().toString();
             final Map<String, Object> headers = new HashMap<>();
-            headers.put("x-batch-id", batchId);
+            headers.put("x-batch-id", batchId.toString());
 
             final AMQP.BasicProperties props = new AMQP.BasicProperties
                     .Builder()
@@ -160,7 +162,7 @@ public class DefaultBatchClient implements BatchClient
     }
 
     @Override
-    public UUID continueWith(final UUID batchId, Consumer<BatchContext> context)
+    public UUID continueWith(final UUID batchId, final Consumer<BatchContext> context)
     {
         return null;
     }
@@ -176,4 +178,17 @@ public class DefaultBatchClient implements BatchClient
         return codec.serialize(new MessagePayload<>(request));
     }
 
+
+    private void consumeReply()
+    {
+        try
+        {
+            consumer = new BatchReplyConsumer(channel, batches);
+            channel.basicConsume(replyToQueueName, true, consumer);
+        }
+        catch (final Exception e)
+        {
+            throw new HoplinRuntimeException("Unable to start RPC client reply consumer", e);
+        }
+    }
 }

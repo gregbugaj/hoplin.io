@@ -30,6 +30,7 @@ public class BatchProcessingExample extends BaseExample
             context.enque(() -> new LogDetail("Msg  >> " + System.nanoTime(), "warn"));
         });
 
+
         Thread.currentThread().join();
     }
 
