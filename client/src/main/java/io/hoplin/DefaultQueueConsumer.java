@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * Default consumer
@@ -24,7 +23,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
 
     private final QueueOptions queueOptions;
 
-    private ArrayListMultimap<Class, BiConsumer> handlers = ArrayListMultimap.create();
+    private ArrayListMultimap<Class, MethodReference> handlers = ArrayListMultimap.create();
 
     private Executor executor;
 
@@ -84,35 +83,47 @@ public class DefaultQueueConsumer extends DefaultConsumer
 
             final MessagePayload message = codec.deserialize(body, MessagePayload.class);
             final Object val = message.getPayload();
-            final Class<?> typeAsClass = message.getTypeAsClass();
-            final Collection<BiConsumer> consumers = handlers.get(typeAsClass);
+            final Class<?> targetClass = message.getTypeAsClass();
+            final Collection<MethodReference> consumers = handlers.get(targetClass);
             final List<Throwable> exceptions = new ArrayList<>();
-            final int handlerSize = consumers.size();
 
-            if(handlerSize == 0)
-            {
-                throw new HoplinRuntimeException("No handlers defined for type : " + typeAsClass);
-            }
-            else if(handlerSize == 1)
-            {
-                final Map.Entry<Class, BiConsumer> entry = handlers.entries().iterator().next();
-                if(!isExpectedType(entry.getKey(), typeAsClass))
-                {
-                    throw new IllegalArgumentException("Expected type does not match handler type : "+ entry.getKey()+", " + typeAsClass);
-                }
-            }
+            int invokedHandlers = 0;
 
-            for(final BiConsumer handler : consumers)
+            for(final MethodReference reference : consumers)
             {
                 try
                 {
-                    handler.accept(val, context);
+                    final BiConsumer handler = reference.handler;
+                    final Class root = reference.root;
+                    if(root == targetClass)
+                    {
+                        ++invokedHandlers;
+                        execute(context, val, handler);
+                    }
+                    else // Down cast if necessary
+                    {
+                        final Optional<?> castedValue = safeCast(val, targetClass);
+                        if(castedValue.isPresent())
+                        {
+                            ++invokedHandlers;
+                            System.out.println("targetClass :: " + targetClass);
+                            System.out.println("castedValue :: " + castedValue.get());
+                            System.out.println("castedValue :: " + castedValue.get().getClass());
+                            //execute(context, castedValue.get(), handler);
+                            handler.accept(castedValue.get(), context);
+                        }
+                    }
                 }
                 catch (final Exception e)
                 {
                     exceptions.add(e);
                     log.error("Handler error for message  : " + message, e);
                 }
+            }
+
+            if(invokedHandlers == 0)
+            {
+                throw new HoplinRuntimeException("No handlers defined for type : " + targetClass);
             }
         }
         catch(final Exception e)
@@ -130,6 +141,18 @@ public class DefaultQueueConsumer extends DefaultConsumer
         }
 
         acknowledge(getChannel(), context, ack);
+    }
+
+    private void execute(final MessageContext context, final Object val,final BiConsumer handler)
+    {
+        handler.accept(val, context);
+    }
+
+    private <S, T> Optional<T> safeCast(final S candidate, Class<T>  targetClass)
+    {
+        return targetClass.isInstance(candidate)
+            ? Optional.of(targetClass.cast(candidate))
+            : Optional.empty();
     }
 
     /**
@@ -163,21 +186,6 @@ public class DefaultQueueConsumer extends DefaultConsumer
     }
 
     /**
-     * Check if given handled is of the correct type
-     *
-     * @param handler
-     * @param typeAsClass
-     * @return
-     */
-    private boolean isExpectedType(final Class<?> handler, final Class<?> typeAsClass)
-    {
-        Objects.requireNonNull(handler);
-        Objects.requireNonNull(typeAsClass);
-
-        return true;
-    }
-
-    /**
      * Add new handler bound to a specific type
      *
      * @param clazz
@@ -188,9 +196,21 @@ public class DefaultQueueConsumer extends DefaultConsumer
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
+        Class<? super T> clz = clazz;
 
-        handlers.put(clazz, handler);
+        while (true)
+        {
+            if (clz == Object.class)
+                break;
+
+            MethodReference reference = new MethodReference<>();
+            reference.handler = handler;
+            reference.root = clazz;
+            handlers.put(clz, reference);
+            clz = clz.getSuperclass();
+        }
     }
+
 
     @Override
     public void handleCancel(final String consumerTag)
@@ -198,4 +218,11 @@ public class DefaultQueueConsumer extends DefaultConsumer
         // TODO : consumer has been cancelled unexpectedly
         throw new HoplinRuntimeException("Not yet implemented");
     }
+
+    private class MethodReference<T>
+    {
+        Class<T> root;
+        BiConsumer<T, MessageContext> handler;
+    }
+
 }
