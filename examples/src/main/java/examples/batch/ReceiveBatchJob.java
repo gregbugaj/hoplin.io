@@ -11,7 +11,6 @@ import java.util.Map;
 
 /**
  * Batch Job receiver
- *
  */
 public class ReceiveBatchJob extends BaseExample
 {
@@ -48,5 +47,4 @@ public class ReceiveBatchJob extends BaseExample
         final LogDetail reply = new LogDetail("Reply Message", "WARN");
         mqClient.basicPublish("", replyTo, reply, headers);
     }
-
 }
