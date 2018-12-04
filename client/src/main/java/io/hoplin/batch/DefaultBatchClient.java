@@ -109,15 +109,8 @@ public class DefaultBatchClient implements BatchClient
 
         for (final BatchContextTask task : tasks)
         {
-
-            final Object message = task.getMessage();
-            final Optional<UUID> taskId = basicPublish(batchId, message, "");
-
-            if (taskId.isPresent())
-            {
-                task.setTaskId(taskId.get());
-            }
-
+            basicPublish(batchId, task, "");
+            final UUID taskId = task.getTaskId();
             index.incrementAndGet();
             log.info("Added task [{} of {}]: {} : {}", index, total, taskId, task);
         }
@@ -130,10 +123,9 @@ public class DefaultBatchClient implements BatchClient
      * @param batchId
      * @param request
      * @param routingKey
-     * @param <T>
      * @return
      */
-    private <T> Optional<UUID> basicPublish(final UUID batchId, final T request, final String routingKey)
+    private void basicPublish(final UUID batchId, final BatchContextTask request, final String routingKey)
     {
         if(routingKey == null)
             throw new IllegalArgumentException("routingKey should not be null");
@@ -152,15 +144,13 @@ public class DefaultBatchClient implements BatchClient
                     .headers(headers)
                     .build();
 
-            channel.basicPublish(exchange, routingKey, props, createRequestPayload(request));
-            return Optional.of(taskId);
+            final Object message = request.getMessage();
+            channel.basicPublish(exchange, routingKey, props, createRequestPayload(message));
         }
         catch (final IOException e)
         {
             log.error("Unable to send request", e);
         }
-
-        return Optional.empty();
     }
 
     @Override

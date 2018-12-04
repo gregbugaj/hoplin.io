@@ -16,6 +16,7 @@ public class BatchContextTask
     public <T> BatchContextTask(final T taskMessage)
     {
         message = taskMessage;
+        taskId = UUID.randomUUID();
     }
 
     public Object getMessage()
