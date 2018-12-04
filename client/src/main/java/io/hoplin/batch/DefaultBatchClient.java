@@ -10,12 +10,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 public class DefaultBatchClient implements BatchClient
 {
-    private static final Logger log = LoggerFactory.getLogger(DefaultRpcClient.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultBatchClient.class);
 
     private final RabbitMQClient client;
 
@@ -32,7 +35,7 @@ public class DefaultBatchClient implements BatchClient
 
     private boolean directReply;
 
-    private ConcurrentHashMap<UUID, BatchContext> batches = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches = new ConcurrentHashMap<>();
 
     private BatchReplyConsumer consumer;
 
@@ -88,39 +91,38 @@ public class DefaultBatchClient implements BatchClient
         }
     }
 
-
     @Override
-    public UUID startNew(final Consumer<BatchContext> consumer)
+    public CompletableFuture<BatchContext> startNew(final Consumer<BatchContext> consumer)
     {
         Objects.requireNonNull(consumer);
+
+        final CompletableFuture<BatchContext> future = new CompletableFuture<>();
         final BatchContext context = new BatchContext();
         final UUID batchId = context.getBatchId();
 
         consumer.accept(context);
-        batches.put(batchId, context);
-
+        batches.put(batchId, new CompletableFutureWrapperBatchContext(future, context));
         final List<BatchContextTask> tasks = context.getSubmittedTasks();
 
-        if(tasks != null)
+        int total = tasks.size();
+        final AtomicLong index = new AtomicLong();
+
+        for (final BatchContextTask task : tasks)
         {
-            int total = tasks.size();
-            int index = 0;
 
-            for (final BatchContextTask task : tasks)
+            final Object message = task.getMessage();
+            final Optional<UUID> taskId = basicPublish(batchId, message, "");
+
+            if (taskId.isPresent())
             {
-                final Object message = task.getMessage();
-                final Optional<UUID> taskId = basicPublish(batchId, message, "");
-
-                if (taskId.isPresent())
-                {
-                    task.setTaskId(taskId.get());
-                }
-                ++index;
-                log.info("Added task [{} of {}]: {} : {}", index, total, taskId, task);
+                task.setTaskId(taskId.get());
             }
+
+            index.incrementAndGet();
+            log.info("Added task [{} of {}]: {} : {}", index, total, taskId, task);
         }
 
-        return batchId;
+        return future;
     }
 
     /**
@@ -139,19 +141,19 @@ public class DefaultBatchClient implements BatchClient
         try
         {
             log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
-            final String messageIdentifier =  UUID.randomUUID().toString();
+            final UUID taskId = UUID.randomUUID();
             final Map<String, Object> headers = new HashMap<>();
             headers.put("x-batch-id", batchId.toString());
 
             final AMQP.BasicProperties props = new AMQP.BasicProperties
                     .Builder()
-                    .correlationId(messageIdentifier)
+                    .correlationId(taskId.toString())
                     .replyTo(replyToQueueName)
                     .headers(headers)
                     .build();
 
             channel.basicPublish(exchange, routingKey, props, createRequestPayload(request));
-            return Optional.of(batchId);
+            return Optional.of(taskId);
         }
         catch (final IOException e)
         {
@@ -177,7 +179,6 @@ public class DefaultBatchClient implements BatchClient
     {
         return codec.serialize(new MessagePayload<>(request));
     }
-
 
     private void consumeReply()
     {

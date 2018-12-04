@@ -1,6 +1,7 @@
 package io.hoplin.batch;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -14,7 +15,7 @@ public interface BatchClient
      * @param context
      * @return  ID associated with this request
      */
-    UUID startNew(final Consumer<BatchContext> context);
+    CompletableFuture<BatchContext> startNew(final Consumer<BatchContext> context);
 
     /**
      * Start new batch after the previous one is finished

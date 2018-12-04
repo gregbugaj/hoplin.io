@@ -4,7 +4,6 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
 import io.hoplin.json.JsonCodec;
 import org.slf4j.Logger;
@@ -25,6 +24,8 @@ public class BatchReplyConsumer extends DefaultConsumer
 {
     private static final Logger log = LoggerFactory.getLogger(BatchReplyConsumer.class);
 
+    private final ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches;
+
     private JsonCodec codec;
 
     private final Executor executor;
@@ -34,18 +35,18 @@ public class BatchReplyConsumer extends DefaultConsumer
      *
      * @param channel the channel to which this consumer is attached
      */
-    public BatchReplyConsumer(final Channel channel, final ConcurrentHashMap<UUID, BatchContext> batches, final Executor executor)
+    public BatchReplyConsumer(final Channel channel, final ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches, final Executor executor)
     {
         super(channel);
-        codec = new JsonCodec();
         this.executor = Objects.requireNonNull(executor);
+        this.batches = Objects.requireNonNull(batches);
+        codec = new JsonCodec();
     }
 
-    public BatchReplyConsumer(final Channel channel, final ConcurrentHashMap<UUID, BatchContext> batches)
+    public BatchReplyConsumer(final Channel channel, final ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches)
     {
         this(channel, batches, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
     }
-
 
     @SuppressWarnings("unchecked")
     @Override
@@ -54,15 +55,28 @@ public class BatchReplyConsumer extends DefaultConsumer
                                final AMQP.BasicProperties properties,
                                final byte[] body)
     {
-        log.info("handleDelivery : {} > {}", properties , envelope);
-
         final Map<String, Object> headers = properties.getHeaders();
-        final String batchId = headers.getOrDefault("x-batch-id", "").toString();
-        final String messageIdentifier = properties.getCorrelationId();
+        final UUID batchId = UUID.fromString(headers.getOrDefault("x-batch-id", "").toString());
+        final UUID correlationId = UUID.fromString( headers.getOrDefault("x-batch-correlationId", "").toString());
+        final CompletableFutureWrapperBatchContext wrapperBatchContext = batches.get(batchId);
+        final BatchContext context = wrapperBatchContext.getContext();
+        final CompletableFuture<BatchContext> completable = wrapperBatchContext.getFuture();
 
-        log.info("handleDelivery [batchId, messageIdentifier] : {} > {}", batchId , messageIdentifier);
+        for(final BatchContextTask task : context)
+        {
+            if(task.getTaskId().equals(correlationId))
+            {
+                final long taskCount = context.decrementAndGetTaskCount();
+                log.info("Reminding task count : {}", taskCount);
+                break;
+            }
+        }
+
+        if(context.isCompleted())
+        {
+            completable.complete(context);
+        }
     }
-
 
     private void handleReply(final byte[] body, final CompletableFuture<Object> action)
     {

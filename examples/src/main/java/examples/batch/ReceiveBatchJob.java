@@ -7,6 +7,8 @@ import io.hoplin.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 /**
  * Batch Job receiver
  *
@@ -33,7 +35,9 @@ public class ReceiveBatchJob extends BaseExample
         final AMQP.BasicProperties properties = context.getProperties();
         final String replyTo = properties.getReplyTo();
         final String correlationId = properties.getCorrelationId();
-        final Object batchId = properties.getHeaders().get("x-batch-id");
+        final Map<String, Object> headers = properties.getHeaders();
+        final Object batchId = headers.get("x-batch-id");
+        headers.put("x-batch-correlationId", correlationId);
 
         log.info("Incoming context        >  {}", context);
         log.info("Incoming replyTo        >  {}", replyTo);
@@ -41,9 +45,8 @@ public class ReceiveBatchJob extends BaseExample
         log.info("Incoming correlationId  >  {}", correlationId);
         log.info("Incoming batchId        >  {}", batchId);
 
-        LogDetail reply = new LogDetail("Reply Message", "WARN");
-        
-        mqClient.basicPublish("", replyTo, reply);
+        final LogDetail reply = new LogDetail("Reply Message", "WARN");
+        mqClient.basicPublish("", replyTo, reply, headers);
     }
 
 }

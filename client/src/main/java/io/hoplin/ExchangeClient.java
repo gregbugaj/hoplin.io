@@ -118,7 +118,7 @@ public interface ExchangeClient
      * @param handler the Consumer that will handle the message
      * @param <T> the type this Consumer will handle
      */
-    <T, U> void subscribe(final Class<T> clazz, final BiConsumer<T, MessageContext> handler);
+    <T> void subscribe(final Class<T> clazz, final BiConsumer<T, MessageContext> handler);
 
     /**
      * Create instance of {@link ExchangeClient}

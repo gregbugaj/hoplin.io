@@ -95,6 +95,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
                 {
                     final BiConsumer handler = reference.handler;
                     final Class root = reference.root;
+
                     if(root == targetClass)
                     {
                         ++invokedHandlers;
@@ -106,11 +107,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
                         if(castedValue.isPresent())
                         {
                             ++invokedHandlers;
-                            System.out.println("targetClass :: " + targetClass);
-                            System.out.println("castedValue :: " + castedValue.get());
-                            System.out.println("castedValue :: " + castedValue.get().getClass());
-                            //execute(context, castedValue.get(), handler);
-                            handler.accept(castedValue.get(), context);
+                            execute(context, castedValue.get(), handler);
                         }
                     }
                 }

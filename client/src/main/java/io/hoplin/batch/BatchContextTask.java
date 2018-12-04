@@ -55,10 +55,4 @@ public class BatchContextTask
     {
         return taskId;
     }
-
-    public BatchContextTask setTaskId(final UUID taskId)
-    {
-        this.taskId = taskId;
-        return this;
-    }
 }

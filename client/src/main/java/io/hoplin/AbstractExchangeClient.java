@@ -141,7 +141,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
         client.basicConsume(binding.getQueue(), clazz, handler);
     }
 
-    public <T, U> void subscribe(final Class<T> clazz, final  BiConsumer<T, MessageContext> handler)
+    public <T> void subscribe(final Class<T> clazz, final  BiConsumer<T, MessageContext> handler)
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);

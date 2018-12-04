@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.UUID;
 
 public class BatchProcessingExample extends BaseExample
 {
@@ -20,16 +19,20 @@ public class BatchProcessingExample extends BaseExample
 
     public static void main(final String... args) throws IOException, InterruptedException
     {
-        final Binding binding = bind();
-        log.info("Binding : {}", binding);
-
         final BatchClient client = new DefaultBatchClient(options(), bind());
-        final UUID batchId = client.startNew(context ->
-        {
-            context.enque(() -> new LogDetail("Msg >> " + System.nanoTime(), "info"));
-            context.enque(() -> new LogDetail("Msg  >> " + System.nanoTime(), "warn"));
-        });
 
+        client.startNew(context ->
+        {
+            for(int i = 0; i < 1000; ++i)
+            {
+                context.enque(() -> new LogDetail("Msg >> " + System.nanoTime(), "info"));
+                context.enque(() -> new LogDetail("Msg  >> " + System.nanoTime(), "warn"));
+            }
+        })
+            .whenComplete((context, throwable)-> {
+
+                log.info("Batch completed in : {}", context.duration());
+        });
 
         Thread.currentThread().join();
     }
