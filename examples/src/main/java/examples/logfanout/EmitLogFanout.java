@@ -29,7 +29,8 @@ public class EmitLogFanout extends BaseExample
             Thread.sleep(100L);
             break;
         }
-        //        Thread.currentThread().join();
+
+        Thread.currentThread().join();
     }
 
     private static Binding bind()

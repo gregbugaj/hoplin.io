@@ -33,8 +33,6 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
     public MessagePayload deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context) throws JsonParseException
     {
         final MessagePayload msg = new MessagePayload();
-
-        System.out.println(json);
         // determine correct payload type
         if (json.isJsonObject())
         {
