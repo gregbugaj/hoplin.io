@@ -78,6 +78,7 @@ public class BindingBuilder
             this.exchange = exchange;
         }
 
+        @SuppressWarnings("unchecked")
         public T withAutoAck(final boolean autoAck)
         {
             this.autoAck = autoAck;
