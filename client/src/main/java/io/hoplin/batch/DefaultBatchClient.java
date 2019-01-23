@@ -99,9 +99,11 @@ public class DefaultBatchClient implements BatchClient
         final CompletableFuture<BatchContext> future = new CompletableFuture<>();
         final BatchContext context = new BatchContext();
         final UUID batchId = context.getBatchId();
-
-        consumer.accept(context);
         batches.put(batchId, new CompletableFutureWrapperBatchContext(future, context));
+
+        // apply the consumer
+        consumer.accept(context);
+
         final List<BatchContextTask> tasks = context.getSubmittedTasks();
 
         int total = tasks.size();
@@ -132,8 +134,10 @@ public class DefaultBatchClient implements BatchClient
 
         try
         {
-            log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
-            final UUID taskId = UUID.randomUUID();
+            if(log.isDebugEnabled())
+                log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
+
+            final UUID taskId = request.getTaskId();
             final Map<String, Object> headers = new HashMap<>();
             headers.put("x-batch-id", batchId.toString());
 
@@ -144,8 +148,7 @@ public class DefaultBatchClient implements BatchClient
                     .headers(headers)
                     .build();
 
-            final Object message = request.getMessage();
-            channel.basicPublish(exchange, routingKey, props, createRequestPayload(message));
+            channel.basicPublish(exchange, routingKey, props, createRequestPayload(request.getMessage()));
         }
         catch (final IOException e)
         {
