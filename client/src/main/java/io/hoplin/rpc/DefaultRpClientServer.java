@@ -20,6 +20,7 @@ public class DefaultRpClientServer<I, O> implements  RpClientServer<I, O>
 
     private RpcServer<I, O> server;
 
+    @SuppressWarnings("unchecked")
     public DefaultRpClientServer(final RabbitMQOptions options, final Binding binding)
     {
         Objects.requireNonNull(options);

@@ -16,8 +16,6 @@ import java.util.*;
 /**
  * Client options
  *
- * Currently Channel and Client options are mixed here.
- *
  * @see {@ConnectionFactory}
  */
 public class RabbitMQOptions
@@ -119,10 +117,7 @@ public class RabbitMQOptions
     {
         Objects.requireNonNull(clientProperties);
         this.clientProperties = createDefaultClientProperties();
-
-        clientProperties.entrySet().forEach(entry->{
-            final String key = entry.getKey();
-            final Object value = entry.getValue();
+        clientProperties.forEach((key, value)->{
             if(overwrite)
                 this.clientProperties.put(key, value);
             else

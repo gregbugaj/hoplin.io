@@ -87,15 +87,13 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
      * Setup consumer in 'server' mode
      * @param handler
      */
+    @SuppressWarnings("unchecked")
     private void consumeRequest(final Function<I, O> handler)
     {
         try
         {
             final AMQP.Queue.BindOk bindStatus = channel.queueBind(requestQueueName, exchange, routingKey);
-
-            log.info("consumeRequest requestQueueName :: {}", requestQueueName);
-            log.info("consumeRequest BindOk :: {}", bindStatus);
-
+            log.info("consumeRequest requestQueueName : {}, {}", requestQueueName, bindStatus);
             channel.basicQos(1);
             channel.basicConsume(requestQueueName, false, new RpcResponderConsumer(channel, handler, executor));
         }

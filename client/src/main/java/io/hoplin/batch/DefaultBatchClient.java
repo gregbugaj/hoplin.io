@@ -4,7 +4,6 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.*;
 import io.hoplin.json.JsonCodec;
-import io.hoplin.rpc.DefaultRpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +11,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -73,9 +71,7 @@ public class DefaultBatchClient implements BatchClient
             replyToQueueName = replyToQueueName+".reply-to." + UUID.randomUUID();
         }
 
-        log.info("Param Exchange    : {}", exchange);
-        log.info("Param ReplyTo     : {}", replyToQueueName);
-        log.info("Param directReply : {}", directReply);
+        log.info("Param Exchange, ReplyTo, directReply  : {}", exchange, replyToQueueName, directReply);
 
         try
         {

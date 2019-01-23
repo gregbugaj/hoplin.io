@@ -44,7 +44,7 @@ public class RpcClientExample extends BaseExample
         }
 
         long e = System.currentTimeMillis() - s;
-        System.out.printf("time : " + e);
+        System.out.println("time : " + e);
     }
 
     private static void asyncRequest(RpcClient<LogDetail, String> client) throws InterruptedException
