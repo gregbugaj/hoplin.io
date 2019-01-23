@@ -31,6 +31,7 @@ public class FirehoseCliHandler implements CliHandler
     public FirehoseCliHandler(final OptionParser parser)
     {
         parser.accepts("firehose");
+
         out = ConsoleDevice.console().writer();
     }
 

@@ -9,9 +9,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This is example of a Work Queues (Direct Exchange)
+ * Messages will be discarded when no consumers are present, possible loss of messages.
  * In this one we'll server a Work Queue that will be used to distribute time-consuming tasks among multiple workers.
  *
  * When you run many workers the tasks will be shared between them.
+ *
  *
  * Log producer
  */
