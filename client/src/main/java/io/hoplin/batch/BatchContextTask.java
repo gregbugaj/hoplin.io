@@ -13,10 +13,10 @@ public class BatchContextTask
 
     private UUID taskId;
 
-    public <T> BatchContextTask(final T taskMessage)
+    public <T> BatchContextTask(final T message)
     {
-        message = taskMessage;
-        taskId = UUID.randomUUID();
+        this.message = message;
+        this.taskId = UUID.randomUUID();
     }
 
     public Object getMessage()

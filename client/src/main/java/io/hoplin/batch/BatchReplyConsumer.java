@@ -55,6 +55,8 @@ public class BatchReplyConsumer extends DefaultConsumer
                                final AMQP.BasicProperties properties,
                                final byte[] body)
     {
+        log.info("received : {}", properties);
+
         final Map<String, Object> headers = properties.getHeaders();
         final UUID batchId = UUID.fromString(headers.getOrDefault("x-batch-id", "").toString());
         final UUID correlationId = UUID.fromString( headers.getOrDefault("x-batch-correlationId", "").toString());
@@ -62,20 +64,27 @@ public class BatchReplyConsumer extends DefaultConsumer
         final BatchContext context = wrapperBatchContext.getContext();
         final CompletableFuture<BatchContext> completable = wrapperBatchContext.getFuture();
 
+        boolean found = false;
         for(final BatchContextTask task : context)
         {
             if(task.getTaskId().equals(correlationId))
             {
                 final long taskCount = context.decrementAndGetTaskCount();
-                log.info("Reminding task count : {}", taskCount);
+                found = true;
+                if(log.isDebugEnabled())
+                    log.debug("Reminding task count[batch] : {} {}",batchId, taskCount);
                 break;
             }
         }
+
+        if(!found)
+            throw new IllegalStateException("not found : " + correlationId);
 
         if(context.isCompleted())
         {
             completable.complete(context);
         }
+
     }
 
     private void handleReply(final byte[] body, final CompletableFuture<Object> action)
