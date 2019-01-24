@@ -16,8 +16,15 @@ public class ReceiveLogsTopic extends BaseExample
     public static void main(final String... args) throws InterruptedException
     {
 //      final ExchangeClient client = clientFromExchange(EXCHANGE, "log.critical", "log.critical.*");
-        final ExchangeClient client = clientFromBinding(EXCHANGE, "log.critical", "log.critical.*");
-        client.subscribe("test", LogDetail.class, msg-> log.info("Message received [{}]", msg));
+//        final ExchangeClient client = clientFromBinding(EXCHANGE, "log.critical", "log.critical.*");
+
+//        final ExchangeClient client = clientFromBinding(EXCHANGE, "log.all", "#");
+
+        // Exchange and Binding Queue will be determined based on the supplied Type of the Message
+        final ExchangeClient client = ExchangeClient.topic(options());
+        final SubscriptionResult sub = client.subscribe("test", LogDetail.class, msg -> log.info("Message received [{}]", msg));
+
+        info(sub);
 
         Thread.currentThread().join();
     }
@@ -28,7 +35,7 @@ public class ReceiveLogsTopic extends BaseExample
     }
 
     /**
-     * Creating client with binding allows us for more granular control
+     * Creating client with binding allows us for more granular control of how Exchage
      * @param exchange
      * @param queue
      * @param routingKey

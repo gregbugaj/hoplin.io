@@ -1,6 +1,5 @@
 package examples.logfanout;
 
-import com.rabbitmq.client.AMQP;
 import examples.BaseExample;
 import io.hoplin.ExchangeClient;
 import io.hoplin.FanoutExchangeClient;

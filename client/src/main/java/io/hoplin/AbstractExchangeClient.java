@@ -60,7 +60,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
         }
     }
 
-    SubscriptionResult subscribe()
+    <T> SubscriptionResult subscribe(final String subscriberId,final Class<T> clazz)
     {
         final String exchangeName = binding.getExchange();
         String queueName = binding.getQueue();
@@ -75,8 +75,13 @@ abstract class AbstractExchangeClient implements ExchangeClient
                 bindingKey = "";
 
             boolean autoDelete = false;
-            if(Strings.isNullOrEmpty(queueName))
-                autoDelete = true;
+            // we did not get a explicit queue name to bind to exchange so here we will determine that from the 
+            // supplied class name
+            if(Strings.isNullOrEmpty(queueName)) 
+            {
+                queueName = getQueueNameFromHandler(subscriberId, exchangeName, clazz);
+                binding.setQueue(queueName);
+            }
 
             // when the queue name is empty we will create a queue dynamically and bind to that queue
             final AMQP.Queue.DeclareOk queueDeclare = client
@@ -90,7 +95,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
                      queueName,
                      bindingKey,
                      autoDelete
-                     );
+            );
 
             return new SubscriptionResult(exchangeName, queueName);
         }
@@ -98,6 +103,25 @@ abstract class AbstractExchangeClient implements ExchangeClient
         {
             throw new HoplinRuntimeException("Unable to setup consumer", e);
         }
+    }
+
+    /**
+     * Generate queue name from supplied parameters
+     * Default format
+     *
+     * <pre>
+     *     subscriber:exchange:class
+     * </pre>
+     *
+     * @param subscriberId
+     * @param exchange
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    private <T> String getQueueNameFromHandler(String subscriberId, String exchange, Class<T> clazz)
+    {
+       return String.format("%s:%s:%s",subscriberId, exchange,  clazz.getName());
     }
 
     /**
@@ -138,9 +162,13 @@ abstract class AbstractExchangeClient implements ExchangeClient
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
-        client.basicConsume(binding.getQueue(), clazz, handler);
+        final SubscriptionResult subscription = subscribe(subscriberId, clazz);
 
-        return null;
+        log.info("Subscription Exchange : {}", subscription.getExchange());
+        log.info("Subscription Queue    : {}", subscription.getQueue());
+
+        client.basicConsume(binding.getQueue(), clazz, handler);
+        return subscription;
     }
 
     @Override

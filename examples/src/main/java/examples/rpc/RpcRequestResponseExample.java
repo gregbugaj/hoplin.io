@@ -1,17 +1,13 @@
 package examples.rpc;
 
 import examples.BaseExample;
-import examples.LogDetail;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
 import io.hoplin.FanoutExchange;
-import io.hoplin.rpc.DefaultRpcClient;
-import io.hoplin.rpc.RpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * RPC Request/Response example

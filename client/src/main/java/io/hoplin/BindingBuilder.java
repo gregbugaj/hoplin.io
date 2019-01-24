@@ -4,8 +4,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
+/**
+ * Binding builder between Exchange and Queue
+ *
+ * TODO : Implement Exchange to Exchange biding
+ */
 public class BindingBuilder
 {
     private BindingBuilder()

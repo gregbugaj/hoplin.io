@@ -246,7 +246,7 @@ public interface ExchangeClient
      */
     static ExchangeClient topic(final RabbitMQOptions options)
     {
-        final String caller = ClassUtil.getMainClass();
+        final String caller = ClassUtil.getRootPackageName();
         if(caller == null)
             throw new IllegalArgumentException("Unable to determine exchange name");
 

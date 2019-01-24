@@ -2,10 +2,11 @@ package examples.logdirect;
 
 import examples.BaseExample;
 import examples.LogDetail;
-import io.hoplin.DirectExchangeClient;
 import io.hoplin.ExchangeClient;
+import io.hoplin.SubscriptionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class ReceiveLogsDirect extends BaseExample
 {
@@ -15,9 +16,10 @@ public class ReceiveLogsDirect extends BaseExample
 
     public static void main(final String... args) throws InterruptedException
     {
-        final ExchangeClient client = critical();
-        client.subscribe("test", LogDetail.class, msg-> log.info("Message received [{}]", msg));
-
+        final ExchangeClient client = informative();
+        final SubscriptionResult subscription = client.subscribe("test", LogDetail.class, msg -> log.info("Message received [{}]", msg));
+        
+        info(subscription);
         Thread.currentThread().join();
     }
 

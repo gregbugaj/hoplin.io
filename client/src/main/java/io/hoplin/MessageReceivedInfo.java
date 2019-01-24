@@ -14,6 +14,7 @@ public class MessageReceivedInfo
     private long ctime;
     private String consumerTag;
 
+
     public MessageReceivedInfo (final String consumerTag,
                                long deliveryTag,
                                boolean redelivered,

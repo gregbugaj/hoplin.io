@@ -3,15 +3,11 @@ package io.hoplin.rpc;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.*;
-import io.hoplin.json.JsonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;

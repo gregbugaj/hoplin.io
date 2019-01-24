@@ -18,13 +18,23 @@ public class EmitLogTopic extends BaseExample
 {
     private static final Logger log = LoggerFactory.getLogger(EmitLogTopic.class);
 
-    private static final String EXCHANGE = "topic_logs";
+    private static final String EXCHANGE = "examples.logtopic";
 
     public static void main(final String... args) throws InterruptedException
     {
         log.info("Starting producer for exchange : {}", EXCHANGE);
 
         final ExchangeClient client = clientFromBinding();
+/*       client.publish(createMessage("warning"), "log.critical.warning");
+
+        Thread.currentThread().join();*/
+
+        client.publish(createMessage("info"), "log.info.info");
+        client.publish(createMessage("debug"), "log.info.debug");
+        client.publish(createMessage("warning"), "log.critical.warning");
+        client.publish(createMessage("error"), "log.critical.error");
+
+        Thread.currentThread().join();
 
         while(true)
         {
@@ -33,7 +43,7 @@ public class EmitLogTopic extends BaseExample
             client.publish(createMessage("warning"), "log.critical.warning");
             client.publish(createMessage("error"), "log.critical.error");
 
-            Thread.sleep(100L);
+            Thread.sleep(1000L);
         }
     }
 

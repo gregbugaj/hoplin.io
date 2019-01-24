@@ -165,8 +165,11 @@ public class DefaultQueueConsumer extends DefaultConsumer
     {
         try
         {
-            log.info("Acking : {}" , context.getReceivedInfo().getDeliveryTag());
-            ack.accept(channel, context.getReceivedInfo().getDeliveryTag());
+            final String messageId = context.getProperties().getMessageId();
+            final long deliveryTag = context.getReceivedInfo().getDeliveryTag();
+            log.info("Acking [messageId, deliveryTag] : {}, {}" , messageId, deliveryTag);
+
+            ack.accept(channel, deliveryTag);
         }
         catch (final Exception e)
         {

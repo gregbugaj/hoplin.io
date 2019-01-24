@@ -2,7 +2,6 @@ package examples.multiplehandlers;
 
 import examples.BaseExample;
 import examples.LogDetail;
-import examples.LogDetailType2;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
 import io.hoplin.ExchangeClient;

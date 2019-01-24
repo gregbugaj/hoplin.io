@@ -2,7 +2,6 @@ package examples.logdirect;
 
 import examples.BaseExample;
 import examples.LogDetail;
-import io.hoplin.DirectExchangeClient;
 import io.hoplin.ExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +30,10 @@ public class EmitLogDirect extends BaseExample
        // while(true)
         {
             client.publish(createMessage("info"), "info");
-            client.publish(createMessage("debug"), "debug");
+      /*      client.publish(createMessage("debug"), "debug");
             client.publish(createMessage("warning"), "warning");
             client.publish(createMessage("error"), "error");
-
+*/
             Thread.sleep(1000L);
         }
     }

@@ -22,6 +22,9 @@ public class FanoutExchangeClient extends AbstractExchangeClient
 
     SubscriptionResult subscribe()
     {
+        if(true)
+            throw new RuntimeException("Should not do this");
+        
         final String exchangeName = binding.getExchange();
         final String queueName = binding.getQueue();
 
