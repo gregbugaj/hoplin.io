@@ -18,7 +18,7 @@ public class ReceiveLogsFanout extends BaseExample
     {
         final ExchangeClient client = FanoutExchangeClient.create(options(), EXCHANGE);
 
-        client.subscribe(String.class, ReceiveLogsFanout::handle);
+        client.subscribe("Test", String.class, ReceiveLogsFanout::handle);
         Thread.currentThread().join();
     }
 

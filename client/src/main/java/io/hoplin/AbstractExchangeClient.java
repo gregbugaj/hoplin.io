@@ -60,7 +60,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
         }
     }
 
-    void subscribe()
+    SubscriptionResult subscribe()
     {
         final String exchangeName = binding.getExchange();
         String queueName = binding.getQueue();
@@ -91,6 +91,8 @@ abstract class AbstractExchangeClient implements ExchangeClient
                      bindingKey,
                      autoDelete
                      );
+
+            return new SubscriptionResult(exchangeName, queueName);
         }
         catch (final Exception e)
         {
@@ -117,16 +119,13 @@ abstract class AbstractExchangeClient implements ExchangeClient
         {
             // survive a server restart
             final boolean durable = true;
-            // keep it even if not in user
+            // keep it even if not in use
             final boolean autoDelete = false;
 
             final Map<String, Object> arguments = new HashMap<>();
             // Make sure that the Exchange is declared
 
             client.exchangeDeclare(exchangeName, type, durable, autoDelete, arguments);
-
-            // setup consumer options
-            subscribe();
         }
         catch (final Exception e)
         {
@@ -134,18 +133,24 @@ abstract class AbstractExchangeClient implements ExchangeClient
         }
     }
 
-    public <T> void subscribe(final Class<T> clazz, final Consumer<T> handler)
+    @Override
+    public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final Consumer<T> handler)
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
         client.basicConsume(binding.getQueue(), clazz, handler);
+
+        return null;
     }
 
-    public <T> void subscribe(final Class<T> clazz, final  BiConsumer<T, MessageContext> handler)
+    @Override
+    public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final  BiConsumer<T, MessageContext> handler)
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
         client.basicConsume(binding.getQueue(), clazz, handler);
+
+        return null;
     }
 
     @Override

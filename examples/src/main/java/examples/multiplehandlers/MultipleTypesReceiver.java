@@ -20,8 +20,8 @@ public class MultipleTypesReceiver extends BaseExample
         final ExchangeClient client = FanoutExchangeClient.create(options(), EXCHANGE);
 
 //        client.subscribe(LogDetail.class, MultipleTypesReceiver::handle);
-        client.subscribe(LogDetail.class, MultipleTypesReceiver::handle);
-        client.subscribe(LogDetailType2.class, MultipleTypesReceiver::handle);
+        client.subscribe("test", LogDetail.class, MultipleTypesReceiver::handle);
+        client.subscribe("test", LogDetailType2.class, MultipleTypesReceiver::handle);
 
        /* LogDetail detail = new LogDetailType2("A", "A");
         handleXX(detail, null);*/

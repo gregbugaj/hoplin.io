@@ -25,7 +25,7 @@ public class ReceiveBatchJob extends BaseExample
         final ExchangeClient client = DirectExchangeClient.create(options(), EXCHANGE);
         mqClient = client.getMqClient();
 
-        client.subscribe(LogDetail.class, ReceiveBatchJob::handle);
+        client.subscribe("test", LogDetail.class, ReceiveBatchJob::handle);
         Thread.currentThread().join();
     }
 

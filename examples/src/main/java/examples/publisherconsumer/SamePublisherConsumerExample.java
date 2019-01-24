@@ -19,7 +19,7 @@ public class SamePublisherConsumerExample extends BaseExample
     {
         log.info("Starting producer/consumer for exchange : {}", EXCHANGE);
         final ExchangeClient client = ExchangeClient.topic(options(), EXCHANGE);
-        client.subscribe(LogDetail.class, SamePublisherConsumerExample::handle);
+        client.subscribe("Test", LogDetail.class, SamePublisherConsumerExample::handle);
 
         for(int i = 0; i < 5; ++i)
         {

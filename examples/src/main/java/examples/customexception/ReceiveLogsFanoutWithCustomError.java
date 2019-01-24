@@ -15,7 +15,7 @@ public class ReceiveLogsFanoutWithCustomError extends BaseExample
     {
         final ExchangeClient client = ExchangeClient.fanout(options(), EXCHANGE);
 
-        client.subscribe(String.class, ReceiveLogsFanoutWithCustomError::handle);
+        client.subscribe("test", String.class, ReceiveLogsFanoutWithCustomError::handle);
         Thread.currentThread().join();
     }
 

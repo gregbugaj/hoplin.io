@@ -17,7 +17,7 @@ public class ReceiveLogsTopic extends BaseExample
     {
 //      final ExchangeClient client = clientFromExchange(EXCHANGE, "log.critical", "log.critical.*");
         final ExchangeClient client = clientFromBinding(EXCHANGE, "log.critical", "log.critical.*");
-        client.subscribe(LogDetail.class, msg-> log.info("Message received [{}]", msg));
+        client.subscribe("test", LogDetail.class, msg-> log.info("Message received [{}]", msg));
 
         Thread.currentThread().join();
     }

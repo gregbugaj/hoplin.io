@@ -20,7 +20,7 @@ public class FanoutExchangeClient extends AbstractExchangeClient
         bind("fanout");
     }
 
-    void subscribe()
+    SubscriptionResult subscribe()
     {
         final String exchangeName = binding.getExchange();
         final String queueName = binding.getQueue();
@@ -44,6 +44,8 @@ public class FanoutExchangeClient extends AbstractExchangeClient
             // Autocreate a new temporary queue
             client.queueBind(queue, exchangeName, "");
             log.info("Binding client [exchangeName, queueName, bindingKey] : {}, {}", exchangeName, queueName);
+
+            return new SubscriptionResult(exchangeName, queue);
         }
         catch (final Exception e)
         {

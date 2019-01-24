@@ -100,12 +100,12 @@ public interface ExchangeClient
      * After that this method  will only add the handlers
      *
      * Handlers should not block.
-     *
+     * @param subscriberId the unique id of the subscriber
      * @param clazz the class type that we are interested in receiving messages for
      * @param handler the Consumer that will handle the message
      * @param <T> the type this Consumer will handle
      */
-    <T> void subscribe(final Class<T> clazz, final Consumer<T> handler);
+    <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final Consumer<T> handler);
 
     /**
      * Add subscription and consume messages from the queue
@@ -114,11 +114,14 @@ public interface ExchangeClient
      *
      * Handlers should not block.
      *
+     * @param subscriberId the unique id of the subscriber
      * @param clazz the class type that we are interested in receiving messages for
      * @param handler the Consumer that will handle the message
      * @param <T> the type this Consumer will handle
+     *
+     * @return SubscriptionResult the result of subscription
      */
-    <T> void subscribe(final Class<T> clazz, final BiConsumer<T, MessageContext> handler);
+    <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final BiConsumer<T, MessageContext> handler);
 
     /**
      * Create instance of {@link ExchangeClient}

@@ -22,7 +22,7 @@ public class ReceiveLogHeader extends BaseExample
     {
         log.info("Starting header consumer for exchange : {}", EXCHANGE);
         final ExchangeClient client= clientFromBinding(EXCHANGE,"info", "service-xyz");
-        client.subscribe(LogDetail.class, ReceiveLogHeader::handler);
+        client.subscribe("test", LogDetail.class, ReceiveLogHeader::handler);
 
         Thread.currentThread().join();
     }
