@@ -176,9 +176,13 @@ abstract class AbstractExchangeClient implements ExchangeClient
     {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(handler);
-        client.basicConsume(binding.getQueue(), clazz, handler);
+        final SubscriptionResult subscription = subscribe(subscriberId, clazz);
 
-        return null;
+        log.info("Subscription Exchange : {}", subscription.getExchange());
+        log.info("Subscription Queue    : {}", subscription.getQueue());
+
+        client.basicConsume(binding.getQueue(), clazz, handler);
+        return subscription;
     }
 
     @Override
