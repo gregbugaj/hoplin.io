@@ -124,6 +124,36 @@ public interface ExchangeClient
     <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final BiConsumer<T, MessageContext> handler);
 
     /**
+     * Add subscription and consume messages from the queue
+     * Calling this method repeatably will only initialize consumer once to make sure that the Consumer is setup.
+     * After that this method will only add the handlers
+     *
+     * Handlers should not block.
+     *
+     * @param clazz the class type that we are interested in receiving messages for
+     * @param handler the Consumer that will handle the message
+     * @param config the subscription configuration
+     * @param <T> the type this Consumer will handle
+     *
+     * @return SubscriptionResult the result of subscription
+     */
+    <T> SubscriptionResult subscribe(final Class<T> clazz, final BiConsumer<T, MessageContext> handler, final Consumer<SubscriptionConfigurator> config);
+
+
+    /**
+     * Add subscription and consume messages from the queue
+     * Calling this method repeatably will only initialize consumer once to make sure that the Consumer is setup.
+     * After that this method  will only add the handlers
+     *
+     * Handlers should not block.
+     * @param clazz the class type that we are interested in receiving messages for
+     * @param handler the Consumer that will handle the message
+     * @param config the subscription configuration
+     * @param <T> the type this Consumer will handle
+     */
+    <T> SubscriptionResult subscribe(final Class<T> clazz, final Consumer<T> handler, final Consumer<SubscriptionConfigurator> config);
+
+    /**
      * Create instance of {@link ExchangeClient}
      *
      * @param options the connection options

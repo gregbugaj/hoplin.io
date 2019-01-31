@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 /**
  * Default consumer
@@ -64,9 +65,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
      * Messages are not consumed until RabbitMQ receives the corresponding ack.
      *
      * Note: A message must be acknowledged only once;
-     *
-     * @param consumerTag
-     * @param envelope
+
      * @param properties
      * @param body
      */

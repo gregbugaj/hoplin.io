@@ -23,6 +23,7 @@ public class MultipleTypesReceiver extends BaseExample
         client.subscribe("test", LogDetail.class, MultipleTypesReceiver::handle);
         client.subscribe("test", LogDetailType2.class, MultipleTypesReceiver::handle);
 
+
        /* LogDetail detail = new LogDetailType2("A", "A");
         handleXX(detail, null);*/
 

@@ -24,6 +24,11 @@ public class ReceiveLogsTopic extends BaseExample
         final ExchangeClient client = ExchangeClient.topic(options());
         final SubscriptionResult sub = client.subscribe("test", LogDetail.class, msg -> log.info("Message received [{}]", msg));
 
+        client.subscribe(LogDetail.class, (msg, context) ->
+        {
+            log.info("Handler  >  {}", msg);
+        }, (cfg) -> cfg.withSubscriberId("UniqueSubscriberId"));
+
         info(sub);
 
         Thread.currentThread().join();

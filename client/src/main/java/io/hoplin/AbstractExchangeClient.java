@@ -60,8 +60,11 @@ abstract class AbstractExchangeClient implements ExchangeClient
         }
     }
 
-    <T> SubscriptionResult subscribe(final String subscriberId,final Class<T> clazz)
+    <T> SubscriptionResult subscribe(final SubscriptionConfig config, final Class<T> clazz)
     {
+        Objects.requireNonNull(config, "Config can't be null");
+
+        final String subscriberId = config.getSubscriberId();
         final String exchangeName = binding.getExchange();
         String queueName = binding.getQueue();
         String routingKey = binding.getRoutingKey();
@@ -160,29 +163,37 @@ abstract class AbstractExchangeClient implements ExchangeClient
     @Override
     public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final Consumer<T> handler)
     {
-        Objects.requireNonNull(clazz);
-        Objects.requireNonNull(handler);
-        final SubscriptionResult subscription = subscribe(subscriberId, clazz);
-
-        log.info("Subscription Exchange : {}", subscription.getExchange());
-        log.info("Subscription Queue    : {}", subscription.getQueue());
-
-        client.basicConsume(binding.getQueue(), clazz, handler);
-        return subscription;
+        return subscribe(clazz, handler, cfg -> cfg.withSubscriberId(subscriberId));
     }
 
     @Override
     public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final  BiConsumer<T, MessageContext> handler)
     {
-        Objects.requireNonNull(clazz);
-        Objects.requireNonNull(handler);
-        final SubscriptionResult subscription = subscribe(subscriberId, clazz);
+        return subscribe(clazz, handler, cfg -> cfg.withSubscriberId(subscriberId));
+    }
+
+    @Override
+    public <T> SubscriptionResult subscribe(Class<T> clazz, BiConsumer<T, MessageContext> handler, Consumer<SubscriptionConfigurator> cfg)
+    {
+        final SubscriptionConfigurator configurator = new SubscriptionConfigurator();
+        cfg.accept(configurator);
+
+        final SubscriptionResult subscription = subscribe(configurator.build(), clazz);
 
         log.info("Subscription Exchange : {}", subscription.getExchange());
         log.info("Subscription Queue    : {}", subscription.getQueue());
 
         client.basicConsume(binding.getQueue(), clazz, handler);
         return subscription;
+
+
+    }
+
+    @Override
+    public <T> SubscriptionResult subscribe(Class<T> clazz, Consumer<T> handler, Consumer<SubscriptionConfigurator> config)
+    {
+
+        return null;
     }
 
     @Override
