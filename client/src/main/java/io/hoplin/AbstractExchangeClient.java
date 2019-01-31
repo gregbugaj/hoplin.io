@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -63,12 +64,14 @@ abstract class AbstractExchangeClient implements ExchangeClient
     <T> SubscriptionResult subscribe(final SubscriptionConfig config, final Class<T> clazz)
     {
         Objects.requireNonNull(config, "Config can't be null");
+        Objects.requireNonNull(clazz, "Handler can't be null");
 
         final String subscriberId = config.getSubscriberId();
         final String exchangeName = binding.getExchange();
+        final Map<String, Object> arguments = binding.getArguments();
+
         String queueName = binding.getQueue();
         String routingKey = binding.getRoutingKey();
-        final Map<String, Object> arguments = binding.getArguments();
 
         try
         {
@@ -104,7 +107,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
         }
         catch (final Exception e)
         {
-            throw new HoplinRuntimeException("Unable to setup consumer", e);
+            throw new HoplinRuntimeException("Unable to setup subscription consumer", e);
         }
     }
 
@@ -124,7 +127,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
      */
     private <T> String getQueueNameFromHandler(String subscriberId, String exchange, Class<T> clazz)
     {
-       return String.format("%s:%s:%s",subscriberId, exchange,  clazz.getName());
+       return String.format("%s:%s:%s",subscriberId, exchange, clazz.getName());
     }
 
     /**
@@ -185,15 +188,14 @@ abstract class AbstractExchangeClient implements ExchangeClient
 
         client.basicConsume(binding.getQueue(), clazz, handler);
         return subscription;
-
-
     }
 
     @Override
-    public <T> SubscriptionResult subscribe(Class<T> clazz, Consumer<T> handler, Consumer<SubscriptionConfigurator> config)
+    public <T> SubscriptionResult subscribe(Class<T> clazz, Consumer<T> handler, Consumer<SubscriptionConfigurator> cfg)
     {
-
-        return null;
+        // wrap handler into our BiConsumer
+        final BiConsumer<T, MessageContext> biHandler = (msg, context) -> handler.accept(msg);
+        return subscribe(clazz, biHandler, cfg);
     }
 
     @Override
@@ -226,7 +228,6 @@ abstract class AbstractExchangeClient implements ExchangeClient
         Objects.requireNonNull(message);
         Objects.requireNonNull(routingKey);
         Objects.requireNonNull(cfg);
-
         // Wrap our message original message
         final MessagePayload<T> payload = new MessagePayload<>(message);
         payload.setType(message.getClass());
@@ -265,5 +266,17 @@ abstract class AbstractExchangeClient implements ExchangeClient
         client.basicPublish(binding.getExchange(), "", payload);
 
         return promise;
+    }
+
+    @Override
+    public void awaitQuiescence()
+    {
+
+    }
+
+    @Override
+    public void awaitQuiescence(long time, TimeUnit unit)
+    {
+
     }
 }

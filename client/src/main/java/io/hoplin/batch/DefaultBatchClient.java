@@ -131,7 +131,7 @@ public class DefaultBatchClient implements BatchClient
         try
         {
             if(log.isDebugEnabled())
-                log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
+                log.debug("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
 
             final UUID taskId = request.getTaskId();
             final Map<String, Object> headers = new HashMap<>();

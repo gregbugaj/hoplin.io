@@ -23,17 +23,18 @@ public class EmitLogTopic extends BaseExample
     public static void main(final String... args) throws InterruptedException
     {
         log.info("Starting producer for exchange : {}", EXCHANGE);
-
         final ExchangeClient client = clientFromBinding();
-/*       client.publish(createMessage("warning"), "log.critical.warning");
+        client.publish(createMessage("warning"), "log.critical.warning");
 
-        Thread.currentThread().join();*/
+        Thread.currentThread().join();
 
         client.publish(createMessage("info"), "log.info.info");
         client.publish(createMessage("debug"), "log.info.debug");
         client.publish(createMessage("warning"), "log.critical.warning");
         client.publish(createMessage("error"), "log.critical.error");
 
+
+        client.awaitQuiescence();
         Thread.currentThread().join();
 
         while(true)

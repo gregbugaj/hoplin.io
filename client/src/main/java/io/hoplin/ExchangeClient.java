@@ -4,6 +4,7 @@ import io.hoplin.util.ClassUtil;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -300,4 +301,17 @@ public interface ExchangeClient
     {
         return HeaderExchangeClient.create(options, exchange);
     }
+
+    /**
+     * Wait for all pending tasks to complete
+     */
+    void awaitQuiescence();
+
+    /**
+     * Wait for all pending tasks to complete within specified timeout
+     *
+     * @param time the time to wait
+     * @param unit the time unit to wait
+     */
+    void awaitQuiescence(long time, TimeUnit unit);
 }

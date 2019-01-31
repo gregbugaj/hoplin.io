@@ -1,8 +1,8 @@
 package io.hoplin;
 
 /**
- * Client subscription results
- * This is populated from supplied binding
+ * Client subscription results, i
+ * This is populated from supplied {@link Binding} and {@link SubscriptionConfig}
  */
 public class SubscriptionResult
 {
