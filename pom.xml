@@ -86,6 +86,7 @@
         <autoReleaseAfterClose>false</autoReleaseAfterClose>
     </properties>
 
+
     <build>
 
         <plugins>
@@ -184,7 +185,6 @@
                 </configuration>
             </plugin>
 
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -198,7 +198,6 @@
                     </execution>
                 </executions>
             </plugin>
-
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -217,16 +216,13 @@
                         </goals>
                     </execution>
                 </executions>
-
             </plugin>
 
         </plugins>
 
-
     </build>
 
     <profiles>
-
         <profile>
             <id>release</id>
             <properties>
@@ -271,8 +267,15 @@
         </profile>
     </profiles>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-provider-gitexe</artifactId>
+            <version>1.9.5</version>
+        </dependency>
+    </dependencies>
 
-  <modules>
+    <modules>
     <module>client</module>
     <module>examples</module>
     <module>toolbox</module>
