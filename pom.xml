@@ -153,8 +153,7 @@
           -->
 
 
-         <!-- SNAPSHOT
-
+         <!-- SNAPSHOT-->
 
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
@@ -167,6 +166,7 @@
                         <phase>deploy</phase>
                         <goals>
                             <goal>deploy</goal>
+                            <goal>release</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -175,9 +175,9 @@
                     <nexusUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2/</nexusUrl>
                 </configuration>
             </plugin>
--->
 
-          <plugin>
+
+        <!--  <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <version>${version.nexus-staging-maven-plugin}</version>
@@ -188,7 +188,7 @@
                     <autoReleaseAfterClose>${autoReleaseAfterClose}</autoReleaseAfterClose>
                 </configuration>
            </plugin>
-
+-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
