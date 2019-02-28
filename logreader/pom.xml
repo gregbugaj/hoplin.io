@@ -4,7 +4,7 @@
   <parent>
     <artifactId>hoplin-parent</artifactId>
     <groupId>io.hoplin</groupId>
-    <version>1.0.4-SNAPSHOT</version>
+    <version>1.0.4</version>
   </parent>
 
   <groupId>io.hoplin</groupId>
@@ -35,7 +35,7 @@
     <dependency>
       <groupId>io.hoplin</groupId>
       <artifactId>hoplin-client</artifactId>
-      <version>1.0.4-SNAPSHOT</version>
+      <version>1.0.4</version>
       <scope>compile</scope>
     </dependency>
 
