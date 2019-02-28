@@ -27,7 +27,7 @@ public class EmitLogDirect extends BaseExample
         log.info("Starting producer on exchange : {}", EXCHANGE);
         final ExchangeClient client = ExchangeClient.direct(options(), EXCHANGE);
 
-       // while(true)
+       while(true)
         {
             client.publish(createMessage("info"), "info");
       /*      client.publish(createMessage("debug"), "debug");

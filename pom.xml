@@ -4,7 +4,7 @@
 
     <groupId>io.hoplin</groupId>
     <artifactId>hoplin-parent</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
 
     <packaging>pom</packaging>
 
@@ -130,6 +130,7 @@
           -->
 
 
+         <!-- SNAPSHOT
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -150,9 +151,9 @@
                 </configuration>
             </plugin>
 
+         -->
 
-        <!--
-              <plugin>
+           <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <version>${version.nexus-staging-maven-plugin}</version>
@@ -162,9 +163,7 @@
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>${autoReleaseAfterClose}</autoReleaseAfterClose>
                 </configuration>
-            </plugin>
-
-        -->
+           </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
