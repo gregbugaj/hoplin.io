@@ -442,4 +442,12 @@ public class RabbitMQOptions
        return ConnectionStringParser.parse(connectionString);
     }
 
+    @Override public String toString()
+    {
+        return String.format(  "Host:    '%s'%n"
+                             + "Hostname:    '%s'%n"
+                             + "VirtualHost: '%s'%n"
+                             + "Port: '%s'%n"
+                , getHost(), getHostName(), getVirtualHost(), getPort());
+    }
 }
