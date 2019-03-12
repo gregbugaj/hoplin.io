@@ -4,8 +4,10 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import io.hoplin.DeadLetterErrorStrategy;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
+import io.hoplin.RetryPolicy;
 import io.hoplin.json.JsonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,8 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
 
     private JsonCodec codec;
 
+    private RetryPolicy retryPolicy;
+
     /**
      * Constructs a new instance and records its association to the passed-in channel.
      *  @param channel the channel to which this consumer is attached
@@ -64,7 +68,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
                                final byte[] body)
     {
 
-        log.info("handleDelivery : {}", envelope);
+        log.info("handleDelivery : {}, {}", envelope, properties);
 
         // 1 : Perform the action required in the RPC request
         CompletableFuture
@@ -76,7 +80,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
                 //0 :there was exception while processing message
                 if(throwable != null)
                 {
-                    nack(envelope);
+                    nack(envelope, properties , throwable);
                     return;
                 }
 
@@ -99,19 +103,25 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
             catch (final Exception e)
             {
                 log.error("Unable to acknowledgeExceptionally execution", e);
-                nack(envelope);
+                nack(envelope, properties, throwable);
             }
         });
     }
 
-    private void nack(final Envelope envelope)
+    private void nack(final Envelope envelope,
+                      final AMQP.BasicProperties properties,
+                      final Throwable error)
     {
+        log.info("NACKing : {}, {}, {}", envelope, properties, error);
         try
         {
+            boolean retryableExceptions = true;
+
             final long deliveryTag = envelope.getDeliveryTag();
+
             if(envelope.isRedeliver())
             {
-                sendToDeadMessageQueue(envelope);
+                sendToDeadMessageExchange(envelope, properties);
             }
             else
             {
@@ -124,10 +134,21 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
         }
     }
 
-    private void sendToDeadMessageQueue(final Envelope envelope)
+    private void sendToDeadMessageExchange(final Envelope envelope,
+                                           final AMQP.BasicProperties properties)
     {
         log.warn("marked for DLQ :  {} ", envelope);
         // TODO: send to special queue for internal review
+        final long deliveryTag = envelope.getDeliveryTag();
+        try
+        {
+            // Nack the message and
+            getChannel().basicNack(deliveryTag, false, false);
+        }
+        catch (IOException e)
+        {
+            log.error("Unable to send to DLQ  : " + envelope, e);
+        }
     }
 
     @SuppressWarnings("unchecked")

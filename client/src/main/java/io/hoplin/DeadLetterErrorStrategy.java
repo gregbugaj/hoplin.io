@@ -24,6 +24,8 @@ public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy
     @Override
     public AckStrategy handleConsumerError(final MessageContext context, final Throwable throwable)
     {
+        int maxRetries = 3;
+
         if(context != null)
         {
             final Map<String, Object> headers = context.getProperties().getHeaders();
@@ -45,7 +47,7 @@ public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy
                 retries += retry;
             }
 
-            if(retries < 3)
+            if(retries < maxRetries)
                 return AcknowledgmentStrategies.NACK_WITHOUT_REQUEUE.strategy();
         }
 
