@@ -1,5 +1,8 @@
 package io.hoplin;
 
+/**
+ * Error handler strategy
+ */
 public interface ConsumerErrorStrategy
 {
    /**
@@ -16,8 +19,9 @@ public interface ConsumerErrorStrategy
 
    /**
     * Handle message cancellation
+    * We NACK current message with requeue set to true
     *
-    * @param context
+    * @param context the message that we trying to cancel
     * @return
     */
    default AckStrategy handleConsumerCancelled(final MessageContext context)

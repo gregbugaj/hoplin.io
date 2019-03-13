@@ -15,6 +15,8 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
 {
     private static final String PROPERTY_NAME = "_payload_type_";
 
+    private static final String STATUS_TAG = "status";
+
     private static final String PAYLOAD_TAG = "payload";
 
     private final Gson gson;
@@ -38,10 +40,12 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
         {
             final JsonObject jsonObject = json.getAsJsonObject();
             final JsonElement propertyElement = jsonObject.get(PROPERTY_NAME);
+            final JsonElement statusElement = jsonObject.get(STATUS_TAG);
 
             if(propertyElement == null)
                 throw new HoplinRuntimeException("Missing payloadtype tag : " + PROPERTY_NAME);
 
+            final String statusValue = statusElement.getAsString();
             final String payloadTypeName = propertyElement.getAsString();
             final JsonElement payload = jsonObject.get(PAYLOAD_TAG);
 
@@ -52,6 +56,7 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
 
                 msg.setType(actualClass);
                 msg.setPayload(out);
+                msg.setStatus(Integer.parseInt(statusValue));
             }
             catch (final ClassNotFoundException e)
             {

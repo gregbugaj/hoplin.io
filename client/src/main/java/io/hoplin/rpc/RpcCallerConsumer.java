@@ -39,7 +39,7 @@ public class RpcCallerConsumer extends DefaultConsumer
     public RpcCallerConsumer(final Channel channel, final Executor executor)
     {
         super(channel);
-        codec = new JsonCodec();
+        this.codec = new JsonCodec();
         this.executor = Objects.requireNonNull(executor);
     }
 
@@ -55,8 +55,8 @@ public class RpcCallerConsumer extends DefaultConsumer
                                final AMQP.BasicProperties properties,
                                final byte[] body)
     {
-        log.info(" handleDelivery : {}", envelope);
-        log.info(" handleDelivery : {}", properties);
+        log.info("RPC handleDelivery Envelope  : {}", envelope);
+        log.info("RPC handleDelivery Properties: {}", properties);
 
         final String messageIdentifier = properties.getCorrelationId();
         final CompletableFuture<Object> action = bindings.remove(messageIdentifier);
@@ -79,6 +79,9 @@ public class RpcCallerConsumer extends DefaultConsumer
             try
             {
                 final MessagePayload<?> reply = deserializeReplyPayload(body);
+                if(reply.isFailure())
+                     action.complete(null);
+
                 action.complete(reply.getPayload());
             }
             catch (final Exception e)

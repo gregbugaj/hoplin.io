@@ -27,15 +27,18 @@ public class RpcClientExample extends BaseExample
 
         // Blocking
         final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient.create(options(), binding);
-        final LogDetailResponse response = client.request(new LogDetailRequest("Request message", "info"));
 
-        log.info("RPC response : {} ", response);
+        final LogDetailResponse response1 = client.request(new LogDetailRequest("Request message 1", "info"));
+        log.info("RPC response : {} ", response1);
+
+        final LogDetailResponse response2 = client.request(new LogDetailRequest("Request message 2", "info"));
+        log.info("RPC response : {} ", response2);
     }
 
     private static void request(RpcClient<LogDetail, String> client)
     {
         long s = System.currentTimeMillis();
-        int tickets  = 10;
+        int tickets  = 1;
 
         for(int i = 0; i < tickets; i++)
         {

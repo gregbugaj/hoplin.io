@@ -25,6 +25,7 @@ public class DefaultRpClientServer<I, O> implements  RpClientServer<I, O>
     {
         Objects.requireNonNull(options);
         Objects.requireNonNull(binding);
+
         client = Rpc.client(options, binding);
         server = Rpc.server(options, binding);
     }

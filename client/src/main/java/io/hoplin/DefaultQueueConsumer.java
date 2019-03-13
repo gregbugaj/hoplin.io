@@ -16,7 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 /**
- * Default consumer
+ * Default queue consumer
  */
 public class DefaultQueueConsumer extends DefaultConsumer
 {
@@ -136,7 +136,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
             }
         }
 
-        acknowledge(getChannel(), context, ack);
+        AckStrategy.acknowledge(getChannel(), context, ack);
     }
 
     private void execute(final MessageContext context, final Object val,final BiConsumer handler)
@@ -149,31 +149,6 @@ public class DefaultQueueConsumer extends DefaultConsumer
         return targetClass.isInstance(candidate)
             ? Optional.of(targetClass.cast(candidate))
             : Optional.empty();
-    }
-
-    /**
-     * Acknowledge given message
-     *
-     * @param channel the channel to send acknowledgment on
-     * @param context the context to use for ack
-     * @param ack the {@link AckStrategy} to use
-     */
-    private void acknowledge(final Channel channel,
-                             final MessageContext context,
-                             final AckStrategy ack)
-    {
-        try
-        {
-            final String messageId = context.getProperties().getMessageId();
-            final long deliveryTag = context.getReceivedInfo().getDeliveryTag();
-            log.info("Acking [messageId, deliveryTag] : {}, {}" , messageId, deliveryTag);
-
-            ack.accept(channel, deliveryTag);
-        }
-        catch (final Exception e)
-        {
-            log.error("Unable to ACK ", e);
-        }
     }
 
     private AckStrategy ackFromOptions(final QueueOptions queueOptions)
@@ -202,14 +177,14 @@ public class DefaultQueueConsumer extends DefaultConsumer
             if (clz == Object.class)
                 break;
 
-            MethodReference reference = new MethodReference<>();
+            final MethodReference reference = new MethodReference<>();
             reference.handler = handler;
             reference.root = clazz;
+
             handlers.put(clz, reference);
             clz = clz.getSuperclass();
         }
     }
-
 
     @Override
     public void handleCancel(final String consumerTag)
@@ -223,5 +198,4 @@ public class DefaultQueueConsumer extends DefaultConsumer
         Class<T> root;
         BiConsumer<T, MessageContext> handler;
     }
-
 }

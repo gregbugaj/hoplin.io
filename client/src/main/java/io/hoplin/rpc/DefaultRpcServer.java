@@ -46,7 +46,7 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
 
         this.client = RabbitMQClient.create(options);
         this.channel = client.channel();
-        this.executor  = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.executor  = createExecutor();
 
         this.exchange = binding.getExchange();
         this.routingKey = binding.getRoutingKey();
@@ -56,6 +56,11 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
             routingKey = "";
 
         bind();
+    }
+
+    private Executor createExecutor()
+    {
+        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     /**

@@ -43,4 +43,5 @@ public enum AcknowledgmentStrategies
      * @return
      */
     public abstract AckStrategy strategy();
+
 }

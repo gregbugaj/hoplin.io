@@ -9,6 +9,10 @@ import java.util.Objects;
  */
 public class MessagePayload<T>
 {
+    // 0 = Success
+    // 1 = Failure
+    private int status;
+
     // Message being sent
     private T payload;
 
@@ -25,9 +29,20 @@ public class MessagePayload<T>
 
     public MessagePayload(final T msg)
     {
+        this(msg, 0);
+    }
+
+    public MessagePayload(final T msg, int status)
+    {
         this.payload = Objects.requireNonNull(msg);
         this.type = msg.getClass().getName();
         this.ctime = System.currentTimeMillis();
+        this.status = status;
+    }
+
+    public static MessagePayload error(final Throwable t)
+    {
+        return new MessagePayload<>(t, 1);
     }
 
     public T getPayload()
@@ -62,7 +77,6 @@ public class MessagePayload<T>
         }
     }
 
-
     public MessagePayload<T> setType(final Class type)
     {
         this.type = type.getName();
@@ -80,4 +94,16 @@ public class MessagePayload<T>
         return ctime;
     }
 
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public boolean isFailure()
+    {
+        return status == 1;
+    }
 }

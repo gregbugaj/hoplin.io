@@ -3,6 +3,8 @@ package io.hoplin;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
 
+import java.util.Objects;
+
 /**
  *  Context that message is associated with
  */
@@ -12,8 +14,19 @@ public class MessageContext
 
     private AMQP.BasicProperties properties;
 
+    /**
+     * Create new message context
+     *
+     * @param consumerTag
+     * @param envelope
+     * @param properties
+     * @return newly created {@link MessageContext}
+     */
     public static MessageContext create(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties)
     {
+        Objects.requireNonNull(consumerTag);
+        Objects.requireNonNull(envelope);
+
         final MessageReceivedInfo receivedInfo = new MessageReceivedInfo(consumerTag,
                                                                          envelope.getDeliveryTag(),
                                                                          envelope.isRedeliver(),
@@ -21,7 +34,6 @@ public class MessageContext
                                                                          envelope.getRoutingKey(),
                                                                          System.currentTimeMillis()
         );
-
 
         final MessageContext context  = new MessageContext();
         context.setReceivedInfo(receivedInfo);

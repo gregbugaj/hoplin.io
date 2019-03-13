@@ -4,15 +4,11 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import io.hoplin.DeadLetterErrorStrategy;
-import io.hoplin.HoplinRuntimeException;
-import io.hoplin.MessagePayload;
-import io.hoplin.RetryPolicy;
+import io.hoplin.*;
 import io.hoplin.json.JsonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -41,7 +37,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
 
     private JsonCodec codec;
 
-    private RetryPolicy retryPolicy;
+    private ConsumerErrorStrategy errorStrategy;
 
     /**
      * Constructs a new instance and records its association to the passed-in channel.
@@ -59,6 +55,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
         this.executor = Objects.requireNonNull(executor);
         this.handler = Objects.requireNonNull(handler);
         this.codec = new JsonCodec();
+        this.errorStrategy = new DeadLetterErrorStrategy(channel);
     }
 
     @Override
@@ -68,20 +65,25 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
                                final byte[] body)
     {
 
-        log.info("handleDelivery : {}, {}", envelope, properties);
+        log.info("RPC handleDelivery Envelope   : {}", envelope);
+        log.info("RPC handleDelivery Properties : {}", properties);
 
         // 1 : Perform the action required in the RPC request
         CompletableFuture
                 .supplyAsync(()-> dispatch(body), executor)
                 .whenComplete((reply, throwable) ->
         {
+            final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
+
             try
             {
-                //0 :there was exception while processing message
+                byte[] replyMessage  = reply;
+
+                //0 : there was unhandled exception while processing message
                 if(throwable != null)
                 {
-                    nack(envelope, properties , throwable);
-                    return;
+                    log.warn("Error dispatching message : {}", throwable);
+                    replyMessage = createErrorMessage(throwable);
                 }
 
                 // 2 : Prepare the reply message Set the correlation ID in the reply properties
@@ -92,64 +94,21 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
 
                 // 3 : Publish the answer on the reply queue
                 final String replyTo = properties.getReplyTo();
-
                 log.info("replyTo, correlationId :  {}, {}", replyTo, properties.getCorrelationId());
 
-                getChannel().basicPublish("", replyTo, replyProperties, reply);
-
+                getChannel().basicPublish("", replyTo, replyProperties, replyMessage);
                 // 4 : Send the ack to the RPC request
-                getChannel().basicAck(envelope.getDeliveryTag(), false);
+
+                // Invoke ACK
+                AckStrategy.acknowledge(getChannel(), context, AcknowledgmentStrategies.BASIC_ACK.strategy());
             }
-            catch (final Exception e)
+            catch (final Exception e1)
             {
-                log.error("Unable to acknowledgeExceptionally execution", e);
-                nack(envelope, properties, throwable);
+                log.error("Unable to acknowledge execution", e1);
             }
         });
     }
 
-    private void nack(final Envelope envelope,
-                      final AMQP.BasicProperties properties,
-                      final Throwable error)
-    {
-        log.info("NACKing : {}, {}, {}", envelope, properties, error);
-        try
-        {
-            boolean retryableExceptions = true;
-
-            final long deliveryTag = envelope.getDeliveryTag();
-
-            if(envelope.isRedeliver())
-            {
-                sendToDeadMessageExchange(envelope, properties);
-            }
-            else
-            {
-                getChannel().basicNack(deliveryTag, false, true);
-            }
-        }
-        catch (final IOException e)
-        {
-            log.error("unable to NACK : " + envelope, e);
-        }
-    }
-
-    private void sendToDeadMessageExchange(final Envelope envelope,
-                                           final AMQP.BasicProperties properties)
-    {
-        log.warn("marked for DLQ :  {} ", envelope);
-        // TODO: send to special queue for internal review
-        final long deliveryTag = envelope.getDeliveryTag();
-        try
-        {
-            // Nack the message and
-            getChannel().basicNack(deliveryTag, false, false);
-        }
-        catch (IOException e)
-        {
-            log.error("Unable to send to DLQ  : " + envelope, e);
-        }
-    }
 
     @SuppressWarnings("unchecked")
     private byte[] dispatch(final byte[] body)
@@ -157,13 +116,35 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
         try
         {
             final MessagePayload<?> requestMsg = codec.deserialize(body, MessagePayload.class);
-            final O reply = handler.apply((I) requestMsg.getPayload());
-            return codec.serialize(new MessagePayload(reply), MessagePayload.class);
+
+            try
+            {
+                final O reply = handler.apply((I) requestMsg.getPayload());
+                return codec.serialize(new MessagePayload(reply), MessagePayload.class);
+            }
+            catch (final Exception e)
+            {
+                log.warn("Handling message error : {} ", e);
+                return codec.serialize(MessagePayload.error(e), MessagePayload.class);
+            }
         }
         catch (final Exception e)
         {
             log.error("Unable to apply reply handler", e);
             throw new HoplinRuntimeException("Unable to apply reply handler", e);
+        }
+    }
+
+    private byte[] createErrorMessage(Throwable throwable)
+    {
+        try
+        {
+            return codec.serialize(MessagePayload.error(throwable), MessagePayload.class);
+        }
+        catch (final Exception e)
+        {
+            log.error("Unable to serialize message", e);
+            throw new HoplinRuntimeException("Unable to serialize message", e);
         }
     }
 }
