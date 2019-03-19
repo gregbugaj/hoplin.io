@@ -231,29 +231,40 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
     }
 
     @Override
-    public void disconnect() throws IOException
+    public void disconnect()
     {
         this.executor.shutdownNow();
-
         try
         {
-            log.debug("Disconnecting create rabbitmq...");
+            log.debug("Disconnecting  rabbitmq...");
+
+            if (channel != null)
+            {
+                try
+                {
+                    log.info("Close Channel #{}...", channel.getChannelNumber());
+                    channel.close();
+                }
+                catch (final TimeoutException | IOException e)
+                {
+                    log.warn("Unable to close channel", e);
+                }
+            }
 
             if (connection != null)
             {
                 try
                 {
+                    log.info("Close Connection...");
                     connection.close();
-                    channel.close();
                 }
-                catch (final TimeoutException | IOException e)
+                catch (final IOException e)
                 {
-                    log.error("Unable to close connection or channel", e);
-                    throw new IOException("Unable to close connection or channel", e);
+                    log.error("Unable to close connection", e);
                 }
             }
 
-            log.debug("Disconnected create rabbitmq !");
+            log.debug("Disconnected rabbitmq !");
         }
         finally
         {
