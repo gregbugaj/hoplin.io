@@ -10,10 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 /**
  * Default queue consumer
@@ -30,7 +30,7 @@ public class DefaultQueueConsumer extends DefaultConsumer
 
     private JsonCodec codec;
 
-    private final ConsumerErrorStrategy consumerErrorStrategy;
+    private final ConsumerErrorStrategy errorStrategy;
 
     /**
      * Constructs a new instance and records its association to the passed-in channel.
@@ -55,8 +55,8 @@ public class DefaultQueueConsumer extends DefaultConsumer
 
         this.queueOptions = Objects.requireNonNull(queueOptions);
         this.executor = Objects.requireNonNull(executor);
-        codec = new JsonCodec();
-        consumerErrorStrategy = new DefaultConsumerErrorStrategy(channel);
+        this.codec = new JsonCodec();
+        this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
     }
 
     /**
@@ -71,72 +71,75 @@ public class DefaultQueueConsumer extends DefaultConsumer
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void handleDelivery(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+    public void handleDelivery(final String consumerTag, final Envelope envelope, final AMQP.BasicProperties properties, byte[] body)
     {
-        AckStrategy ack;
-        final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
-
-        try
+        CompletableFuture.runAsync(()->
         {
-            ack = ackFromOptions(queueOptions);
+            AckStrategy ack;
+            final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
 
-            final MessagePayload message = codec.deserialize(body, MessagePayload.class);
-            final Object val = message.getPayload();
-            final Class<?> targetClass = message.getTypeAsClass();
-            final Collection<MethodReference> consumers = handlers.get(targetClass);
-            final List<Throwable> exceptions = new ArrayList<>();
-
-            int invokedHandlers = 0;
-
-            for(final MethodReference reference : consumers)
-            {
-                try
-                {
-                    final BiConsumer handler = reference.handler;
-                    final Class root = reference.root;
-
-                    if(root == targetClass)
-                    {
-                        ++invokedHandlers;
-                        execute(context, val, handler);
-                    }
-                    else // Down cast if necessary
-                    {
-                        final Optional<?> castedValue = safeCast(val, targetClass);
-                        if(castedValue.isPresent())
-                        {
-                            ++invokedHandlers;
-                            execute(context, castedValue.get(), handler);
-                        }
-                    }
-                }
-                catch (final Exception e)
-                {
-                    exceptions.add(e);
-                    log.error("Handler error for message  : " + message, e);
-                }
-            }
-
-            if(invokedHandlers == 0)
-            {
-                throw new HoplinRuntimeException("No handlers defined for type : " + targetClass);
-            }
-        }
-        catch(final Exception e)
-        {
-            log.error("Unable to process message", e);
             try
             {
-                ack = consumerErrorStrategy.handleConsumerError(context, e);
-            }
-            catch (final Exception ex2)
-            {
-                log.error("Exception in error strategy", ex2);
-                ack = AcknowledgmentStrategies.BASIC_ACK.strategy();
-            }
-        }
+                ack = ackFromOptions(queueOptions);
 
-        AckStrategy.acknowledge(getChannel(), context, ack);
+                final MessagePayload message = codec.deserialize(body, MessagePayload.class);
+                final Object val = message.getPayload();
+                final Class<?> targetClass = message.getTypeAsClass();
+                final Collection<MethodReference> consumers = handlers.get(targetClass);
+                final List<Throwable> exceptions = new ArrayList<>();
+                int invokedHandlers = 0;
+
+                for(final MethodReference reference : consumers)
+                {
+                    try
+                    {
+                        final BiConsumer handler = reference.handler;
+                        final Class root = reference.root;
+
+                        if(root == targetClass)
+                        {
+                            ++invokedHandlers;
+                            execute(context, val, handler);
+                        }
+                        else // Down cast if necessary
+                        {
+                            final Optional<?> castedValue = safeCast(val, targetClass);
+                            if(castedValue.isPresent())
+                            {
+                                ++invokedHandlers;
+                                execute(context, castedValue.get(), handler);
+                            }
+                        }
+                    }
+                    catch (final Exception e)
+                    {
+                        exceptions.add(e);
+                        log.error("Handler error for message  : " + message, e);
+                    }
+                }
+
+                if(invokedHandlers == 0)
+                {
+                    throw new HoplinRuntimeException("No handlers defined for type : " + targetClass);
+                }
+            }
+            catch(final Exception e)
+            {
+                log.error("Unable to process message", e);
+                try
+                {
+                    ack = errorStrategy.handleConsumerError(context, e);
+                }
+                catch (final Exception ex2)
+                {
+                    log.error("Exception in error strategy", ex2);
+                    ack = AcknowledgmentStrategies.BASIC_ACK.strategy();
+                }
+            }
+
+            AckStrategy.acknowledge(getChannel(), context, ack);
+
+        }, executor);
     }
 
     private void execute(final MessageContext context, final Object val,final BiConsumer handler)

@@ -71,8 +71,8 @@ public class RpcCallerConsumer extends DefaultConsumer
 
     private void handleReply(final byte[] body, final CompletableFuture<Object> action)
     {
-        CompletableFuture.runAsync(()->{
-
+        CompletableFuture.runAsync(()->
+        {
             if(log.isDebugEnabled())
                 log.debug("reply body : {}", new String(body));
 
