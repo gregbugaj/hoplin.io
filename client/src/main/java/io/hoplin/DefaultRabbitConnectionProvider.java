@@ -168,19 +168,15 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
     private Channel createChannel() throws IOException
     {
         final Channel channel = connection.createChannel();
+        channel.addShutdownListener(sse->
+        {
 
-        channel.addShutdownListener(sse->{
-
-            if (sse.isInitiatedByApplication())
-            {
+            if (sse.isInitiatedByApplication()) {
                 log.info("Channel #{} closed.", channel.getChannelNumber());
-            }
-            else
-            {
+            } else {
                 log.info("Channel #{} suddenly closed.", channel.getChannelNumber());
             }
         });
-
         return channel;
     }
 
