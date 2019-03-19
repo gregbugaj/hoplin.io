@@ -19,13 +19,13 @@ public abstract class BaseExample
     {
         final RabbitMQOptions options = new RabbitMQOptions();
 
-        options.setConnectionRetries(3);
-        options.setConnectionRetryDelay(250L);
+        options.setConnectionRetries(25);
+        options.setConnectionRetryDelay(500L);
 
         return options;
     }
 
-    /**
+    /**s
      * Create options from connection string
      * @param connectionString
      * @return

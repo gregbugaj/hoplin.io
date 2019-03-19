@@ -1,9 +1,6 @@
 package io.hoplin.rpc;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.*;
 import io.hoplin.*;
 import io.hoplin.json.JsonCodec;
 import org.slf4j.Logger;
@@ -146,5 +143,11 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
             log.error("Unable to serialize message", e);
             throw new HoplinRuntimeException("Unable to serialize message", e);
         }
+    }
+
+    @Override
+    public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig)
+    {
+       log.warn("Handle Shutdown Signal :{} , {}", consumerTag, sig);
     }
 }

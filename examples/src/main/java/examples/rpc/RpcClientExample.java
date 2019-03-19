@@ -28,12 +28,13 @@ public class RpcClientExample extends BaseExample
         // Blocking
         final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient.create(options(), binding);
 
-        while(true)
+        System.out.printf("Waiting");
+//        while(true)
         {
             final LogDetailResponse response1 = client.request(new LogDetailRequest("Request message 1", "info"));
             log.info("RPC response : {} ", response1);
-            final LogDetailResponse response2 = client.request(new LogDetailRequest("Request message 2", "info"));
-            log.info("RPC response : {} ", response2);
+//            final LogDetailResponse response2 = client.request(new LogDetailRequest("Request message 2", "info"));
+//            log.info("RPC response : {} ", response2);
         }
     }
 

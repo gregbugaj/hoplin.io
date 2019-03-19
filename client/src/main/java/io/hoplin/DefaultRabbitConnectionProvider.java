@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,7 +42,12 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
     public Channel acquire()
     {
         if(!isConnected())
-            throw new IllegalStateException("Client is not connected");
+        {
+            log.info("Not connected to AMQP, attempting reconnect");
+            final boolean connected = connect();
+            if(!connected)
+                throw new IllegalStateException("Client is not connected after reconnect attempt");
+        }
 
         if(!isOpenChannel())
         {
@@ -161,13 +168,17 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
     private Channel createChannel() throws IOException
     {
         final Channel channel = connection.createChannel();
-        channel.addShutdownListener(sse->
-        {
-            final boolean initiatedByApplication = sse.isInitiatedByApplication();
-            final boolean hardError = sse.isHardError();
-            System.out.println("KILLED BYX : " + sse);
-            System.out.println("initiatedByApplicationX : " + initiatedByApplication);
-            System.out.println("hardErrorX : " + hardError);
+
+        channel.addShutdownListener(sse->{
+
+            if (sse.isInitiatedByApplication())
+            {
+                log.info("Channel #{} closed.", channel.getChannelNumber());
+            }
+            else
+            {
+                log.info("Channel #{} suddenly closed.", channel.getChannelNumber());
+            }
         });
 
         return channel;
@@ -262,11 +273,15 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
     public void shutdownCompleted(final ShutdownSignalException cause)
     {
         if (cause.isInitiatedByApplication())
+        {
+            log.info("Shutting down AMPQ consumer.");
             return;
+        }
 
         abortConnection();
-        log.info("RabbitMQ connection shutdown! The client will attempt to reconnect automatically", cause);
-        asyncWaitAndReconnect(5l);
+        long delay = 5l;
+        log.info("RabbitMQ connection shutdown! The client will attempt to reconnect automatically in : {} sec, caused by : {}", delay, cause);
+        asyncWaitAndReconnect(delay);
     }
 
     private void asyncWaitAndReconnect(final long delay)

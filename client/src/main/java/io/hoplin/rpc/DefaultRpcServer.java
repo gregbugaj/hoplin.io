@@ -24,8 +24,10 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
 
     private final RabbitMQClient client;
 
-    /** Channel we are communicating on */
-    private final Channel channel;
+    /** Channel we are communicating on
+     *  Upon disconnect this channel will be reinitialized
+     **/
+    private Channel channel;
 
     /** Exchange to send requests to */
     private final String exchange;
@@ -38,6 +40,8 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
 
     // executor that will process incoming RPC requests
     private Executor executor;
+
+    private Function<I,O> handler;
 
     public DefaultRpcServer(final RabbitMQOptions options, final Binding binding)
     {
@@ -55,12 +59,28 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
         if(routingKey == null)
             routingKey = "";
 
+        setupChannel();
         bind();
     }
 
     private Executor createExecutor()
     {
         return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    }
+
+    private void setupChannel()
+    {
+        channel.addShutdownListener(sse->
+        {
+            log.info("Channel Shutdown, reacquiring : channel #{}", channel.getChannelNumber());
+            channel = client.channel();
+
+            if(channel != null)
+            {
+                log.info("New channel #{}", channel, channel.isOpen());
+                reInitHandler();
+            }
+        });
     }
 
     /**
@@ -104,9 +124,21 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
         }
     }
 
+    private void reInitHandler()
+    {
+        log.info("Reinitializing topology & handler");
+
+        setupChannel();
+        bind();
+
+        if(handler != null)
+            consumeRequest(handler);
+    }
+
     @Override
     public void respondAsync(final Function<I, O> handler)
     {
+        this.handler = handler;
         consumeRequest(handler);
     }
 
