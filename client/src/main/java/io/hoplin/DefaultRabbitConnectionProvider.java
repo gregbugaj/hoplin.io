@@ -209,6 +209,19 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
             cf.setVirtualHost(config.getVirtualHost());
         }
 
+        if(config.isTlsEnabled())
+        {
+            try
+            {
+                log.info("Enabling TLS for AMQP input [{}/{}].", config.getHost(), config.getVirtualHost());
+                cf.useSslProtocol();
+            }
+            catch (NoSuchAlgorithmException | KeyManagementException e)
+            {
+                throw new IOException("Couldn't enable TLS for AMQP input.", e);
+            }
+        }
+
         cf.setConnectionTimeout(config.getConnectionTimeout());
         cf.setRequestedHeartbeat(config.getRequestedHeartbeat());
         cf.setHandshakeTimeout(config.getHandshakeTimeout());

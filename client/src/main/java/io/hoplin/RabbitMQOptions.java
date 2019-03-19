@@ -73,7 +73,7 @@ public class RabbitMQOptions
     /**
      * The default automatic recovery enabled = {@code false}
      */
-    public static final boolean DEFAULT_AUTOMATIC_RECOVERY_ENABLED = false;
+    public static final boolean DEFAULT_AUTOMATIC_RECOVERY_ENABLED = true;
 
     /**
      * The default connection retry delay = {@code 10000}
@@ -113,6 +113,8 @@ public class RabbitMQOptions
         this.clientProperties = createDefaultClientProperties();
     }
 
+    private boolean tlsEnabled;
+
     public RabbitMQOptions(final Map<String, Object> clientProperties, boolean overwrite)
     {
         Objects.requireNonNull(clientProperties);
@@ -145,6 +147,7 @@ public class RabbitMQOptions
         clientProperties = that.clientProperties;
         keepUnroutableMessages = that.keepUnroutableMessages;
         unroutableDirectory = that.unroutableDirectory;
+        tlsEnabled = that.tlsEnabled;
     }
 
     private Map<String, Object> createDefaultClientProperties()
@@ -448,6 +451,17 @@ public class RabbitMQOptions
                              + "Hostname:    '%s'%n"
                              + "VirtualHost: '%s'%n"
                              + "Port: '%s'%n"
-                , getHost(), getHostName(), getVirtualHost(), getPort());
+                             + "TLS: '%s'%n"
+                , getHost(), getHostName(), getVirtualHost(), getPort(), isTlsEnabled());
+    }
+
+    public boolean isTlsEnabled()
+    {
+        return tlsEnabled;
+    }
+
+    public void setTlsEnabled(boolean tlsEnabled)
+    {
+        this.tlsEnabled = tlsEnabled;
     }
 }
