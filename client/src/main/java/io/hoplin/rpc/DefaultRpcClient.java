@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Default implementation of RPC client
@@ -28,9 +29,9 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
 
     private JsonCodec codec;
 
-    /** Channel we are communicating on */
+    /** Channel we are communicating on
     private final Channel channel;
-
+     */
     /** Queue where we will listen for our RPC replies */
     private String replyToQueueName;
 
@@ -47,9 +48,7 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         Objects.requireNonNull(binding);
 
         this.client = RabbitMQClient.create(options);
-        this.channel = client.channel();
         this.codec = new JsonCodec();
-
         this.exchange = binding.getExchange();
         this.replyToQueueName = binding.getQueue();
 
@@ -83,6 +82,7 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         {
             if(!directReply)
             {
+                final Channel channel = channel();
                 channel.exchangeDeclare(exchange, "direct",false, true, null);
                 channel.queueDeclare(replyToQueueName, false, false, true, null);
             }
@@ -93,10 +93,40 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         }
     }
 
+    private Channel channel()
+    {
+        final Channel channel = client.channel();
+        if(false)
+        {
+            channel.addShutdownListener(sse->
+            {
+                final boolean initiatedByApplication = sse.isInitiatedByApplication();
+                final boolean hardError = sse.isHardError();
+                System.out.println("KILLED BY : " + sse);
+                System.out.println("initiatedByApplication : " + initiatedByApplication);
+                System.out.println("hardError : " + hardError);
+            });
+
+            System.out.println("HELLO OPEN ME : " + channel.isOpen());
+            try
+            {
+                channel.close();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            System.out.println("HELLO OPEN ME2 : " + channel.isOpen());
+        }
+        return channel;
+    }
+    
     private void consumeReply()
     {
         try
         {
+            final Channel channel = channel();
             consumer = new RpcCallerConsumer(channel);
             channel.basicConsume(replyToQueueName, true, consumer);
         }
@@ -179,7 +209,7 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
                     .build();
 
             consumer.bind(messageIdentifier, promise);
-            channel.basicPublish(exchange, routingKey, props, createRequestPayload(request));
+            channel().basicPublish(exchange, routingKey, props, createRequestPayload(request));
         }
         catch (final IOException e)
         {

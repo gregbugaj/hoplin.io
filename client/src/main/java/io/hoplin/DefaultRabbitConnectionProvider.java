@@ -47,7 +47,7 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
             try
             {
                 log.debug("channel is closed");
-                channel = connection.createChannel();
+                channel = createChannel();
             }
             catch (final IOException e)
             {
@@ -148,9 +148,29 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
         long s = System.currentTimeMillis();
         log.debug("Connecting to rabbitmq...");
         connection = newConnection(config);
-        channel = connection.createChannel();
+        channel = createChannel();
         long ms = System.currentTimeMillis() - s;
         log.debug("Connected to rabbitmq in {} ms", ms);
+    }
+
+    /**
+     * Create and decorate our channel for possible reconnect
+     * @return
+     * @throws IOException
+     */
+    private Channel createChannel() throws IOException
+    {
+        final Channel channel = connection.createChannel();
+        channel.addShutdownListener(sse->
+        {
+            final boolean initiatedByApplication = sse.isInitiatedByApplication();
+            final boolean hardError = sse.isHardError();
+            System.out.println("KILLED BYX : " + sse);
+            System.out.println("initiatedByApplicationX : " + initiatedByApplication);
+            System.out.println("hardErrorX : " + hardError);
+        });
+
+        return channel;
     }
 
     private static Connection newConnection(final RabbitMQOptions config) throws IOException, TimeoutException
@@ -222,18 +242,35 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider
         }
     }
 
+    private synchronized void abortConnection()
+    {
+        if(connection == null)
+            return;
+        try
+        {
+            connection.abort();
+        }
+        catch (final Exception e)
+        {
+            log.warn("Failed to abort connect due to "+ e.getMessage());
+        }
+
+        connection = null;
+    }
+
     @Override
     public void shutdownCompleted(final ShutdownSignalException cause)
     {
         if (cause.isInitiatedByApplication())
             return;
 
+        abortConnection();
         log.info("RabbitMQ connection shutdown! The client will attempt to reconnect automatically", cause);
-        asyncWaitAndReconnect();
+        asyncWaitAndReconnect(5l);
     }
 
-    private void asyncWaitAndReconnect()
+    private void asyncWaitAndReconnect(final long delay)
     {
-        executor.schedule(this::connect, 5, TimeUnit.SECONDS);
+        executor.schedule(this::connect, delay, TimeUnit.SECONDS);
     }
 }

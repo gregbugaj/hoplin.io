@@ -29,7 +29,7 @@ public class RpcServerExample extends BaseExample
 
     private static LogDetailResponse handler(final LogDetailRequest log)
     {
-        if(true)
+        if(false)
         {
              throw new RuntimeException("Faulty message handler");
         }
