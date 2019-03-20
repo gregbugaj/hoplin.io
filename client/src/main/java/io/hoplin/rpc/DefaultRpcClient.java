@@ -119,40 +119,10 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         consumeReply();
     }
 
-    private Channel channel()
-    {
-        final Channel channel = client.channel();
-        if(false)
-        {
-            channel.addShutdownListener(sse->
-            {
-                final boolean initiatedByApplication = sse.isInitiatedByApplication();
-                final boolean hardError = sse.isHardError();
-                System.out.println("KILLED BY : " + sse);
-                System.out.println("initiatedByApplication : " + initiatedByApplication);
-                System.out.println("hardError : " + hardError);
-            });
-
-            System.out.println("HELLO OPEN ME : " + channel.isOpen());
-            try
-            {
-                channel.close();
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-
-            System.out.println("HELLO OPEN ME2 : " + channel.isOpen());
-        }
-        return channel;
-    }
-
     private void consumeReply()
     {
         try
         {
-            final Channel channel = channel();
             consumer = new RpcCallerConsumer(channel);
             channel.basicConsume(replyToQueueName, true, consumer);
         }
@@ -235,7 +205,7 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
                     .build();
 
             consumer.bind(messageIdentifier, promise);
-            channel().basicPublish(exchange, routingKey, props, createRequestPayload(request));
+            channel.basicPublish(exchange, routingKey, props, createRequestPayload(request));
         }
         catch (final IOException e)
         {
