@@ -29,15 +29,9 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
 
     private JsonCodec codec;
 
-<<<<<<< HEAD
     /** Channel we are communicating on*/
     private Channel channel;
 
-=======
-    /** Channel we are communicating on
-    private final Channel channel;
-     */
->>>>>>> ce54c9d72d26b62837562711a113794bdc0e9d27
     /** Queue where we will listen for our RPC replies */
     private String replyToQueueName;
 
@@ -101,7 +95,6 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         }
     }
 
-<<<<<<< HEAD
     private void setupChannel()
     {
         channel.addShutdownListener(sse->
@@ -126,7 +119,6 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         consumeReply();
     }
 
-=======
     private Channel channel()
     {
         final Channel channel = client.channel();
@@ -155,8 +147,7 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
         }
         return channel;
     }
-    
->>>>>>> ce54c9d72d26b62837562711a113794bdc0e9d27
+
     private void consumeReply()
     {
         try
