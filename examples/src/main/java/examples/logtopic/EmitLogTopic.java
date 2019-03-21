@@ -8,6 +8,7 @@ import io.hoplin.metrics.FunctionMetricsPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -59,7 +60,7 @@ public class EmitLogTopic extends BaseExample
         }
     }
 
-    private static void metrics(Object o)
+    private static void metrics(final Map<String, Map<String, String>> o)
     {
         System.out.println("Metrics Info : " + o);
     }

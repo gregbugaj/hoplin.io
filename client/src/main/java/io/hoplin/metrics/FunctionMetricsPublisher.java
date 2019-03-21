@@ -80,7 +80,7 @@ public class FunctionMetricsPublisher implements MetricsPublisher
         executor.shutdown();
     }
 
-    public static Builder consumer(final Consumer consumer)
+    public static Builder consumer(final Consumer<Map<String, Map<String, String>>> consumer)
     {
         Objects.requireNonNull(consumer);
         return new Builder(consumer);
