@@ -3,6 +3,7 @@ package io.hoplin.rpc;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.*;
+import io.hoplin.metrics.QueueMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,8 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
     private static final Logger log = LoggerFactory.getLogger(DefaultRpcServer.class);
 
     private final RabbitMQClient client;
+
+    private final QueueMetrics metrics;
 
     /** Channel we are communicating on
      *  Upon disconnect this channel will be reinitialized
@@ -59,6 +62,7 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
         if(routingKey == null)
             routingKey = "";
 
+        this.metrics = QueueMetrics.Factory.getInstance(exchange+"-"+requestQueueName);
         setupChannel();
         bind();
     }
@@ -116,7 +120,7 @@ public class DefaultRpcServer<I, O> implements RpcServer <I, O>
             final AMQP.Queue.BindOk bindStatus = channel.queueBind(requestQueueName, exchange, routingKey);
             log.info("consumeRequest requestQueueName : {}, {}", requestQueueName, bindStatus);
             channel.basicQos(1);
-            channel.basicConsume(requestQueueName, false, new RpcResponderConsumer(channel, handler, executor));
+            channel.basicConsume(requestQueueName, false, new RpcResponderConsumer(channel, handler, executor, metrics));
         }
         catch (final Exception e)
         {

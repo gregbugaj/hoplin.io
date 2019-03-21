@@ -7,6 +7,7 @@ import com.rabbitmq.client.Envelope;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
 import io.hoplin.json.JsonCodec;
+import io.hoplin.metrics.QueueMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,8 @@ public class RpcCallerConsumer extends DefaultConsumer
 {
     private static final Logger log = LoggerFactory.getLogger(RpcCallerConsumer.class);
 
+    private final QueueMetrics metrics;
+
     private ConcurrentHashMap<String, CompletableFuture> bindings = new ConcurrentHashMap<>();
 
     private JsonCodec codec;
@@ -36,17 +39,19 @@ public class RpcCallerConsumer extends DefaultConsumer
      *
      * @param channel the channel to which this consumer is attached
      */
-    public RpcCallerConsumer(final Channel channel, final Executor executor)
+    public RpcCallerConsumer(final Channel channel, final QueueMetrics metrics, final Executor executor)
     {
         super(channel);
         this.codec = new JsonCodec();
         this.executor = Objects.requireNonNull(executor);
+        this.metrics = Objects.requireNonNull(metrics);
     }
 
-    public RpcCallerConsumer(final Channel channel)
+    public RpcCallerConsumer(final Channel channel, QueueMetrics metrics)
     {
-        this(channel, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+        this(channel, metrics, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
     }
+
 
     @SuppressWarnings("unchecked")
     @Override
@@ -91,6 +96,11 @@ public class RpcCallerConsumer extends DefaultConsumer
             {
                 log.error("Unable to complete reply action", e);
                 action.completeExceptionally(e);
+            }
+            finally
+            {
+                metrics.markMessageReceived();
+                metrics.incrementReceived(body.length);
             }
 
         }, executor);

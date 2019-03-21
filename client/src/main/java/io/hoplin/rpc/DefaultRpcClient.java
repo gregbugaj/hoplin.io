@@ -4,6 +4,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.*;
 import io.hoplin.json.JsonCodec;
+import io.hoplin.metrics.QueueMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,8 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
 
     private boolean directReply;
 
+    private QueueMetrics metrics;
+
     public DefaultRpcClient(final RabbitMQOptions options, final Binding binding)
     {
         Objects.requireNonNull(options);
@@ -76,15 +79,18 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
             replyToQueueName = replyToQueueName+".reply-to." + UUID.randomUUID();
         }
 
+        final String metricsKey = exchange + "-" + replyToQueueName;
+        metrics = QueueMetrics.Factory.getInstance(metricsKey);
+
         log.info("Param Exchange    : {}", exchange);
         log.info("Param ReplyTo     : {}", replyToQueueName);
         log.info("Param directReply : {}", directReply);
+        log.info("Param metricsKey  : {}", metricsKey);
 
         try
         {
             if(!directReply)
             {
-                final Channel channel = channel();
                 channel.exchangeDeclare(exchange, "direct",false, true, null);
                 channel.queueDeclare(replyToQueueName, false, false, true, null);
             }
@@ -123,7 +129,7 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
     {
         try
         {
-            consumer = new RpcCallerConsumer(channel);
+            consumer = new RpcCallerConsumer(channel, metrics);
             channel.basicConsume(replyToQueueName, true, consumer);
         }
         catch (final Exception e)
@@ -193,8 +199,10 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
             throw new IllegalArgumentException("routingKey should not be null");
 
         final CompletableFuture<O> promise = new CompletableFuture<>();
+
         try
         {
+
             log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
             final String messageIdentifier =  UUID.randomUUID().toString();
 
@@ -204,8 +212,12 @@ public class DefaultRpcClient<I, O> implements RpcClient <I, O>
                     .replyTo(replyToQueueName)
                     .build();
 
+            final byte[] payload = createRequestPayload(request);
             consumer.bind(messageIdentifier, promise);
-            channel.basicPublish(exchange, routingKey, props, createRequestPayload(request));
+            channel.basicPublish(exchange, routingKey, props, payload);
+
+            metrics.incrementSend(payload.length);
+            metrics.markMessageSent();
         }
         catch (final IOException e)
         {

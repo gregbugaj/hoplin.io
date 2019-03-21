@@ -40,6 +40,7 @@ public class MessagePayload<T>
         this.status = status;
     }
 
+
     public static MessagePayload error(final Throwable t)
     {
         return new MessagePayload<>(t, 1);

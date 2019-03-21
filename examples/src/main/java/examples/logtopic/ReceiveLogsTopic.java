@@ -4,8 +4,11 @@ import examples.BaseExample;
 import examples.LogDetail;
 import examples.logdirect.EmitLogDirect;
 import io.hoplin.*;
+import io.hoplin.metrics.FunctionMetricsPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class ReceiveLogsTopic extends BaseExample
 {
@@ -20,6 +23,13 @@ public class ReceiveLogsTopic extends BaseExample
 
 //        final ExchangeClient client = clientFromBinding(EXCHANGE, "log.all", "#");
 
+        FunctionMetricsPublisher
+                .consumer(ReceiveLogsTopic::metrics)
+                .withInterval(1, TimeUnit.SECONDS)
+                .withResetOnReporting(false)
+                .build()
+                .start();
+
         // Exchange and Binding Queue will be determined based on the supplied Type of the Message
         final ExchangeClient client = ExchangeClient.topic(options());
         final SubscriptionResult sub = client.subscribe("test", LogDetail.class, msg -> log.info("Message received [{}]", msg));
@@ -32,6 +42,12 @@ public class ReceiveLogsTopic extends BaseExample
         info(sub);
 
         Thread.currentThread().join();
+    }
+
+
+    private static void metrics(Object o)
+    {
+        System.out.println("Metrics Info : " + o);
     }
 
     private static ExchangeClient clientFromExchange(final String exchange, final String queue, final String routingKey)

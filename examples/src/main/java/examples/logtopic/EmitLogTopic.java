@@ -2,9 +2,13 @@ package examples.logtopic;
 
 import examples.BaseExample;
 import examples.LogDetail;
+import examples.rpc.RpcServerExample;
 import io.hoplin.*;
+import io.hoplin.metrics.FunctionMetricsPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is example of a Work Queues with routing patterns (Topic Exchange)
@@ -22,9 +26,17 @@ public class EmitLogTopic extends BaseExample
 
     public static void main(final String... args) throws InterruptedException
     {
+        FunctionMetricsPublisher
+                .consumer(EmitLogTopic::metrics)
+                .withInterval(1, TimeUnit.SECONDS)
+                .withResetOnReporting(false)
+                .build()
+                .start();
+
         log.info("Starting producer for exchange : {}", EXCHANGE);
         final ExchangeClient client = clientFromBinding();
         client.publish(createMessage("warning"), "log.critical.warning");
+
 
         Thread.currentThread().join();
 
@@ -32,7 +44,6 @@ public class EmitLogTopic extends BaseExample
         client.publish(createMessage("debug"), "log.info.debug");
         client.publish(createMessage("warning"), "log.critical.warning");
         client.publish(createMessage("error"), "log.critical.error");
-
 
         client.awaitQuiescence();
         Thread.currentThread().join();
@@ -46,6 +57,11 @@ public class EmitLogTopic extends BaseExample
 
             Thread.sleep(1000L);
         }
+    }
+
+    private static void metrics(Object o)
+    {
+        System.out.println("Metrics Info : " + o);
     }
 
     private static ExchangeClient clientFromExchange()

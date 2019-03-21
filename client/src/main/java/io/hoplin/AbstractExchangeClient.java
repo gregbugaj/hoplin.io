@@ -2,6 +2,7 @@ package io.hoplin;
 
 import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
+import io.hoplin.metrics.QueueMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
         setupErrorHandling();
     }
 
-    /**
+     /**
      * setup error handling queues
      */
     private void setupErrorHandling()
@@ -125,7 +126,7 @@ abstract class AbstractExchangeClient implements ExchangeClient
      * @param <T>
      * @return
      */
-    private <T> String getQueueNameFromHandler(String subscriberId, String exchange, Class<T> clazz)
+    private <T> String getQueueNameFromHandler(final String subscriberId, final String exchange, final Class<T> clazz)
     {
        return String.format("%s:%s:%s",subscriberId, exchange, clazz.getName());
     }

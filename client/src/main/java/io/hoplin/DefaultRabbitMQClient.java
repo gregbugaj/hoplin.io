@@ -4,6 +4,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import io.hoplin.json.JsonCodec;
+import io.hoplin.metrics.QueueMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +107,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
                     channel.addConfirmListener(this::confirmedAck, this::confirmedNack);
                 }
 
-                consumer = new DefaultQueueConsumer(channel, options);
+                consumer = new DefaultQueueConsumer(queue, channel, options);
                 channel.basicQos(prefetchCount);
 
                 final String consumerTag = channel.basicConsume(queue, autoAck, consumer);
@@ -225,19 +226,6 @@ public class DefaultRabbitMQClient implements RabbitMQClient
         T handle(Channel channel) throws Exception;
     }
 
-
-    private void logReceived(final Object message)
-    {
-        if (message == null)
-        {
-            log.debug("Received no message");
-        }
-        else if (log.isDebugEnabled())
-        {
-            log.debug("Received: {}", message);
-        }
-    }
-
     @Override
     public boolean isConnected()
     {
@@ -280,6 +268,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient
     @Override
     public <T> void basicPublish(final String exchange, final String routingKey, final T message, final Map<String,Object> headers)
     {
+
         try
         {
             final String messageId = UUID.randomUUID().toString();
@@ -292,9 +281,13 @@ public class DefaultRabbitMQClient implements RabbitMQClient
                     .build();
 
             log.info("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey, messageId);
-
             final byte[] body = codec.serialize(message);
             channel.basicPublish(exchange, routingKey, props, body);
+
+            // mark
+            final QueueMetrics metrics = QueueMetrics.Factory.getInstance(exchange+"-"+routingKey);
+            metrics.markMessageSent();
+            metrics.incrementSend(body.length);
         }
         catch (final IOException e)
         {

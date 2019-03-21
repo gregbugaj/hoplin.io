@@ -3,6 +3,7 @@ package io.hoplin.metrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -60,13 +61,16 @@ public interface QueueMetrics
      */
     long getReceivedSize();
 
+    /**
+     * Reset underlying statistics
+     */
+    void reset();
 
     class Factory
     {
         private static final Logger log = LoggerFactory.getLogger(QueueMetrics.class);
 
         private static final Map<String, QueueMetrics> metrics = new ConcurrentHashMap<>();
-
 
         public static QueueMetrics getInstance(final String key)
         {
@@ -83,6 +87,11 @@ public interface QueueMetrics
             }
 
             return existing;
+        }
+
+        public static Map<String, QueueMetrics> getMetrics()
+        {
+            return Collections.unmodifiableMap(metrics);
         }
     }
 
@@ -123,13 +132,13 @@ public interface QueueMetrics
         @Override
         public void incrementReceived(long dataSizeInBytes)
         {
-            sentData.addAndGet(dataSizeInBytes);
+            receivedData.addAndGet(dataSizeInBytes);
         }
 
         @Override
         public void incrementSend(long dataSizeInBytes)
         {
-            receivedData.addAndGet(dataSizeInBytes);
+            sentData.addAndGet(dataSizeInBytes);
         }
 
         @Override
@@ -142,6 +151,15 @@ public interface QueueMetrics
         public long getReceivedSize()
         {
             return receivedData.get();
+        }
+
+        @Override
+        public synchronized void reset()
+        {
+            sent.set(0);
+            received.set(0);
+            sentData.set(0);
+            receivedData.set(0);
         }
     }
 }

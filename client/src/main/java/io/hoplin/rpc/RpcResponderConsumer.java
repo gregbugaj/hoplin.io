@@ -3,6 +3,7 @@ package io.hoplin.rpc;
 import com.rabbitmq.client.*;
 import io.hoplin.*;
 import io.hoplin.json.JsonCodec;
+import io.hoplin.metrics.QueueMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,8 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
 
     private final Function<I, O> handler;
 
+    private final QueueMetrics metrics;
+
     private JsonCodec codec;
 
     private ConsumerErrorStrategy errorStrategy;
@@ -45,12 +48,13 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
 
     public RpcResponderConsumer(final Channel channel,
                                        final Function<I, O> handler,
-                                       final Executor executor)
+                                       final Executor executor, QueueMetrics metrics)
     {
         super(channel);
 
         this.executor = Objects.requireNonNull(executor);
         this.handler = Objects.requireNonNull(handler);
+        this.metrics = Objects.requireNonNull(metrics);
         this.codec = new JsonCodec();
         this.errorStrategy = new DeadLetterErrorStrategy(channel);
     }
@@ -64,6 +68,9 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
 
         log.info("RPC handleDelivery Envelope   : {}", envelope);
         log.info("RPC handleDelivery Properties : {}", properties);
+
+        metrics.markMessageReceived();
+        metrics.incrementReceived(body.length);
 
         // 1 : Perform the action required in the RPC request
         CompletableFuture
@@ -98,6 +105,9 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
 
                 // Invoke ACK
                 AckStrategy.acknowledge(getChannel(), context, AcknowledgmentStrategies.BASIC_ACK.strategy());
+
+                metrics.markMessageSent();
+                metrics.incrementSend(replyMessage.length);
             }
             catch (final Exception e1)
             {
@@ -106,24 +116,25 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
         });
     }
 
-
     @SuppressWarnings("unchecked")
     private byte[] dispatch(final byte[] body)
     {
         try
         {
             final MessagePayload<?> requestMsg = codec.deserialize(body, MessagePayload.class);
-
+            MessagePayload payload;
             try
             {
                 final O reply = handler.apply((I) requestMsg.getPayload());
-                return codec.serialize(new MessagePayload(reply), MessagePayload.class);
+                payload = new MessagePayload(reply);
             }
             catch (final Exception e)
             {
                 log.warn("Handling message error : {} ", e);
-                return codec.serialize(MessagePayload.error(e), MessagePayload.class);
+                payload = MessagePayload.error(e);
             }
+
+            return codec.serialize(payload, MessagePayload.class);
         }
         catch (final Exception e)
         {
@@ -132,7 +143,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer
         }
     }
 
-    private byte[] createErrorMessage(Throwable throwable)
+    private byte[] createErrorMessage(final Throwable throwable)
     {
         try
         {

@@ -4,10 +4,14 @@ import examples.BaseExample;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
 import io.hoplin.DirectExchange;
+import io.hoplin.metrics.FunctionMetricsPublisher;
+import io.hoplin.metrics.MetricsPublisher;
 import io.hoplin.rpc.DefaultRpcServer;
 import io.hoplin.rpc.RpcServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * RPC Server example
@@ -24,7 +28,19 @@ public class RpcServerExample extends BaseExample
         final RpcServer<LogDetailRequest, LogDetailResponse> server = DefaultRpcServer.create(options(), binding);
         server.respondAsync(RpcServerExample::handler);
 
+        FunctionMetricsPublisher
+                .consumer(RpcServerExample::metrics)
+                .withInterval(1, TimeUnit.SECONDS)
+                .withResetOnReporting(false)
+                .build()
+                .start();
+
         Thread.currentThread().join();
+    }
+
+    private static void metrics(Object o)
+    {
+        System.out.println("Metrics Info : " + o);
     }
 
     private static LogDetailResponse handler(final LogDetailRequest log)

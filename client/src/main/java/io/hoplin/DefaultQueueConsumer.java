@@ -6,6 +6,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.hoplin.json.JsonCodec;
+import io.hoplin.metrics.QueueMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,9 @@ public class DefaultQueueConsumer extends DefaultConsumer
 
     private final QueueOptions queueOptions;
 
-    private ArrayListMultimap<Class, MethodReference> handlers = ArrayListMultimap.create();
+    private final QueueMetrics metrics;
+
+    private ArrayListMultimap<Class<?>, MethodReference> handlers = ArrayListMultimap.create();
 
     private Executor executor;
 
@@ -35,12 +38,13 @@ public class DefaultQueueConsumer extends DefaultConsumer
     /**
      * Constructs a new instance and records its association to the passed-in channel.
      *
+     * @param queue
      * @param channel the channel to which this consumer is attached
      * @param queueOptions the options to use for this queue consumer
      */
-    public DefaultQueueConsumer(final Channel channel, final QueueOptions queueOptions)
+    public DefaultQueueConsumer(String queue, final Channel channel, final QueueOptions queueOptions)
     {
-        this(channel, queueOptions, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+        this(queue, channel, queueOptions, Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
     }
 
     /**
@@ -49,14 +53,14 @@ public class DefaultQueueConsumer extends DefaultConsumer
      * @param queueOptions
      * @param executor
      */
-    public DefaultQueueConsumer(final Channel channel, final QueueOptions queueOptions, final Executor executor)
+    public DefaultQueueConsumer(final String queue, final Channel channel, final QueueOptions queueOptions, final Executor executor)
     {
         super(channel);
-
         this.queueOptions = Objects.requireNonNull(queueOptions);
         this.executor = Objects.requireNonNull(executor);
         this.codec = new JsonCodec();
         this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
+        this.metrics = QueueMetrics.Factory.getInstance(queue);
     }
 
     /**
@@ -73,6 +77,9 @@ public class DefaultQueueConsumer extends DefaultConsumer
     @Override
     public void handleDelivery(final String consumerTag, final Envelope envelope, final AMQP.BasicProperties properties, byte[] body)
     {
+        metrics.markMessageReceived();
+        metrics.incrementReceived(body.length);
+
         CompletableFuture.runAsync(()->
         {
             AckStrategy ack;
