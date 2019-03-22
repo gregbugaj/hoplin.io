@@ -25,8 +25,8 @@ public class BatchProcessingExample extends BaseExample
         {
             for(int i = 0; i < 1000; ++i)
             {
-                context.enque(() -> new LogDetail("Msg >> " + System.nanoTime(), "info"));
-                context.enque(() -> new LogDetail("Msg >> " + System.nanoTime(), "warn"));
+                context.enqueue(() -> new LogDetail("Msg >> " + System.nanoTime(), "info"));
+                context.enqueue(() -> new LogDetail("Msg >> " + System.nanoTime(), "warn"));
             }
         })
         .whenComplete((context, throwable)->

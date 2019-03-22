@@ -30,7 +30,7 @@ public class BatchContext implements Iterable<BatchContextTask>
      * @param taskSupplier
      * @param <T>
      */
-    public <T> void enque(final Supplier<T> taskSupplier)
+    public <T> void enqueue(final Supplier<T> taskSupplier)
     {
         Objects.requireNonNull(taskSupplier);
         final T taskMessage = taskSupplier.get();
@@ -42,7 +42,7 @@ public class BatchContext implements Iterable<BatchContextTask>
         tasks.add(new BatchContextTask(taskMessage));
     }
 
-    public long decrementAndGetTaskCount()
+    long decrementAndGetTaskCount()
     {
         final long count = --taskCounter;
         if(count == 0)
@@ -54,7 +54,7 @@ public class BatchContext implements Iterable<BatchContextTask>
     }
 
     /**
-     * Time it
+     * Time it took to process the message
      * @return
      */
     public Duration duration()
