@@ -12,7 +12,7 @@ import io.hoplin.DeadLetterErrorStrategy;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessageContext;
 import io.hoplin.MessagePayload;
-import io.hoplin.json.JsonCodec;
+import io.hoplin.json.JsonMessageCodec;
 import io.hoplin.metrics.QueueMetrics;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -44,7 +44,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
 
   private final QueueMetrics metrics;
 
-  private JsonCodec codec;
+  private JsonMessageCodec codec;
 
   private ConsumerErrorStrategy errorStrategy;
 
@@ -64,7 +64,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
     this.executor = Objects.requireNonNull(executor);
     this.handler = Objects.requireNonNull(handler);
     this.metrics = Objects.requireNonNull(metrics);
-    this.codec = new JsonCodec();
+    this.codec = new JsonMessageCodec();
     this.errorStrategy = new DeadLetterErrorStrategy(channel);
   }
 

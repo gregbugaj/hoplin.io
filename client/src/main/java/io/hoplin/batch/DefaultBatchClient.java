@@ -7,7 +7,7 @@ import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
 import io.hoplin.RabbitMQClient;
 import io.hoplin.RabbitMQOptions;
-import io.hoplin.json.JsonCodec;
+import io.hoplin.json.JsonMessageCodec;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +34,7 @@ public class DefaultBatchClient implements BatchClient {
    * Exchange to send requests to
    */
   private final String exchange;
-  private JsonCodec codec;
+  private JsonMessageCodec codec;
   /**
    * Queue where we will listen for our RPC replies
    */
@@ -51,7 +51,7 @@ public class DefaultBatchClient implements BatchClient {
 
     this.client = RabbitMQClient.create(options);
     this.channel = client.channel();
-    this.codec = new JsonCodec();
+    this.codec = new JsonMessageCodec();
 
     this.exchange = binding.getExchange();
     this.replyToQueueName = binding.getQueue();

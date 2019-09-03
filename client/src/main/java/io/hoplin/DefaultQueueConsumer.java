@@ -5,13 +5,14 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import io.hoplin.json.JsonCodec;
+import io.hoplin.json.JsonMessageCodec;
 import io.hoplin.metrics.QueueMetrics;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -29,10 +30,12 @@ public class DefaultQueueConsumer extends DefaultConsumer {
   private final QueueOptions queueOptions;
 
   private final QueueMetrics metrics;
+
   private final ConsumerErrorStrategy errorStrategy;
+
   private ArrayListMultimap<Class<?>, MethodReference> handlers = ArrayListMultimap.create();
+
   private Executor executor;
-  private JsonCodec codec;
 
   /**
    * Constructs a new instance and records its association to the passed-in channel.
@@ -59,7 +62,6 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     super(channel);
     this.queueOptions = Objects.requireNonNull(queueOptions);
     this.executor = Objects.requireNonNull(executor);
-    this.codec = new JsonCodec();
     this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
     this.metrics = QueueMetrics.Factory.getInstance(queue);
   }
@@ -88,6 +90,9 @@ public class DefaultQueueConsumer extends DefaultConsumer {
       try {
 
         ack = ackFromOptions(queueOptions);
+
+        final Set<Class<?>> handlerClasses = handlers.keySet();
+        final JsonMessageCodec codec = new JsonMessageCodec(handlerClasses, (b)->{});
 
         final MessagePayload message = codec.deserialize(body, MessagePayload.class);
         final Object val = message.getPayload();
@@ -179,6 +184,8 @@ public class DefaultQueueConsumer extends DefaultConsumer {
       handlers.put(clz, reference);
       clz = clz.getSuperclass();
     }
+
+    log.info("Adding handler : {}, {}", handlers);
   }
 
   @Override
@@ -189,7 +196,13 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
   private static class MethodReference<T> {
 
-    Class<T> root;
-    BiConsumer<T, MessageContext> handler;
+    private Class<T> root;
+
+    private BiConsumer<T, MessageContext> handler;
+
+    @Override
+    public String toString() {
+      return root + ":" + handler;
+    }
   }
 }

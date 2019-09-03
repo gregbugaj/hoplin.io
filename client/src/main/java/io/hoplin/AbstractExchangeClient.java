@@ -164,6 +164,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   @Override
   public <T> SubscriptionResult subscribe(Class<T> clazz, BiConsumer<T, MessageContext> handler,
       Consumer<SubscriptionConfigurator> cfg) {
+
     final SubscriptionConfigurator configurator = new SubscriptionConfigurator();
     cfg.accept(configurator);
 
@@ -180,8 +181,8 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   public <T> SubscriptionResult subscribe(Class<T> clazz, Consumer<T> handler,
       Consumer<SubscriptionConfigurator> cfg) {
     // wrap handler into our BiConsumer
-    final BiConsumer<T, MessageContext> biHandler = (msg, context) -> handler.accept(msg);
-    return subscribe(clazz, biHandler, cfg);
+    final BiConsumer<T, MessageContext> consumer = (msg, context) -> handler.accept(msg);
+    return subscribe(clazz, consumer, cfg);
   }
 
   @Override
@@ -191,14 +192,23 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
   @Override
   public <T> void publish(final T message) {
-    publish(message, "", cfg -> {
-    });
+    publish(message, "", createDefaultConfiguration());
   }
 
   @Override
   public <T> void publish(final T message, final String routingKey) {
-    publish(message, routingKey, cfg -> {
-    });
+    publish(message, routingKey, createDefaultConfiguration());
+  }
+
+  /**
+   * Create default configuration for a message
+   *
+   * @return
+   */
+  private Consumer<MessageConfiguration> createDefaultConfiguration() {
+    return cfg -> {
+      // TODO : Default values
+    };
   }
 
   @Override
@@ -209,25 +219,46 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   @Override
   public <T> void publish(final T message, final String routingKey,
       final Consumer<MessageConfiguration> cfg) {
+
+    _publish(message, routingKey, cfg);
+  }
+
+  public <T> void _publish(final T message, final String routingKey,
+      final Consumer<MessageConfiguration> cfg) {
+
     Objects.requireNonNull(message);
     Objects.requireNonNull(routingKey);
     Objects.requireNonNull(cfg);
-    // Wrap our message original message
-    final MessagePayload<T> payload = new MessagePayload<>(message);
-    payload.setType(message.getClass());
-    client.basicPublish(binding.getExchange(), routingKey, payload);
+
+    // populate our configurations with default etc...
+    final MessageConfiguration conf = new MessageConfiguration();
+    final Consumer<MessageConfiguration> composite = cfg.andThen(after -> {
+      after.setNativeMessageFormat(true);
+    });
+
+    composite.accept(conf);
+    Object val;
+
+    if (conf.isNativeMessageFormat()) {
+      val = message;
+    } else {
+      // Wrap our message original message
+      final MessagePayload<T> payload = new MessagePayload<>(message);
+      payload.setType(message.getClass());
+      val = payload;
+    }
+
+    client.basicPublish(binding.getExchange(), routingKey, val);
   }
 
   @Override
   public <T> CompletableFuture<Void> publishAsync(T message) {
-    return publishAsync(message, "", cfg -> {
-    });
+    return publishAsync(message, "", createDefaultConfiguration());
   }
 
   @Override
   public <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey) {
-    return publishAsync(message, routingKey, cfg -> {
-    });
+    return publishAsync(message, routingKey, createDefaultConfiguration());
   }
 
   @Override

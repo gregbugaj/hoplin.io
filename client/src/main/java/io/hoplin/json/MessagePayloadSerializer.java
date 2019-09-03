@@ -11,10 +11,16 @@ import com.google.gson.JsonSerializer;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
 import java.lang.reflect.Type;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Message payload serializer Messages exchanged between two clients are decorated with special JSON
  * tags to allow for generic type serialization.
+ * <p>
+ * If the '_payload_type_' is missing we will default to parsing the message based ont eh
  */
 public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
     JsonDeserializer<MessagePayload> {
@@ -28,10 +34,11 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
   private final Gson gson;
 
   public MessagePayloadSerializer() {
-    gson = new Gson();
+    this(new Gson());
   }
 
   public MessagePayloadSerializer(final Gson gson) {
+    Objects.requireNonNull(gson, "Gson can't be null");
     this.gson = gson;
   }
 
@@ -44,12 +51,23 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
     if (json.isJsonObject()) {
       final JsonObject jsonObject = json.getAsJsonObject();
       final JsonElement propertyElement = jsonObject.get(PROPERTY_NAME);
-      final JsonElement statusElement = jsonObject.get(STATUS_TAG);
 
       if (propertyElement == null) {
+        final Map<String, JsonElement> raw = jsonObject
+            .entrySet()
+            .stream()
+            .filter(e -> e.getValue().isJsonPrimitive())
+            //.filter(e -> e.getValue().getAsJsonPrimitive().isString())
+            .collect(Collectors.toMap(Entry::getKey, e -> e.getValue()));
+
+        raw.forEach((key, val)->{
+          System.out.println(key + " = " +val.isJsonPrimitive() + " = " + val);
+        });
+
         throw new HoplinRuntimeException("Missing payloadtype tag : " + PROPERTY_NAME);
       }
 
+      final JsonElement statusElement = jsonObject.get(STATUS_TAG);
       final String statusValue = statusElement.getAsString();
       final String payloadTypeName = propertyElement.getAsString();
       final JsonElement payload = jsonObject.get(PAYLOAD_TAG);
@@ -61,6 +79,7 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
         msg.setType(actualClass);
         msg.setPayload(out);
         msg.setStatus(Integer.parseInt(statusValue));
+
       } catch (final ClassNotFoundException e) {
         throw new JsonParseException(e.getMessage());
       }

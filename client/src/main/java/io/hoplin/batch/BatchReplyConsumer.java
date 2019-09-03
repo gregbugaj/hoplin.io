@@ -5,7 +5,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.hoplin.MessagePayload;
-import io.hoplin.json.JsonCodec;
+import io.hoplin.json.JsonMessageCodec;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -25,7 +25,7 @@ public class BatchReplyConsumer extends DefaultConsumer {
 
   private final ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches;
   private final Executor executor;
-  private JsonCodec codec;
+  private JsonMessageCodec codec;
 
   /**
    * Constructs a new instance and records its association to the passed-in channel.
@@ -38,7 +38,7 @@ public class BatchReplyConsumer extends DefaultConsumer {
     super(channel);
     this.executor = Objects.requireNonNull(executor);
     this.batches = Objects.requireNonNull(batches);
-    codec = new JsonCodec();
+    codec = new JsonMessageCodec();
   }
 
   public BatchReplyConsumer(final Channel channel,
@@ -82,7 +82,6 @@ public class BatchReplyConsumer extends DefaultConsumer {
     if (context.isCompleted()) {
       completable.complete(context);
     }
-
   }
 
   private void handleReply(final byte[] body, final CompletableFuture<Object> action) {
