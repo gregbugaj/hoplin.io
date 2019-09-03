@@ -2,65 +2,60 @@ package io.hoplin;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
-
 import java.util.Objects;
 
 /**
- *  Context that message is associated with
+ * Context that message is associated with
  */
-public class MessageContext
-{
-    private MessageReceivedInfo receivedInfo;
+public class MessageContext {
 
-    private AMQP.BasicProperties properties;
+  private MessageReceivedInfo receivedInfo;
 
-    /**
-     * Create new message context
-     *
-     * @param consumerTag
-     * @param envelope
-     * @param properties
-     * @return newly created {@link MessageContext}
-     */
-    public static MessageContext create(final String consumerTag, final Envelope envelope, AMQP.BasicProperties properties)
-    {
-        Objects.requireNonNull(consumerTag);
-        Objects.requireNonNull(envelope);
+  private AMQP.BasicProperties properties;
 
-        final MessageReceivedInfo receivedInfo = new MessageReceivedInfo(consumerTag,
-                                                                         envelope.getDeliveryTag(),
-                                                                         envelope.isRedeliver(),
-                                                                         envelope.getExchange(),
-                                                                         envelope.getRoutingKey(),
-                                                                         System.currentTimeMillis()
-        );
+  /**
+   * Create new message context
+   *
+   * @param consumerTag
+   * @param envelope
+   * @param properties
+   * @return newly created {@link MessageContext}
+   */
+  public static MessageContext create(final String consumerTag, final Envelope envelope,
+      AMQP.BasicProperties properties) {
+    Objects.requireNonNull(consumerTag);
+    Objects.requireNonNull(envelope);
 
-        final MessageContext context  = new MessageContext();
-        context.setReceivedInfo(receivedInfo);
-        context.setProperties(properties);
+    final MessageReceivedInfo receivedInfo = new MessageReceivedInfo(consumerTag,
+        envelope.getDeliveryTag(),
+        envelope.isRedeliver(),
+        envelope.getExchange(),
+        envelope.getRoutingKey(),
+        System.currentTimeMillis()
+    );
 
-        return  context;
-    }
+    final MessageContext context = new MessageContext();
+    context.setReceivedInfo(receivedInfo);
+    context.setProperties(properties);
 
-    public MessageReceivedInfo getReceivedInfo()
-    {
-        return receivedInfo;
-    }
+    return context;
+  }
 
-    public MessageContext setReceivedInfo(final MessageReceivedInfo receivedInfo)
-    {
-        this.receivedInfo = receivedInfo;
-        return this;
-    }
+  public MessageReceivedInfo getReceivedInfo() {
+    return receivedInfo;
+  }
 
-    public AMQP.BasicProperties getProperties()
-    {
-        return properties;
-    }
+  public MessageContext setReceivedInfo(final MessageReceivedInfo receivedInfo) {
+    this.receivedInfo = receivedInfo;
+    return this;
+  }
 
-    public MessageContext setProperties(final AMQP.BasicProperties properties)
-    {
-        this.properties = properties;
-        return this;
-    }
+  public AMQP.BasicProperties getProperties() {
+    return properties;
+  }
+
+  public MessageContext setProperties(final AMQP.BasicProperties properties) {
+    this.properties = properties;
+    return this;
+  }
 }

@@ -4,20 +4,18 @@ import examples.BaseExample;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
 import io.hoplin.FanoutExchange;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * RPC Request/Response example
  */
-public class RpcRequestResponseExample extends BaseExample
-{
-    private static final Logger log = LoggerFactory.getLogger(RpcRequestResponseExample.class);
+public class RpcRequestResponseExample extends BaseExample {
 
-    public static void main(final String... args) throws IOException, InterruptedException
-    {
+  private static final Logger log = LoggerFactory.getLogger(RpcRequestResponseExample.class);
+
+  public static void main(final String... args) throws IOException, InterruptedException {
         /*
         final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient.create(options(), bind());
         // rpc response
@@ -33,13 +31,12 @@ public class RpcRequestResponseExample extends BaseExample
 
         Thread.currentThread().join();
         */
-    }
+  }
 
-    private static Binding bind()
-    {
-        return BindingBuilder
-                .bind("rpc.direct.log")
-                .to(new FanoutExchange("direct.rpc.logs"));
-    }
+  private static Binding bind() {
+    return BindingBuilder
+        .bind("rpc.direct.log")
+        .to(new FanoutExchange("direct.rpc.logs"));
+  }
 }
 

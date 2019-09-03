@@ -1,43 +1,43 @@
 package examples.customexception;
 
 import examples.BaseExample;
-import io.hoplin.*;
+import io.hoplin.Binding;
+import io.hoplin.BindingBuilder;
+import io.hoplin.ExchangeClient;
+import io.hoplin.FanoutExchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This is example of a Fanout Exchange
- *
+ * <p>
  * Log producer
  */
-public class EmitLogFanoutWithCustomError extends BaseExample
-{
-    private static final Logger log = LoggerFactory.getLogger(EmitLogFanoutWithCustomError.class);
+public class EmitLogFanoutWithCustomError extends BaseExample {
 
-    private static final String EXCHANGE = "fanout_logs";
+  private static final Logger log = LoggerFactory.getLogger(EmitLogFanoutWithCustomError.class);
 
-    public static void main(final String... args) throws InterruptedException
-    {
-        final Binding binding = bind();
-        log.info("Binding : {}", binding);
+  private static final String EXCHANGE = "fanout_logs";
 
-        final ExchangeClient client = ExchangeClient.fanout(options(), binding);
+  public static void main(final String... args) throws InterruptedException {
+    final Binding binding = bind();
+    log.info("Binding : {}", binding);
 
-        while(true)
-        {
-            client.publish("Msg : " + System.currentTimeMillis());
-            Thread.sleep(1000L);
-        }
+    final ExchangeClient client = ExchangeClient.fanout(options(), binding);
 
-        //        Thread.currentThread().join();
+    while (true) {
+      client.publish("Msg : " + System.currentTimeMillis());
+      Thread.sleep(1000L);
     }
 
-    private static Binding bind()
-    {
-        return BindingBuilder
-                .bind()
-                .to(new FanoutExchange(EXCHANGE));
-    }
+    //        Thread.currentThread().join();
+  }
+
+  private static Binding bind() {
+    return BindingBuilder
+        .bind()
+        .to(new FanoutExchange(EXCHANGE));
+  }
 
 }
 

@@ -6,6 +6,6 @@ package io.hoplin.rpc;
  * @param <I>
  * @param <O>
  */
-public interface RpClientServer<I, O> extends RpcClient<I, O>, RpcServer<I, O>
-{
+public interface RpClientServer<I, O> extends RpcClient<I, O>, RpcServer<I, O> {
+
 }

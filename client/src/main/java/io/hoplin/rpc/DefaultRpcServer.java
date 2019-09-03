@@ -2,16 +2,18 @@ package io.hoplin.rpc;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import io.hoplin.*;
+import io.hoplin.Binding;
+import io.hoplin.HoplinRuntimeException;
+import io.hoplin.RabbitMQClient;
+import io.hoplin.RabbitMQOptions;
 import io.hoplin.metrics.QueueMetrics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of RPC server
@@ -19,151 +21,144 @@ import java.util.function.Function;
  * @param <I> the request type
  * @param <O> the response type
  */
-public class DefaultRpcServer<I, O> implements RpcServer <I, O>
-{
-    private static final Logger log = LoggerFactory.getLogger(DefaultRpcServer.class);
+public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
 
-    private final RabbitMQClient client;
+  private static final Logger log = LoggerFactory.getLogger(DefaultRpcServer.class);
 
-    private final QueueMetrics metrics;
+  private final RabbitMQClient client;
 
-    /** Channel we are communicating on
-     *  Upon disconnect this channel will be reinitialized
-     **/
-    private Channel channel;
+  private final QueueMetrics metrics;
+  /**
+   * Exchange to send requests to
+   */
+  private final String exchange;
+  /**
+   * Channel we are communicating on Upon disconnect this channel will be reinitialized
+   **/
+  private Channel channel;
+  /**
+   * Routing key to use for requests
+   */
+  private String routingKey;
 
-    /** Exchange to send requests to */
-    private final String exchange;
+  /**
+   * Queue name used for incoming request
+   */
+  private String requestQueueName;
 
-    /** Routing key to use for requests */
-    private  String routingKey;
+  // executor that will process incoming RPC requests
+  private Executor executor;
 
-    /** Queue name used for incoming request*/
-    private String requestQueueName;
+  private Function<I, O> handler;
 
-    // executor that will process incoming RPC requests
-    private Executor executor;
+  public DefaultRpcServer(final RabbitMQOptions options, final Binding binding) {
+    Objects.requireNonNull(options);
+    Objects.requireNonNull(binding);
 
-    private Function<I,O> handler;
+    this.client = RabbitMQClient.create(options);
+    this.channel = client.channel();
+    this.executor = createExecutor();
 
-    public DefaultRpcServer(final RabbitMQOptions options, final Binding binding)
-    {
-        Objects.requireNonNull(options);
-        Objects.requireNonNull(binding);
+    this.exchange = binding.getExchange();
+    this.routingKey = binding.getRoutingKey();
+    this.requestQueueName = binding.getQueue();
 
-        this.client = RabbitMQClient.create(options);
-        this.channel = client.channel();
-        this.executor  = createExecutor();
-
-        this.exchange = binding.getExchange();
-        this.routingKey = binding.getRoutingKey();
-        this.requestQueueName = binding.getQueue();
-
-        if(routingKey == null)
-            routingKey = "";
-
-        this.metrics = QueueMetrics.Factory.getInstance(exchange+"-"+requestQueueName);
-        setupChannel();
-        bind();
+    if (routingKey == null) {
+      routingKey = "";
     }
 
-    private Executor createExecutor()
+    this.metrics = QueueMetrics.Factory.getInstance(exchange + "-" + requestQueueName);
+    setupChannel();
+    bind();
+  }
+
+  /**
+   * Create new {@link DefaultRpcServer}
+   *
+   * @param options the connection options to use
+   * @param binding the binding to use
+   * @return new Direct Exchange client setup in server mode
+   */
+  public static RpcServer create(final RabbitMQOptions options, final Binding binding) {
+    Objects.requireNonNull(options);
+    Objects.requireNonNull(binding);
+
+    return new DefaultRpcServer<>(options, binding);
+  }
+
+  private Executor createExecutor() {
+    return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+  }
+
+  private void setupChannel() {
+    channel.addShutdownListener(sse ->
     {
-        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+      log.info("Channel Shutdown, reacquiring : channel #{}", channel.getChannelNumber());
+      channel = client.channel();
+
+      if (channel != null) {
+        log.info("New channel #{}, open = {}", channel, channel.isOpen());
+        reInitHandler();
+      }
+    });
+  }
+
+  /**
+   * Declare the request queue where the responder will be waiting for the RPC requests Create a
+   * temporary, private, autodelete reply queue
+   */
+  private void bind() {
+    log.info("Param RoutingKey  : {}", routingKey);
+    log.info("Param Exchange    : {}", exchange);
+    log.info("Param Request     : {}", requestQueueName);
+
+    try {
+      channel.exchangeDeclare(exchange, "direct", false, true, null);
+      channel.queueDeclare(requestQueueName, false, false, true, null);
+    } catch (final Exception e) {
+      throw new HoplinRuntimeException("Unable to bind queue", e);
     }
+  }
 
-    private void setupChannel()
-    {
-        channel.addShutdownListener(sse->
-        {
-            log.info("Channel Shutdown, reacquiring : channel #{}", channel.getChannelNumber());
-            channel = client.channel();
-
-            if(channel != null)
-            {
-                log.info("New channel #{}", channel, channel.isOpen());
-                reInitHandler();
-            }
-        });
+  /**
+   * Setup consumer in 'server' mode
+   *
+   * @param handler
+   */
+  @SuppressWarnings("unchecked")
+  private void consumeRequest(final Function<I, O> handler) {
+    try {
+      final AMQP.Queue.BindOk bindStatus = channel
+          .queueBind(requestQueueName, exchange, routingKey);
+      log.info("consumeRequest requestQueueName : {}, {}", requestQueueName, bindStatus);
+      channel.basicQos(1);
+      channel.basicConsume(requestQueueName, false,
+          new RpcResponderConsumer(channel, handler, executor, metrics));
+    } catch (final Exception e) {
+      throw new HoplinRuntimeException("Unable to start RPC server consumer", e);
     }
+  }
 
-    /**
-     * Declare the request queue where the responder will be waiting for the RPC requests
-     * Create a temporary, private, autodelete reply queue
-     */
-    private void bind()
-    {
-        log.info("Param RoutingKey  : {}", routingKey);
-        log.info("Param Exchange    : {}", exchange);
-        log.info("Param Request     : {}", requestQueueName);
+  private void reInitHandler() {
+    log.info("Reinitializing topology & handler");
 
-        try
-        {
-            channel.exchangeDeclare(exchange, "direct",false, true, null);
-            channel.queueDeclare(requestQueueName, false, false, true, null);
-        }
-        catch (final Exception e)
-        {
-            throw new HoplinRuntimeException("Unable to bind queue", e);
-        }
+    setupChannel();
+    bind();
+
+    if (handler != null) {
+      consumeRequest(handler);
     }
+  }
 
-    /**
-     * Setup consumer in 'server' mode
-     * @param handler
-     */
-    @SuppressWarnings("unchecked")
-    private void consumeRequest(final Function<I, O> handler)
-    {
-        try
-        {
-            final AMQP.Queue.BindOk bindStatus = channel.queueBind(requestQueueName, exchange, routingKey);
-            log.info("consumeRequest requestQueueName : {}, {}", requestQueueName, bindStatus);
-            channel.basicQos(1);
-            channel.basicConsume(requestQueueName, false, new RpcResponderConsumer(channel, handler, executor, metrics));
-        }
-        catch (final Exception e)
-        {
-            throw new HoplinRuntimeException("Unable to start RPC server consumer", e);
-        }
+  @Override
+  public void respondAsync(final Function<I, O> handler) {
+    this.handler = handler;
+    consumeRequest(handler);
+  }
+
+  public void close() throws IOException {
+    if (client != null) {
+      client.disconnect();
     }
-
-    private void reInitHandler()
-    {
-        log.info("Reinitializing topology & handler");
-
-        setupChannel();
-        bind();
-
-        if(handler != null)
-            consumeRequest(handler);
-    }
-
-    @Override
-    public void respondAsync(final Function<I, O> handler)
-    {
-        this.handler = handler;
-        consumeRequest(handler);
-    }
-
-    /**
-     * Create new {@link DefaultRpcServer}
-     *
-     * @param options the connection options to use
-     * @param binding the binding to use
-     * @return new Direct Exchange client setup in server mode
-     */
-    public static RpcServer create(final RabbitMQOptions options, final Binding binding)
-    {
-        Objects.requireNonNull(options);
-        Objects.requireNonNull(binding);
-
-        return new DefaultRpcServer<>(options, binding);
-    }
-
-    public void close() throws IOException
-    {
-        if(client != null)
-            client.disconnect();
-    }
+  }
 }

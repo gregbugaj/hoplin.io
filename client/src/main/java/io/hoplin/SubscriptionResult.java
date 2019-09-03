@@ -1,38 +1,33 @@
 package io.hoplin;
 
 /**
- * Client subscription results, i
- * This is populated from supplied {@link Binding} and {@link SubscriptionConfig}
+ * Client subscription results, i This is populated from supplied {@link Binding} and {@link
+ * SubscriptionConfig}
  */
-public class SubscriptionResult
-{
-    private String exchange;
+public class SubscriptionResult {
 
-    private String queue;
+  private String exchange;
 
-    public SubscriptionResult(String exchangeName, String queueName)
-    {
-        this.exchange = exchangeName;
-        this.queue = queueName;
-    }
+  private String queue;
 
-    public String getExchange()
-    {
-        return exchange;
-    }
+  public SubscriptionResult(String exchangeName, String queueName) {
+    this.exchange = exchangeName;
+    this.queue = queueName;
+  }
 
-    public void setExchange(String exchange)
-    {
-        this.exchange = exchange;
-    }
+  public String getExchange() {
+    return exchange;
+  }
 
-    public String getQueue()
-    {
-        return queue;
-    }
+  public void setExchange(String exchange) {
+    this.exchange = exchange;
+  }
 
-    public void setQueue(String queue)
-    {
-        this.queue = queue;
-    }
+  public String getQueue() {
+    return queue;
+  }
+
+  public void setQueue(String queue) {
+    this.queue = queue;
+  }
 }

@@ -7,24 +7,22 @@ import io.hoplin.MessageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReceiveLogsFanout extends BaseExample
-{
-    private static final Logger log = LoggerFactory.getLogger(EmitLogFanout.class);
+public class ReceiveLogsFanout extends BaseExample {
 
-    private static final String EXCHANGE = "fanout_logs";
+  private static final Logger log = LoggerFactory.getLogger(EmitLogFanout.class);
 
-    public static void main(final String... args) throws InterruptedException
-    {
-        final ExchangeClient client = FanoutExchangeClient.create(options(), EXCHANGE);
+  private static final String EXCHANGE = "fanout_logs";
 
-        client.subscribe("Test", String.class, ReceiveLogsFanout::handle);
-        Thread.currentThread().join();
-    }
+  public static void main(final String... args) throws InterruptedException {
+    final ExchangeClient client = FanoutExchangeClient.create(options(), EXCHANGE);
 
-    private static void handle(final String msg, final MessageContext context)
-    {
-        log.info("Incoming context >  {}", context);
-        log.info("Incoming msg     >  {}", msg);
+    client.subscribe("Test", String.class, ReceiveLogsFanout::handle);
+    Thread.currentThread().join();
+  }
 
-    }
+  private static void handle(final String msg, final MessageContext context) {
+    log.info("Incoming context >  {}", context);
+    log.info("Incoming msg     >  {}", msg);
+
+  }
 }

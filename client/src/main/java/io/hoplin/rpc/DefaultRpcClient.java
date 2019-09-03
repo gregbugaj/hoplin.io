@@ -2,19 +2,21 @@ package io.hoplin.rpc;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import io.hoplin.*;
+import io.hoplin.Binding;
+import io.hoplin.HoplinRuntimeException;
+import io.hoplin.MessagePayload;
+import io.hoplin.RabbitMQClient;
+import io.hoplin.RabbitMQOptions;
 import io.hoplin.json.JsonCodec;
 import io.hoplin.metrics.QueueMetrics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of RPC client
@@ -22,237 +24,206 @@ import java.util.concurrent.TimeoutException;
  * @param <I> the request type
  * @param <O> the response type
  */
-public class DefaultRpcClient<I, O> implements RpcClient <I, O>
-{
-    private static final Logger log = LoggerFactory.getLogger(DefaultRpcClient.class);
+public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
 
-    private final RabbitMQClient client;
+  private static final Logger log = LoggerFactory.getLogger(DefaultRpcClient.class);
 
-    private JsonCodec codec;
+  private final RabbitMQClient client;
+  /**
+   * Exchange to send requests to
+   */
+  private final String exchange;
+  private JsonCodec codec;
+  /**
+   * Channel we are communicating on
+   */
+  private Channel channel;
+  /**
+   * Queue where we will listen for our RPC replies
+   */
+  private String replyToQueueName;
+  private RpcCallerConsumer consumer;
 
-    /** Channel we are communicating on*/
-    private Channel channel;
+  private boolean directReply;
 
-    /** Queue where we will listen for our RPC replies */
-    private String replyToQueueName;
+  private QueueMetrics metrics;
 
-    /** Exchange to send requests to */
-    private final String exchange;
+  public DefaultRpcClient(final RabbitMQOptions options, final Binding binding) {
+    Objects.requireNonNull(options);
+    Objects.requireNonNull(binding);
 
-    private RpcCallerConsumer consumer;
+    this.client = RabbitMQClient.create(options);
+    this.codec = new JsonCodec();
+    this.exchange = binding.getExchange();
+    this.replyToQueueName = binding.getQueue();
+    this.channel = client.channel();
 
-    private boolean directReply;
+    setupChannel();
+    bind();
+    consumeReply();
+  }
 
-    private QueueMetrics metrics;
+  /**
+   * Create new {@link DefaultRpcClient}
+   *
+   * @param options the connection options to use
+   * @param binding the binding to use
+   * @return new Direct Exchange client setup in server mode
+   */
+  public static RpcClient create(final RabbitMQOptions options, final Binding binding) {
+    Objects.requireNonNull(options);
+    Objects.requireNonNull(binding);
 
-    public DefaultRpcClient(final RabbitMQOptions options, final Binding binding)
-    {
-        Objects.requireNonNull(options);
-        Objects.requireNonNull(binding);
+    return new DefaultRpcClient<>(options, binding);
+  }
 
-        this.client = RabbitMQClient.create(options);
-        this.codec = new JsonCodec();
-        this.exchange = binding.getExchange();
-        this.replyToQueueName = binding.getQueue();
-        this.channel = client.channel();
-
-        setupChannel();
-        bind();
-        consumeReply();
+  /**
+   * Declare the request queue where the responder will be waiting for the RPC requests Create a
+   * temporary, private, autodelete reply queue
+   */
+  private void bind() {
+    if (replyToQueueName == null ||
+        replyToQueueName.isEmpty() ||
+        "amq.rabbitmq.reply-to".equalsIgnoreCase(replyToQueueName)) {
+      replyToQueueName = "amq.rabbitmq.reply-to";
+      directReply = true;
+    } else {
+      replyToQueueName = replyToQueueName + ".reply-to." + UUID.randomUUID();
     }
 
-    /**
-     * Declare the request queue where the responder will be waiting for the RPC requests
-     * Create a temporary, private, autodelete reply queue
-     */
-    private void bind()
+    final String metricsKey = exchange + "-" + replyToQueueName;
+    metrics = QueueMetrics.Factory.getInstance(metricsKey);
+
+    log.info("Param Exchange    : {}", exchange);
+    log.info("Param ReplyTo     : {}", replyToQueueName);
+    log.info("Param directReply : {}", directReply);
+    log.info("Param metricsKey  : {}", metricsKey);
+
+    try {
+      if (!directReply) {
+        channel.exchangeDeclare(exchange, "direct", false, true, null);
+        channel.queueDeclare(replyToQueueName, false, false, true, null);
+      }
+    } catch (final Exception e) {
+      throw new HoplinRuntimeException("Unable to bind queue", e);
+    }
+  }
+
+  private void setupChannel() {
+    channel.addShutdownListener(sse ->
     {
-        if(replyToQueueName == null ||
-                replyToQueueName.isEmpty() ||
-                "amq.rabbitmq.reply-to".equalsIgnoreCase(replyToQueueName))
-        {
-            replyToQueueName =  "amq.rabbitmq.reply-to";
-            directReply = true;
-        }
-        else
-        {
-            replyToQueueName = replyToQueueName+".reply-to." + UUID.randomUUID();
-        }
+      log.info("Channel Shutdown, reacquiring : channel #{}", channel.getChannelNumber());
+      channel = client.channel();
 
-        final String metricsKey = exchange + "-" + replyToQueueName;
-        metrics = QueueMetrics.Factory.getInstance(metricsKey);
+      if (channel != null) {
+        log.info("New channel #{}, open = {}", channel, channel.isOpen());
+        reInitHandler();
+      }
+    });
+  }
 
-        log.info("Param Exchange    : {}", exchange);
-        log.info("Param ReplyTo     : {}", replyToQueueName);
-        log.info("Param directReply : {}", directReply);
-        log.info("Param metricsKey  : {}", metricsKey);
+  private void reInitHandler() {
+    log.info("Reinitializing topology & handler");
 
-        try
-        {
-            if(!directReply)
-            {
-                channel.exchangeDeclare(exchange, "direct",false, true, null);
-                channel.queueDeclare(replyToQueueName, false, false, true, null);
-            }
-        }
-        catch (final Exception e)
-        {
-            throw new HoplinRuntimeException("Unable to bind queue", e);
-        }
+    setupChannel();
+    bind();
+    consumeReply();
+  }
+
+  private void consumeReply() {
+    try {
+      consumer = new RpcCallerConsumer(channel, metrics);
+      channel.basicConsume(replyToQueueName, true, consumer);
+    } catch (final Exception e) {
+      throw new HoplinRuntimeException("Unable to start RPC client reply consumer", e);
+    }
+  }
+
+  @Override
+  public O request(I request) {
+    return request(request, "", Duration.ZERO);
+  }
+
+  @Override
+  public O request(I request, String routingKey) {
+    return request(request, routingKey, Duration.ZERO);
+  }
+
+  @Override
+  public O request(I request, Duration timeout) {
+    return request(request, "", timeout);
+  }
+
+  @Override
+  public O request(I request, String routingKey, Duration timeout) {
+    try {
+      return requestAsync(request, routingKey, timeout).get();
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (final ExecutionException e) {
+      log.error("Execution error", e);
     }
 
-    private void setupChannel()
-    {
-        channel.addShutdownListener(sse->
-        {
-            log.info("Channel Shutdown, reacquiring : channel #{}", channel.getChannelNumber());
-            channel = client.channel();
+    return null;
+  }
 
-            if(channel != null)
-            {
-                log.info("New channel #{}", channel, channel.isOpen());
-                reInitHandler();
-            }
-        });
+  public CompletableFuture<O> requestAsync(final I request) {
+    return requestAsync(request, "");
+  }
+
+  @Override
+  public CompletableFuture<O> requestAsync(final I request, final String routingKey) {
+    return requestAsync(request, routingKey, Duration.ZERO);
+  }
+
+  @Override
+  public CompletableFuture<O> requestAsync(I request, Duration timeout) {
+    return requestAsync(request, "", timeout);
+  }
+
+  @Override
+  public CompletableFuture<O> requestAsync(I request, String routingKey, Duration timeout) {
+      if (routingKey == null) {
+          throw new IllegalArgumentException("routingKey should not be null");
+      }
+
+    final CompletableFuture<O> promise = new CompletableFuture<>();
+
+    try {
+
+      log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey,
+          replyToQueueName);
+      final String messageIdentifier = UUID.randomUUID().toString();
+
+      final AMQP.BasicProperties props = new AMQP.BasicProperties
+          .Builder()
+          .correlationId(messageIdentifier)
+          .replyTo(replyToQueueName)
+          .build();
+
+      final byte[] payload = createRequestPayload(request);
+      consumer.bind(messageIdentifier, promise);
+      channel.basicPublish(exchange, routingKey, props, payload);
+
+      metrics.incrementSend(payload.length);
+      metrics.markMessageSent();
+    } catch (final IOException e) {
+      promise.completeExceptionally(e);
+      log.error("Unable to send request", e);
     }
 
-    private void reInitHandler()
-    {
-        log.info("Reinitializing topology & handler");
+    return promise;
+  }
 
-        setupChannel();
-        bind();
-        consumeReply();
-    }
+  private byte[] createRequestPayload(final I request) {
+    final MessagePayload<I> msg = new MessagePayload<>(request);
+    msg.setType(request.getClass());
+    return codec.serialize(msg);
+  }
 
-    private void consumeReply()
-    {
-        try
-        {
-            consumer = new RpcCallerConsumer(channel, metrics);
-            channel.basicConsume(replyToQueueName, true, consumer);
-        }
-        catch (final Exception e)
-        {
-            throw new HoplinRuntimeException("Unable to start RPC client reply consumer", e);
-        }
-    }
-
-    @Override
-    public O request(I request)
-    {
-       return request(request, "", Duration.ZERO);
-    }
-
-    @Override
-    public O request(I request, String routingKey)
-    {
-        return request(request, routingKey, Duration.ZERO);
-    }
-
-    @Override
-    public O request(I request, Duration timeout)
-    {
-        return request(request, "", timeout);
-    }
-
-    @Override
-    public O request(I request, String routingKey, Duration timeout)
-    {
-        try
-        {
-            return requestAsync(request, routingKey, timeout).get();
-        }
-        catch (final InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-        }
-        catch (final ExecutionException e)
-        {
-            log.error("Execution error", e);
-        }
-
-        return null;
-    }
-
-    public CompletableFuture<O> requestAsync(final I request)
-    {
-        return requestAsync(request, "");
-    }
-
-    @Override
-    public CompletableFuture<O> requestAsync(final I request, final String routingKey)
-    {
-        return requestAsync(request, routingKey, Duration.ZERO);
-    }
-
-    @Override
-    public CompletableFuture<O> requestAsync(I request, Duration timeout)
-    {
-        return requestAsync(request, "", timeout);
-    }
-
-    @Override
-    public CompletableFuture<O> requestAsync(I request, String routingKey, Duration timeout)
-    {
-        if(routingKey == null)
-            throw new IllegalArgumentException("routingKey should not be null");
-
-        final CompletableFuture<O> promise = new CompletableFuture<>();
-
-        try
-        {
-
-            log.info("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange, routingKey, replyToQueueName);
-            final String messageIdentifier =  UUID.randomUUID().toString();
-
-            final AMQP.BasicProperties props = new AMQP.BasicProperties
-                    .Builder()
-                    .correlationId(messageIdentifier)
-                    .replyTo(replyToQueueName)
-                    .build();
-
-            final byte[] payload = createRequestPayload(request);
-            consumer.bind(messageIdentifier, promise);
-            channel.basicPublish(exchange, routingKey, props, payload);
-
-            metrics.incrementSend(payload.length);
-            metrics.markMessageSent();
-        }
-        catch (final IOException e)
-        {
-            promise.completeExceptionally(e);
-            log.error("Unable to send request", e);
-        }
-
-        return promise;
-    }
-
-    /**
-     * Create new {@link DefaultRpcClient}
-     *
-     * @param options the connection options to use
-     * @param binding the binding to use
-     * @return new Direct Exchange client setup in server mode
-     */
-    public static RpcClient create(final RabbitMQOptions options, final Binding binding)
-    {
-        Objects.requireNonNull(options);
-        Objects.requireNonNull(binding);
-
-        return new DefaultRpcClient<>(options, binding);
-    }
-
-    private byte[] createRequestPayload(final I request)
-    {
-        final MessagePayload<I> msg = new MessagePayload<>(request);
-        msg.setType(request.getClass());
-        return codec.serialize(msg);
-    }
-
-    public void close() throws IOException
-    {
-        if(client != null)
-            client.disconnect();
-    }
+  public void close() throws IOException {
+      if (client != null) {
+          client.disconnect();
+      }
+  }
 }

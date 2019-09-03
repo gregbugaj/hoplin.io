@@ -1,16 +1,14 @@
 package io.hoplin;
 
-public class Queue
-{
-    private String name;
+public class Queue {
 
-    public Queue(final String name)
-    {
-        this.name = name;
-    }
+  private String name;
 
-    public String getName()
-    {
-        return name;
-    }
+  public Queue(final String name) {
+    this.name = name;
+  }
+
+  public String getName() {
+    return name;
+  }
 }

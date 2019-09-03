@@ -3,26 +3,23 @@ package io.hoplin.batch;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-public class CompletableFutureWrapperBatchContext
-{
-    private CompletableFuture<BatchContext> future;
+public class CompletableFutureWrapperBatchContext {
 
-    private BatchContext context;
+  private CompletableFuture<BatchContext> future;
 
-    public CompletableFutureWrapperBatchContext(final CompletableFuture<BatchContext> future,
-                                                final BatchContext context)
-    {
-        this.future = Objects.requireNonNull(future);
-        this.context = Objects.requireNonNull(context);
-    }
+  private BatchContext context;
 
-    public CompletableFuture<BatchContext> getFuture()
-    {
-        return future;
-    }
+  public CompletableFutureWrapperBatchContext(final CompletableFuture<BatchContext> future,
+      final BatchContext context) {
+    this.future = Objects.requireNonNull(future);
+    this.context = Objects.requireNonNull(context);
+  }
 
-    public BatchContext getContext()
-    {
-        return context;
-    }
+  public CompletableFuture<BatchContext> getFuture() {
+    return future;
+  }
+
+  public BatchContext getContext() {
+    return context;
+  }
 }

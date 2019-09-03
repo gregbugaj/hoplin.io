@@ -5,22 +5,20 @@ import io.hoplin.ExchangeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReceiveLogsFanoutWithCustomError extends BaseExample
-{
-    private static final Logger log = LoggerFactory.getLogger(ReceiveLogsFanoutWithCustomError.class);
+public class ReceiveLogsFanoutWithCustomError extends BaseExample {
 
-    private static final String EXCHANGE = "fanout_logs";
+  private static final Logger log = LoggerFactory.getLogger(ReceiveLogsFanoutWithCustomError.class);
 
-    public static void main(final String... args) throws InterruptedException
-    {
-        final ExchangeClient client = ExchangeClient.fanout(options(), EXCHANGE);
+  private static final String EXCHANGE = "fanout_logs";
 
-        client.subscribe("test", String.class, ReceiveLogsFanoutWithCustomError::handle);
-        Thread.currentThread().join();
-    }
+  public static void main(final String... args) throws InterruptedException {
+    final ExchangeClient client = ExchangeClient.fanout(options(), EXCHANGE);
 
-    private static void handle(final String msg)
-    {
-        log.info("Incoming msg : {}", msg);
-    }
+    client.subscribe("test", String.class, ReceiveLogsFanoutWithCustomError::handle);
+    Thread.currentThread().join();
+  }
+
+  private static void handle(final String msg) {
+    log.info("Incoming msg : {}", msg);
+  }
 }

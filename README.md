@@ -28,6 +28,9 @@ To make working with RabbitMQ as simple as possible with minimum dependencies.
 `hoplin_default_error_queue`
 
 
+# Code Style
+[Google Style Guides](https://github.com/google/styleguide)
+
 # Resources
 
 [RabbitMQ](https://www.rabbitmq.com/)

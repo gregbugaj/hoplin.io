@@ -3,36 +3,31 @@ package io.hoplin.util;
 /**
  * Response create executed process
  */
-public class ProcessResponse
-{
-    private final int exitCode;
+public class ProcessResponse {
 
-    private final String output;
+  private final int exitCode;
 
-    public ProcessResponse(final String output, final int exitCode)
-    {
-        this.output = output;
-        this.exitCode = exitCode;
-    }
+  private final String output;
 
-    public boolean success()
-    {
-        return exitCode == 0;
-    }
+  public ProcessResponse(final String output, final int exitCode) {
+    this.output = output;
+    this.exitCode = exitCode;
+  }
 
-    public int getExitCode()
-    {
-        return exitCode;
-    }
+  public boolean success() {
+    return exitCode == 0;
+  }
 
-    public String getOutput()
-    {
-        return output;
-    }
+  public int getExitCode() {
+    return exitCode;
+  }
 
-    @Override
-    public String toString()
-    {
-        return exitCode + " : " + output;
-    }
+  public String getOutput() {
+    return output;
+  }
+
+  @Override
+  public String toString() {
+    return exitCode + " : " + output;
+  }
 }

@@ -1,22 +1,20 @@
 package examples.basic;
 
-public class TextMessage
-{
-    private String text;
+public class TextMessage {
 
-    public String getText()
-    {
-        return text;
-    }
+  private String text;
 
-    public TextMessage setText(final String text)
-    {
-        this.text = text;
-        return this;
-    }
+  public String getText() {
+    return text;
+  }
 
-    @Override public String toString()
-    {
-        return text;
-    }
+  public TextMessage setText(final String text) {
+    this.text = text;
+    return this;
+  }
+
+  @Override
+  public String toString() {
+    return text;
+  }
 }

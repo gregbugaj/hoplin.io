@@ -8,30 +8,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ReceiveLogsDirect extends BaseExample
-{
-    private static final Logger log = LoggerFactory.getLogger(EmitLogDirect.class);
+public class ReceiveLogsDirect extends BaseExample {
 
-    private static final String EXCHANGE = "direct_logs";
+  private static final Logger log = LoggerFactory.getLogger(EmitLogDirect.class);
 
-    public static void main(final String... args) throws InterruptedException
-    {
-        final ExchangeClient client = informative();
-        final SubscriptionResult subscription = client.subscribe("test", LogDetail.class, msg -> log.info("Message received [{}]", msg));
-        
-        info(subscription);
-        Thread.currentThread().join();
-    }
+  private static final String EXCHANGE = "direct_logs";
 
-    private static ExchangeClient critical()
-    {
-        return ExchangeClient
-                .direct(options(), EXCHANGE, "log.critical", "error");
-    }
+  public static void main(final String... args) throws InterruptedException {
+    final ExchangeClient client = informative();
+    final SubscriptionResult subscription = client
+        .subscribe("test", LogDetail.class, msg -> log.info("Message received [{}]", msg));
 
-    private static ExchangeClient informative()
-    {
-        return ExchangeClient
-                .direct(options(), EXCHANGE, "log.informative", "info");
-    }
+    info(subscription);
+    Thread.currentThread().join();
+  }
+
+  private static ExchangeClient critical() {
+    return ExchangeClient
+        .direct(options(), EXCHANGE, "log.critical", "error");
+  }
+
+  private static ExchangeClient informative() {
+    return ExchangeClient
+        .direct(options(), EXCHANGE, "log.informative", "info");
+  }
 }

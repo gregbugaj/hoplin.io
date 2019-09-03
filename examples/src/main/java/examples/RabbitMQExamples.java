@@ -4,38 +4,38 @@ package examples;
 import io.hoplin.RabbitMQClient;
 import io.hoplin.RabbitMQOptions;
 
-public class RabbitMQExamples
-{
-    public void createClientWithManualParams() {
+public class RabbitMQExamples {
 
-        RabbitMQOptions config = new RabbitMQOptions();
+  public void createClientWithManualParams() {
 
-        // Each parameter is optional
+    RabbitMQOptions config = new RabbitMQOptions();
 
-        // The default parameter with be used if the parameter is not set
+    // Each parameter is optional
 
-        config.setUser("user1");
+    // The default parameter with be used if the parameter is not set
 
-        config.setPassword("password1");
+    config.setUser("user1");
 
-        config.setHost("localhost");
+    config.setPassword("password1");
 
-        config.setPort(5672);
+    config.setHost("localhost");
 
-        config.setVirtualHost("vhost1");
+    config.setPort(5672);
 
-        config.setConnectionTimeout(6000); // in milliseconds
+    config.setVirtualHost("vhost1");
 
-        config.setRequestedHeartbeat(60); // in seconds
+    config.setConnectionTimeout(6000); // in milliseconds
 
-        config.setHandshakeTimeout(6000); // in milliseconds
+    config.setRequestedHeartbeat(60); // in seconds
 
-        config.setRequestedChannelMax(5);
+    config.setHandshakeTimeout(6000); // in milliseconds
 
-        config.setNetworkRecoveryInterval(500); // in milliseconds
+    config.setRequestedChannelMax(5);
 
-        config.setAutomaticRecoveryEnabled(true);
+    config.setNetworkRecoveryInterval(500); // in milliseconds
 
-        RabbitMQClient client = RabbitMQClient.create(config);
-    }
+    config.setAutomaticRecoveryEnabled(true);
+
+    RabbitMQClient client = RabbitMQClient.create(config);
+  }
 }

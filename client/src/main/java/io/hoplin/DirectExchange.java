@@ -2,9 +2,10 @@ package io.hoplin;
 
 /**
  * Direct Exchange
- *
- * A direct exchange delivers messages to queues based on the message routing key.
- * A direct exchange is ideal for the unicast routing of messages (although they can be used for multicast routing as well)
+ * <p>
+ * A direct exchange delivers messages to queues based on the message routing key. A direct exchange
+ * is ideal for the unicast routing of messages (although they can be used for multicast routing as
+ * well)
  *
  * <pre>
  *                key=load.era     +----------+
@@ -26,16 +27,14 @@ package io.hoplin;
  *                                 +----------+
  * </pre>
  */
-public class DirectExchange extends AbstractExchange
-{
-    public DirectExchange(final String name)
-    {
-        super(name);
-    }
+public class DirectExchange extends AbstractExchange {
 
-    @Override
-    public ExchangeType getType()
-    {
-        return ExchangeType.DIRECT;
-    }
+  public DirectExchange(final String name) {
+    super(name);
+  }
+
+  @Override
+  public ExchangeType getType() {
+    return ExchangeType.DIRECT;
+  }
 }

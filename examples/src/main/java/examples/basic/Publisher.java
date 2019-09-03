@@ -1,32 +1,29 @@
 package examples.basic;
 
 import examples.BaseExample;
+import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Scanner;
+public class Publisher extends BaseExample {
 
-public class Publisher extends BaseExample
-{
-    private static final Logger log = LoggerFactory.getLogger(Publisher.class);
+  private static final Logger log = LoggerFactory.getLogger(Publisher.class);
 
-    public static void main(final String... args)
-    {
-        System.out.print("Enter a message. 'q' to quit.");
-        final Scanner scanner = new Scanner(System.in);
+  public static void main(final String... args) {
+    System.out.print("Enter a message. 'q' to quit.");
+    final Scanner scanner = new Scanner(System.in);
 
+    String in;
+    while (true) {
+      in = scanner.nextLine();
+      if ("quit".equalsIgnoreCase(in)) {
+        break;
+      }
 
-        String in;
-        while (true)
-        {
-            in = scanner.nextLine();
-            if("quit".equalsIgnoreCase(in))
-                break;
+      final TextMessage msg = new TextMessage();
+      msg.setText(in);
 
-            final TextMessage msg = new TextMessage();
-            msg.setText(in);
-
-            log.info("Publishing : {}", msg);
-        }
+      log.info("Publishing : {}", msg);
     }
+  }
 }

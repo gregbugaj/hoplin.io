@@ -3,21 +3,19 @@ package io.hoplin;
 /**
  * Subscription configurator
  */
-public class SubscriptionConfigurator
-{
-    private String subscriberId;
+public class SubscriptionConfigurator {
 
-    public SubscriptionConfigurator withSubscriberId(final String subscriberId)
-    {
-        this.subscriberId = subscriberId;
-        return this;
-    }
+  private String subscriberId;
 
-    public SubscriptionConfig build()
-    {
-        final SubscriptionConfig config = new SubscriptionConfig();
-        config.setSubscriberId(subscriberId);
+  public SubscriptionConfigurator withSubscriberId(final String subscriberId) {
+    this.subscriberId = subscriberId;
+    return this;
+  }
 
-        return config;
-    }
+  public SubscriptionConfig build() {
+    final SubscriptionConfig config = new SubscriptionConfig();
+    config.setSubscriberId(subscriberId);
+
+    return config;
+  }
 }

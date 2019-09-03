@@ -1,328 +1,330 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>hoplin-parent</artifactId>
 
-    <groupId>io.hoplin</groupId>
-    <artifactId>hoplin-parent</artifactId>
-    <version>1.0.10</version>
+  <build>
 
-    <packaging>pom</packaging>
-
-    <name>hoplin.io</name>
-    <description>A lightweight RabbitMQ client for Java</description>
-    <url>http://hoplin.io</url>
-
-    <organization>
-        <name>io.hoplin</name>
-        <url>http://hoplin.io</url>
-    </organization>
-
-    <licenses>
-        <license>
-            <name>The MIT License</name>
-            <url>http://www.opensource.org/licenses/mit-license.php</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
-    <scm>
-        <url>https://github.com/gregbugaj/hoplin.io.git</url>
-        <connection>scm:git:git://github.com/gregbugaj/hoplin.io.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:gregbugaj/hoplin.io.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
-
-    <issueManagement>
-        <system>GitHub</system>
-        <url>https://github.com/gregbugaj/hoplin.io/issues</url>
-    </issueManagement>
-
-    <developers>
-        <developer>
-            <id>greg</id>
-            <name>Greg Bugaj</name>
-            <email>gregbugaj@yahoo.com</email>
-        </developer>
-    </developers>
-
-    <distributionManagement>
-        <site>
-            <id>github-project-site</id>
-            <url>gitsite:git@github.com/gregbugaj/hoplin.io.git</url>
-        </site>
-
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-
-    </distributionManagement>
-
-    <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <jdk.version>1.8</jdk.version>
-
-        <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.project.outputEncoding>UTF-8</project.project.outputEncoding>
-
-        <version.maven-gpg-plugin>1.6</version.maven-gpg-plugin>
-        <version.maven-compiler-plugin>3.6.0</version.maven-compiler-plugin>
-        <version.maven-source-plugin>3.0.1</version.maven-source-plugin>
-        <version.maven-javadoc-plugin>2.10.4</version.maven-javadoc-plugin>
-        <version.maven-deploy-plugin>2.8.2</version.maven-deploy-plugin>
-        <version.nexus-staging-maven-plugin>1.6.7</version.nexus-staging-maven-plugin>
-
-        <!-- Don't sign artifacts unless the 'stage' or 'release' profile is active -->
-        <gpg.skip>true</gpg.skip>
-
-        <!-- When deploying, don't promote artifacts from staging repository unless 'release' profile is active -->
-        <autoReleaseAfterClose>false</autoReleaseAfterClose>
-    </properties>
-
-    <build>
-
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <version>3.7.1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-site-plugin</artifactId>
+          <groupId>org.apache.maven.plugins</groupId>
+          <version>3.7.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
 
 
-        <plugins>
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-descriptor</id>
-                        <goals>
-                            <goal>attach-descriptor</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${version.maven-compiler-plugin}</version>
-                <configuration>
-                    <encoding>UTF-8</encoding>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <debug>true</debug>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                    <showDeprecation>true</showDeprecation>
-                </configuration>
-            </plugin>
+    <plugins>
+      <plugin>
+        <artifactId>maven-site-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>attach-descriptor</goal>
+            </goals>
+            <id>attach-descriptor</id>
+          </execution>
+        </executions>
+      </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>${version.maven-deploy-plugin}</version>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <debug>true</debug>
+          <encoding>UTF-8</encoding>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <showDeprecation>true</showDeprecation>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>${version.maven-compiler-plugin}</version>
+      </plugin>
 
-          <!--
-            <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>${version.maven-deploy-plugin}</version>
-                <executions>
-                    <execution>
-                        <id>default-deploy</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-          -->
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>${version.maven-deploy-plugin}</version>
+      </plugin>
+
+      <!--
+        <plugin>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>${version.maven-deploy-plugin}</version>
+            <executions>
+                <execution>
+                    <id>default-deploy</id>
+                    <phase>deploy</phase>
+                    <goals>
+                        <goal>deploy</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+      -->
 
 
-         <!-- SNAPSHOT
+      <!-- SNAPSHOT
 
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${version.nexus-staging-maven-plugin}</version>
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <id>default-deploy</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                            <goal>release</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <serverId>sonatype-nexus-staging</serverId>
-                    <nexusUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2/</nexusUrl>
-                </configuration>
-            </plugin>
+         <plugin>
+             <groupId>org.sonatype.plugins</groupId>
+             <artifactId>nexus-staging-maven-plugin</artifactId>
+             <version>${version.nexus-staging-maven-plugin}</version>
+             <extensions>true</extensions>
+             <executions>
+                 <execution>
+                     <id>default-deploy</id>
+                     <phase>deploy</phase>
+                     <goals>
+                         <goal>deploy</goal>
+                         <goal>release</goal>
+                     </goals>
+                 </execution>
+             </executions>
+             <configuration>
+                 <serverId>sonatype-nexus-staging</serverId>
+                 <nexusUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2/</nexusUrl>
+             </configuration>
+         </plugin>
 -->
 
-          <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${version.nexus-staging-maven-plugin}</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>${autoReleaseAfterClose}</autoReleaseAfterClose>
-                </configuration>
-           </plugin>
+      <plugin>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <configuration>
+          <autoReleaseAfterClose>${autoReleaseAfterClose}</autoReleaseAfterClose>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <serverId>ossrh</serverId>
+        </configuration>
+        <extensions>true</extensions>
+        <groupId>org.sonatype.plugins</groupId>
+        <version>${version.nexus-staging-maven-plugin}</version>
+      </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>${version.maven-gpg-plugin}</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
+      <plugin>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <configuration>
+          <arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+        <groupId>org.apache.maven.plugins</groupId>
 
-                <!-- Read password from the settings.xml file rather than from prompt-->
-                <configuration>
-                    <arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
-                </configuration>
-            </plugin>
-
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
-                <configuration>
-                    <stagingRepository>/tmp/maven-snapshot</stagingRepository>
-                    <localCheckout>true</localCheckout>
-                    <pushChanges>false</pushChanges>
-                    <mavenExecutorId>forked-path</mavenExecutorId>
-                    <arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>${version.maven-source-plugin}</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${version.maven-javadoc-plugin}</version>
-
-                <configuration>
-                    <encoding>UTF-8</encoding>
-                    <additionalparam>-Xdoclint:none</additionalparam>
-                </configuration>
-
-                <executions>
-                    <execution>
-                        <id>attach-javadoc</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-        </plugins>
-
-    </build>
-
-    <profiles>
-        <profile>
-            <id>release</id>
-            <properties>
-                <gpg.skip>false</gpg.skip>
-                <autoReleaseAfterClose>true</autoReleaseAfterClose>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>stage</id>
-            <properties>
-                <gpg.skip>false</gpg.skip>
-            </properties>
-        </profile>
-
-        <!-- GPG Signature on release -->
-        <profile>
-            <id>release-sign-artifacts</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
+        <!-- Read password from the settings.xml file rather than from prompt-->
+        <version>${version.maven-gpg-plugin}</version>
+      </plugin>
 
 
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${version.maven-gpg-plugin}</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <arguments>-Dgpg.passphrase=${gpg.passphrase}</arguments>
+          <localCheckout>true</localCheckout>
+          <mavenExecutorId>forked-path</mavenExecutorId>
+          <pushChanges>false</pushChanges>
+          <stagingRepository>/tmp/maven-snapshot</stagingRepository>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>2.5.3</version>
+      </plugin>
 
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <id>attach-sources</id>
+          </execution>
+        </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>${version.maven-source-plugin}</version>
+      </plugin>
 
-        </profile>
-    </profiles>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <additionalparam>-Xdoclint:none</additionalparam>
+          <encoding>UTF-8</encoding>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <id>attach-javadoc</id>
+          </execution>
+        </executions>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.maven.scm</groupId>
-            <artifactId>maven-scm-provider-gitexe</artifactId>
-            <version>1.9.5</version>
-        </dependency>
-    </dependencies>
+        <groupId>org.apache.maven.plugins</groupId>
 
-    <modules>
+        <version>${version.maven-javadoc-plugin}</version>
+      </plugin>
+
+    </plugins>
+
+  </build>
+  <dependencies>
+    <dependency>
+      <artifactId>maven-scm-provider-gitexe</artifactId>
+      <groupId>org.apache.maven.scm</groupId>
+      <version>1.9.5</version>
+    </dependency>
+  </dependencies>
+  <description>A lightweight RabbitMQ client for Java</description>
+
+  <developers>
+    <developer>
+      <email>gregbugaj@yahoo.com</email>
+      <id>greg</id>
+      <name>Greg Bugaj</name>
+    </developer>
+  </developers>
+
+  <distributionManagement>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+
+    <site>
+      <id>github-project-site</id>
+      <url>gitsite:git@github.com/gregbugaj/hoplin.io.git</url>
+    </site>
+
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+
+  </distributionManagement>
+  <groupId>io.hoplin</groupId>
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/gregbugaj/hoplin.io/issues</url>
+  </issueManagement>
+
+  <licenses>
+    <license>
+      <distribution>repo</distribution>
+      <name>The MIT License</name>
+      <url>http://www.opensource.org/licenses/mit-license.php</url>
+    </license>
+  </licenses>
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <modules>
     <module>client</module>
     <module>examples</module>
     <module>toolbox</module>
     <module>logreader</module>
   </modules>
+
+  <name>hoplin.io</name>
+
+  <organization>
+    <name>io.hoplin</name>
+    <url>http://hoplin.io</url>
+  </organization>
+
+  <packaging>pom</packaging>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <properties>
+        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        <gpg.skip>false</gpg.skip>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>stage</id>
+      <properties>
+        <gpg.skip>false</gpg.skip>
+      </properties>
+    </profile>
+
+    <!-- GPG Signature on release -->
+    <profile>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+              </execution>
+            </executions>
+            <groupId>org.apache.maven.plugins</groupId>
+            <version>${version.maven-gpg-plugin}</version>
+          </plugin>
+        </plugins>
+      </build>
+
+
+      <id>release-sign-artifacts</id>
+
+
+    </profile>
+  </profiles>
+
+  <properties>
+    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+    <gpg.skip>true</gpg.skip>
+    <jdk.version>1.8</jdk.version>
+
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.project.outputEncoding>UTF-8</project.project.outputEncoding>
+    <version.maven-compiler-plugin>3.6.0</version.maven-compiler-plugin>
+    <version.maven-deploy-plugin>2.8.2</version.maven-deploy-plugin>
+    <version.maven-gpg-plugin>1.6</version.maven-gpg-plugin>
+    <version.maven-javadoc-plugin>2.10.4</version.maven-javadoc-plugin>
+
+    <!-- Don't sign artifacts unless the 'stage' or 'release' profile is active -->
+    <version.maven-source-plugin>3.0.1</version.maven-source-plugin>
+
+    <!-- When deploying, don't promote artifacts from staging repository unless 'release' profile is active -->
+    <version.nexus-staging-maven-plugin>1.6.7</version.nexus-staging-maven-plugin>
+  </properties>
+
+  <scm>
+    <connection>scm:git:git://github.com/gregbugaj/hoplin.io.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:gregbugaj/hoplin.io.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/gregbugaj/hoplin.io.git</url>
+  </scm>
+
+  <url>http://hoplin.io</url>
+
+  <version>1.0.10</version>
 
 </project>

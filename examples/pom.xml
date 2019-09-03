@@ -1,54 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>hoplin-examples</artifactId>
 
-    <parent>
-        <groupId>io.hoplin</groupId>
-        <artifactId>hoplin-parent</artifactId>
-        <version>1.0.10</version>
-     </parent>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+    </plugins>
+  </build>
 
+  <dependencies>
+
+    <dependency>
+      <artifactId>hoplin-client</artifactId>
+      <groupId>io.hoplin</groupId>
+      <scope>compile</scope>
+      <version>1.0.10</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>logback-core</artifactId>
+      <groupId>ch.qos.logback</groupId>
+      <version>1.2.3</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>logback-classic</artifactId>
+      <groupId>ch.qos.logback</groupId>
+      <version>1.2.3</version>
+    </dependency>
+
+  </dependencies>
+  <groupId>io.hoplin</groupId>
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>hoplin-parent</artifactId>
     <groupId>io.hoplin</groupId>
-    <artifactId>hoplin-examples</artifactId>
+    <version>1.0.10</version>
+  </parent>
 
-    <properties>
-        <java.version>1.8</java.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
-
-        <dependency>
-            <groupId>io.hoplin</groupId>
-            <artifactId>hoplin-client</artifactId>
-            <version>1.0.10</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-
-    </dependencies>
+  <properties>
+    <java.version>1.8</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 </project>

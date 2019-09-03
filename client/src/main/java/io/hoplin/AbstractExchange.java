@@ -2,53 +2,47 @@ package io.hoplin;
 
 import java.util.Map;
 
-public abstract class AbstractExchange implements Exchange
-{
-    private Map<String, Object> arguments;
+public abstract class AbstractExchange implements Exchange {
 
-    // exchange name
-    private String name;
+  private Map<String, Object> arguments;
 
-    // exchange is deleted when last queue is unbound create it
-    private boolean autoDelete;
+  // exchange name
+  private String name;
 
-    // exchanges survive broker restart
-    private boolean durable;
+  // exchange is deleted when last queue is unbound create it
+  private boolean autoDelete;
 
-    private ExchangeType type;
+  // exchanges survive broker restart
+  private boolean durable;
 
-    public AbstractExchange(final String name)
-    {
-        this.name = name;
-    }
+  private ExchangeType type;
 
-    @Override
-    public Map<String, Object> getArguments()
-    {
-        return arguments;
-    }
+  public AbstractExchange(final String name) {
+    this.name = name;
+  }
 
-    @Override
-    public String getName()
-    {
-        return name;
-    }
+  @Override
+  public Map<String, Object> getArguments() {
+    return arguments;
+  }
 
-    @Override
-    public boolean isAutoDelete()
-    {
-        return autoDelete;
-    }
+  @Override
+  public String getName() {
+    return name;
+  }
 
-    @Override
-    public boolean isDurable()
-    {
-        return durable;
-    }
+  @Override
+  public boolean isAutoDelete() {
+    return autoDelete;
+  }
 
-    @Override
-    public ExchangeType getType()
-    {
-        return type;
-    }
+  @Override
+  public boolean isDurable() {
+    return durable;
+  }
+
+  @Override
+  public ExchangeType getType() {
+    return type;
+  }
 }

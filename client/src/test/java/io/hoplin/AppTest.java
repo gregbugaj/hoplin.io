@@ -1,15 +1,13 @@
 package io.hoplin;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AppTest 
-{
+import org.junit.jupiter.api.Test;
 
-    @Test
-    public void shouldAnswerWithTrue()
-    {
-        assertTrue( true );
-    }
+public class AppTest {
+
+  @Test
+  public void shouldAnswerWithTrue() {
+    assertTrue(true);
+  }
 }

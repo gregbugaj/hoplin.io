@@ -1,16 +1,14 @@
 package io.hoplin;
 
-public class SubscriptionConfig
-{
-    private String subscriberId;
+public class SubscriptionConfig {
 
-    public String getSubscriberId()
-    {
-        return subscriberId;
-    }
+  private String subscriberId;
 
-    public void setSubscriberId(String subscriberId)
-    {
-        this.subscriberId = subscriberId;
-    }
+  public String getSubscriberId() {
+    return subscriberId;
+  }
+
+  public void setSubscriberId(String subscriberId) {
+    this.subscriberId = subscriberId;
+  }
 }

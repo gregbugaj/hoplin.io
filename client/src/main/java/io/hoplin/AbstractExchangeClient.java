@@ -2,10 +2,6 @@ package io.hoplin;
 
 import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
-import io.hoplin.metrics.QueueMetrics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -13,271 +9,256 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base exchange client
  */
-abstract class AbstractExchangeClient implements ExchangeClient
-{
-    private static final Logger log = LoggerFactory.getLogger(AbstractExchangeClient.class);
+abstract class AbstractExchangeClient implements ExchangeClient {
 
-    private static String DEFAULT_ERROR_EXCHANGE = "hoplin_default_error_exchange";
+  private static final Logger log = LoggerFactory.getLogger(AbstractExchangeClient.class);
 
-    Binding binding;
+  private static String DEFAULT_ERROR_EXCHANGE = "hoplin_default_error_exchange";
 
-    RabbitMQClient client;
+  Binding binding;
 
-    AbstractExchangeClient(final RabbitMQOptions options, final Binding binding)
-    {
-        Objects.requireNonNull(options);
-        Objects.requireNonNull(binding);
+  RabbitMQClient client;
 
-        this.client = RabbitMQClient.create(options);
-        this.binding = binding;
+  AbstractExchangeClient(final RabbitMQOptions options, final Binding binding) {
+    Objects.requireNonNull(options);
+    Objects.requireNonNull(binding);
 
-        setupErrorHandling();
+    this.client = RabbitMQClient.create(options);
+    this.binding = binding;
+
+    setupErrorHandling();
+  }
+
+  /**
+   * setup error handling queues
+   */
+  private void setupErrorHandling() {
+    final String exchangeName = DEFAULT_ERROR_EXCHANGE;
+    // survive a server restart
+    final boolean durable = true;
+    // keep it even if not in user
+    final boolean autoDelete = false;
+    final String type = "direct";
+
+    try {
+      // Make sure that the Exchange is declared
+      client.exchangeDeclare(exchangeName, type, durable, autoDelete);
+    } catch (final Exception e) {
+      log.error("Unable to declare error exchange", e);
+      throw new HoplinRuntimeException("Unable to declare error exchange", e);
+    }
+  }
+
+  <T> SubscriptionResult subscribe(final SubscriptionConfig config, final Class<T> clazz) {
+    Objects.requireNonNull(config, "Config can't be null");
+    Objects.requireNonNull(clazz, "Handler can't be null");
+
+    final String subscriberId = config.getSubscriberId();
+    final String exchangeName = binding.getExchange();
+    final Map<String, Object> arguments = binding.getArguments();
+
+    String queueName = binding.getQueue();
+    String routingKey = binding.getRoutingKey();
+
+    try {
+      // binding
+      String bindingKey = routingKey;
+      if (routingKey == null) {
+        bindingKey = "";
+      }
+
+      boolean autoDelete = false;
+      // we did not get a explicit queue name to bind to exchange so here we will determine that from the
+      // supplied class name
+      if (Strings.isNullOrEmpty(queueName)) {
+        queueName = getQueueNameFromHandler(subscriberId, exchangeName, clazz);
+        binding.setQueue(queueName);
+      }
+
+      // when the queue name is empty we will create a queue dynamically and bind to that queue
+      final AMQP.Queue.DeclareOk queueDeclare = client
+          .queueDeclare(queueName, true, false, autoDelete, arguments);
+
+      queueName = queueDeclare.getQueue();
+
+      client.queueBind(queueName, exchangeName, bindingKey);
+      log.info("Binding client [exchangeName, queueName, bindingKey, autoDelete] : {}, {}, {}, {}",
+          exchangeName,
+          queueName,
+          bindingKey,
+          autoDelete
+      );
+
+      return new SubscriptionResult(exchangeName, queueName);
+    } catch (final Exception e) {
+      throw new HoplinRuntimeException("Unable to setup subscription consumer", e);
+    }
+  }
+
+  /**
+   * Generate queue name from supplied parameters Default format
+   *
+   * <pre>
+   *     subscriber:exchange:class
+   * </pre>
+   *
+   * @param subscriberId
+   * @param exchange
+   * @param clazz
+   * @param <T>
+   * @return
+   */
+  private <T> String getQueueNameFromHandler(final String subscriberId, final String exchange,
+      final Class<T> clazz) {
+    return String.format("%s:%s:%s", subscriberId, exchange, clazz.getName());
+  }
+
+  /**
+   * This will actively declare:
+   * <p>
+   * a durable, non-autodelete exchange of "direct" type a durable, non-exclusive, non-autodelete
+   * queue with a well-known name
+   */
+  void bind(final String type) {
+    Objects.requireNonNull(type);
+    final String exchangeName = binding.getExchange();
+
+    // prevent changing default queues
+    if (Strings.isNullOrEmpty(exchangeName)) {
+      throw new IllegalArgumentException("Exchange name can't be empty");
     }
 
-     /**
-     * setup error handling queues
-     */
-    private void setupErrorHandling()
-    {
-        final String exchangeName = DEFAULT_ERROR_EXCHANGE;
-        // survive a server restart
-        final boolean durable = true;
-        // keep it even if not in user
-        final boolean autoDelete = false;
-        final String type = "direct";
+    try {
+      // survive a server restart
+      final boolean durable = true;
+      // keep it even if not in use
+      final boolean autoDelete = false;
 
-        try
-        {
-            // Make sure that the Exchange is declared
-            client.exchangeDeclare(exchangeName, type, durable, autoDelete);
-        }
-        catch(final Exception e)
-        {
-            log.error("Unable to declare error exchange", e);
-            throw new HoplinRuntimeException("Unable to declare error exchange", e);
-        }
+      final Map<String, Object> arguments = new HashMap<>();
+      // Make sure that the Exchange is declared
+
+      client.exchangeDeclare(exchangeName, type, durable, autoDelete, arguments);
+    } catch (final Exception e) {
+      throw new HoplinRuntimeException("Unable to bind to queue", e);
     }
+  }
 
-    <T> SubscriptionResult subscribe(final SubscriptionConfig config, final Class<T> clazz)
-    {
-        Objects.requireNonNull(config, "Config can't be null");
-        Objects.requireNonNull(clazz, "Handler can't be null");
+  @Override
+  public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
+      final Consumer<T> handler) {
+    return subscribe(clazz, handler, cfg -> cfg.withSubscriberId(subscriberId));
+  }
 
-        final String subscriberId = config.getSubscriberId();
-        final String exchangeName = binding.getExchange();
-        final Map<String, Object> arguments = binding.getArguments();
+  @Override
+  public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
+      final BiConsumer<T, MessageContext> handler) {
+    return subscribe(clazz, handler, cfg -> cfg.withSubscriberId(subscriberId));
+  }
 
-        String queueName = binding.getQueue();
-        String routingKey = binding.getRoutingKey();
+  @Override
+  public <T> SubscriptionResult subscribe(Class<T> clazz, BiConsumer<T, MessageContext> handler,
+      Consumer<SubscriptionConfigurator> cfg) {
+    final SubscriptionConfigurator configurator = new SubscriptionConfigurator();
+    cfg.accept(configurator);
 
-        try
-        {
-            // binding
-            String bindingKey = routingKey;
-            if(routingKey == null)
-                bindingKey = "";
+    final SubscriptionResult subscription = subscribe(configurator.build(), clazz);
 
-            boolean autoDelete = false;
-            // we did not get a explicit queue name to bind to exchange so here we will determine that from the 
-            // supplied class name
-            if(Strings.isNullOrEmpty(queueName)) 
-            {
-                queueName = getQueueNameFromHandler(subscriberId, exchangeName, clazz);
-                binding.setQueue(queueName);
-            }
+    log.info("Subscription Exchange : {}", subscription.getExchange());
+    log.info("Subscription Queue    : {}", subscription.getQueue());
 
-            // when the queue name is empty we will create a queue dynamically and bind to that queue
-            final AMQP.Queue.DeclareOk queueDeclare = client
-                    .queueDeclare(queueName, true, false, autoDelete, arguments);
+    client.basicConsume(binding.getQueue(), clazz, handler);
+    return subscription;
+  }
 
-            queueName = queueDeclare.getQueue();
+  @Override
+  public <T> SubscriptionResult subscribe(Class<T> clazz, Consumer<T> handler,
+      Consumer<SubscriptionConfigurator> cfg) {
+    // wrap handler into our BiConsumer
+    final BiConsumer<T, MessageContext> biHandler = (msg, context) -> handler.accept(msg);
+    return subscribe(clazz, biHandler, cfg);
+  }
 
-            client.queueBind(queueName, exchangeName, bindingKey);
-            log.info("Binding client [exchangeName, queueName, bindingKey, autoDelete] : {}, {}, {}, {}",
-                     exchangeName,
-                     queueName,
-                     bindingKey,
-                     autoDelete
-            );
+  @Override
+  public RabbitMQClient getMqClient() {
+    return client;
+  }
 
-            return new SubscriptionResult(exchangeName, queueName);
-        }
-        catch (final Exception e)
-        {
-            throw new HoplinRuntimeException("Unable to setup subscription consumer", e);
-        }
-    }
+  @Override
+  public <T> void publish(final T message) {
+    publish(message, "", cfg -> {
+    });
+  }
 
-    /**
-     * Generate queue name from supplied parameters
-     * Default format
-     *
-     * <pre>
-     *     subscriber:exchange:class
-     * </pre>
-     *
-     * @param subscriberId
-     * @param exchange
-     * @param clazz
-     * @param <T>
-     * @return
-     */
-    private <T> String getQueueNameFromHandler(final String subscriberId, final String exchange, final Class<T> clazz)
-    {
-       return String.format("%s:%s:%s",subscriberId, exchange, clazz.getName());
-    }
+  @Override
+  public <T> void publish(final T message, final String routingKey) {
+    publish(message, routingKey, cfg -> {
+    });
+  }
 
-    /**
-     * This will actively declare:
-     *
-     * a durable, non-autodelete exchange of "direct" type
-     * a durable, non-exclusive, non-autodelete queue with a well-known name
-     */
-    void bind(final String type)
-    {
-        Objects.requireNonNull(type);
-        final String exchangeName = binding.getExchange();
+  @Override
+  public <T> void publish(final T message, final Consumer<MessageConfiguration> cfg) {
+    publish(message, "", cfg);
+  }
 
-        // prevent changing default queues
-        if(Strings.isNullOrEmpty(exchangeName))
-            throw new IllegalArgumentException("Exchange name can't be empty");
+  @Override
+  public <T> void publish(final T message, final String routingKey,
+      final Consumer<MessageConfiguration> cfg) {
+    Objects.requireNonNull(message);
+    Objects.requireNonNull(routingKey);
+    Objects.requireNonNull(cfg);
+    // Wrap our message original message
+    final MessagePayload<T> payload = new MessagePayload<>(message);
+    payload.setType(message.getClass());
+    client.basicPublish(binding.getExchange(), routingKey, payload);
+  }
 
-        try
-        {
-            // survive a server restart
-            final boolean durable = true;
-            // keep it even if not in use
-            final boolean autoDelete = false;
+  @Override
+  public <T> CompletableFuture<Void> publishAsync(T message) {
+    return publishAsync(message, "", cfg -> {
+    });
+  }
 
-            final Map<String, Object> arguments = new HashMap<>();
-            // Make sure that the Exchange is declared
+  @Override
+  public <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey) {
+    return publishAsync(message, routingKey, cfg -> {
+    });
+  }
 
-            client.exchangeDeclare(exchangeName, type, durable, autoDelete, arguments);
-        }
-        catch (final Exception e)
-        {
-            throw new HoplinRuntimeException("Unable to bind to queue", e);
-        }
-    }
+  @Override
+  public <T> CompletableFuture<Void> publishAsync(final T message,
+      final Consumer<MessageConfiguration> cfg) {
+    return publishAsync(message, "", cfg);
+  }
 
-    @Override
-    public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final Consumer<T> handler)
-    {
-        return subscribe(clazz, handler, cfg -> cfg.withSubscriberId(subscriberId));
-    }
+  @Override
+  public <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey,
+      final Consumer<MessageConfiguration> cfg) {
+    Objects.requireNonNull(message);
+    Objects.requireNonNull(routingKey);
+    Objects.requireNonNull(cfg);
 
-    @Override
-    public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz, final  BiConsumer<T, MessageContext> handler)
-    {
-        return subscribe(clazz, handler, cfg -> cfg.withSubscriberId(subscriberId));
-    }
+    final CompletableFuture<Void> promise = new CompletableFuture<>();
+    // Wrap our message original message
+    final MessagePayload<T> payload = new MessagePayload<>(message);
+    payload.setType(message.getClass());
+    client.basicPublish(binding.getExchange(), "", payload);
 
-    @Override
-    public <T> SubscriptionResult subscribe(Class<T> clazz, BiConsumer<T, MessageContext> handler, Consumer<SubscriptionConfigurator> cfg)
-    {
-        final SubscriptionConfigurator configurator = new SubscriptionConfigurator();
-        cfg.accept(configurator);
+    return promise;
+  }
 
-        final SubscriptionResult subscription = subscribe(configurator.build(), clazz);
+  @Override
+  public void awaitQuiescence() {
 
-        log.info("Subscription Exchange : {}", subscription.getExchange());
-        log.info("Subscription Queue    : {}", subscription.getQueue());
+  }
 
-        client.basicConsume(binding.getQueue(), clazz, handler);
-        return subscription;
-    }
+  @Override
+  public void awaitQuiescence(long time, TimeUnit unit) {
 
-    @Override
-    public <T> SubscriptionResult subscribe(Class<T> clazz, Consumer<T> handler, Consumer<SubscriptionConfigurator> cfg)
-    {
-        // wrap handler into our BiConsumer
-        final BiConsumer<T, MessageContext> biHandler = (msg, context) -> handler.accept(msg);
-        return subscribe(clazz, biHandler, cfg);
-    }
-
-    @Override
-    public RabbitMQClient getMqClient()
-    {
-        return client;
-    }
-
-    @Override
-    public <T> void publish(final T message)
-    {
-        publish(message, "", cfg->{});
-    }
-
-    @Override
-    public <T> void publish(final T message, final String routingKey)
-    {
-        publish(message, routingKey, cfg->{});
-    }
-
-    @Override
-    public <T> void publish(final T message, final Consumer<MessageConfiguration> cfg)
-    {
-        publish(message, "", cfg);
-    }
-
-    @Override
-    public <T> void publish(final T message, final String routingKey, final Consumer<MessageConfiguration> cfg)
-    {
-        Objects.requireNonNull(message);
-        Objects.requireNonNull(routingKey);
-        Objects.requireNonNull(cfg);
-        // Wrap our message original message
-        final MessagePayload<T> payload = new MessagePayload<>(message);
-        payload.setType(message.getClass());
-        client.basicPublish(binding.getExchange(), routingKey, payload);
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> publishAsync(T message)
-    {
-        return publishAsync(message, "", cfg->{});
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey)
-    {
-        return publishAsync(message, routingKey, cfg->{});
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> publishAsync(final T message, final Consumer<MessageConfiguration> cfg)
-    {
-        return publishAsync(message, "", cfg);
-    }
-
-    @Override
-    public <T> CompletableFuture<Void> publishAsync(final T message, final String routingKey, final Consumer<MessageConfiguration> cfg)
-    {
-        Objects.requireNonNull(message);
-        Objects.requireNonNull(routingKey);
-        Objects.requireNonNull(cfg);
-
-        final CompletableFuture<Void> promise = new CompletableFuture<>();
-        // Wrap our message original message
-        final MessagePayload<T> payload = new MessagePayload<>(message);
-        payload.setType(message.getClass());
-        client.basicPublish(binding.getExchange(), "", payload);
-
-        return promise;
-    }
-
-    @Override
-    public void awaitQuiescence()
-    {
-
-    }
-
-    @Override
-    public void awaitQuiescence(long time, TimeUnit unit)
-    {
-
-    }
+  }
 }

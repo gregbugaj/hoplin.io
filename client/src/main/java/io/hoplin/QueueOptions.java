@@ -3,106 +3,95 @@ package io.hoplin;
 import java.util.function.Consumer;
 
 /**
- * Specify queue consumer settings when calling
- * {@link RabbitMQClient#basicConsume(String, Class, Consumer)}
+ * Specify queue consumer settings when calling {@link RabbitMQClient#basicConsume(String, Class,
+ * Consumer)}
  */
-public class QueueOptions
-{
-    private boolean autoAck = true;
+public class QueueOptions {
 
-    private boolean keepMostRecent = false;
+  private boolean autoAck = true;
 
-    private int maxInternalQueueSize = Integer.MAX_VALUE;
+  private boolean keepMostRecent = false;
 
-    private  boolean publisherConfirms;
+  private int maxInternalQueueSize = Integer.MAX_VALUE;
 
-    private int prefetchCount = 10;
+  private boolean publisherConfirms;
 
-    public static QueueOptions of(boolean autoAck, boolean keepMostRecent, int maxInternalQueueSize)
-    {
-        return new QueueOptions()
-            .setAutoAck(autoAck)
-            .setKeepMostRecent(keepMostRecent)
-            .setMaxInternalQueueSize(maxInternalQueueSize);
-    }
+  private int prefetchCount = 10;
 
-    public static QueueOptions of(boolean autoAck)
-    {
-        return new QueueOptions()
-                .setAutoAck(autoAck);
-    }
+  public static QueueOptions of(boolean autoAck, boolean keepMostRecent, int maxInternalQueueSize) {
+    return new QueueOptions()
+        .setAutoAck(autoAck)
+        .setKeepMostRecent(keepMostRecent)
+        .setMaxInternalQueueSize(maxInternalQueueSize);
+  }
 
-    /**
-     * @param autoAck true if the server should consider messages
-     *                acknowledged once delivered; false if the server should expect
-     *                explicit acknowledgements
-     */
-    public QueueOptions setAutoAck(boolean autoAck)
-    {
-        this.autoAck = autoAck;
-        return this;
-    }
+  public static QueueOptions of(boolean autoAck) {
+    return new QueueOptions()
+        .setAutoAck(autoAck);
+  }
 
-    /**
-     * @param keepMostRecent {@code true} for discarding old messages instead of recent ones,
-     *                       otherwise use {@code false}
-     */
-    public QueueOptions setKeepMostRecent(boolean keepMostRecent)
-    {
-        this.keepMostRecent = keepMostRecent;
-        return this;
-    }
+  /**
+   * @param maxInternalQueueSize the size of internal queue
+   */
+  public QueueOptions setMaxInternalQueueSize(int maxInternalQueueSize) {
+    this.maxInternalQueueSize = maxInternalQueueSize;
+    return this;
+  }
 
+  /**
+   * @return {@code true} if the server should consider messages acknowledged once delivered; {@code
+   * false}  if the server should expect explicit acknowledgements
+   */
+  public boolean isAutoAck() {
+    return autoAck;
+  }
 
-    /**
-     * @param maxInternalQueueSize the size of internal queue
-     */
-    public QueueOptions setMaxInternalQueueSize(int maxInternalQueueSize)
-    {
-        this.maxInternalQueueSize = maxInternalQueueSize;
-        return this;
-    }
+  /**
+   * @param autoAck true if the server should consider messages acknowledged once delivered; false
+   *                if the server should expect explicit acknowledgements
+   */
+  public QueueOptions setAutoAck(boolean autoAck) {
+    this.autoAck = autoAck;
+    return this;
+  }
 
-    /**
-     * @return {@code true} if the server should consider messages
-     * acknowledged once delivered; {@code false}  if the server should expect
-     * explicit acknowledgements
-     */
-    public boolean isAutoAck()
-    {
-        return autoAck;
-    }
+  /**
+   * @return the size of internal queue
+   */
+  public int maxInternalQueueSize() {
+    return maxInternalQueueSize;
+  }
 
-    /**
-     * @return the size of internal queue
-     */
-    public int maxInternalQueueSize()
-    {
-        return maxInternalQueueSize;
-    }
+  /**
+   * @return {@code true} if old messages will be discarded instead of recent ones, otherwise use
+   * {@code false}
+   */
+  public boolean isKeepMostRecent() {
+    return keepMostRecent;
+  }
 
-    /**
-     * @return {@code true} if old messages will be discarded instead of recent ones,
-     * otherwise use {@code false}
-     */
-    public boolean isKeepMostRecent()
-    {
-        return keepMostRecent;
-    }
+  /**
+   * @param keepMostRecent {@code true} for discarding old messages instead of recent ones,
+   *                       otherwise use {@code false}
+   */
+  public QueueOptions setKeepMostRecent(boolean keepMostRecent) {
+    this.keepMostRecent = keepMostRecent;
+    return this;
+  }
 
-    public boolean isPublisherConfirms() {
-        return publisherConfirms;
-    }
+  public boolean isPublisherConfirms() {
+    return publisherConfirms;
+  }
 
-    public void setPublisherConfirms(boolean publisherConfirms) {
-        this.publisherConfirms = publisherConfirms;
-    }
+  public void setPublisherConfirms(boolean publisherConfirms) {
+    this.publisherConfirms = publisherConfirms;
+  }
 
-    public int getPrefetchCount() {
-        return prefetchCount;
-    }
+  public int getPrefetchCount() {
+    return prefetchCount;
+  }
 
-    public void setPrefetchCount(int prefetchCount) {
-        this.prefetchCount = prefetchCount;
-    }
+  public void setPrefetchCount(int prefetchCount) {
+    this.prefetchCount = prefetchCount;
+  }
 }

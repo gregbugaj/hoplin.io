@@ -1,48 +1,49 @@
 package io.hoplin.logreader.cli;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.Reader;
 
-public abstract class ConsoleDevice implements AutoCloseable
-{
-    private static ConsoleDevice DEFAULT = (System.console() == null) ? streamDevice(System.in, System.out)
-        : new NativeConsole(System.console());
+public abstract class ConsoleDevice implements AutoCloseable {
 
-    private static ConsoleDevice console;
+  private static ConsoleDevice DEFAULT =
+      (System.console() == null) ? streamDevice(System.in, System.out)
+          : new NativeConsole(System.console());
 
-    public abstract ConsoleDevice printf(final String fmt,final Object... params);
+  private static ConsoleDevice console;
 
-    public abstract String readLine() throws ConsoleException;
+  public static ConsoleDevice streamDevice(final InputStream in, final OutputStream out) {
+    final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+    final PrintWriter writer = new PrintWriter(out, true);
+    return new EmulatedConsole(reader, writer);
+  }
 
-    public abstract String readLine(final String fmt, final Object... args) throws ConsoleException;
+  public static ConsoleDevice console() {
+    return console == null ? DEFAULT : console;
+  }
 
-    public abstract char[] readPassword();
+  public static void console(final ConsoleDevice device) {
+    console = device;
+  }
 
-    public abstract Reader reader();
+  public static void reset() {
+    console = null;
+  }
 
-    public abstract PrintWriter writer();
+  public abstract ConsoleDevice printf(final String fmt, final Object... params);
 
-    public static ConsoleDevice streamDevice(final InputStream in, final OutputStream out)
-    {
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        final PrintWriter writer = new PrintWriter(out, true);
-        return new EmulatedConsole(reader, writer);
-    }
+  public abstract String readLine() throws ConsoleException;
 
-    public static ConsoleDevice console()
-    {
-        return console == null ? DEFAULT : console;
-    }
+  public abstract String readLine(final String fmt, final Object... args) throws ConsoleException;
 
-    public static void console(final ConsoleDevice device)
-    {
-        console = device;
-    }
+  public abstract char[] readPassword();
 
-    public static void reset()
-    {
-        console = null;
-    }
+  public abstract Reader reader();
 
+  public abstract PrintWriter writer();
 
 
 }

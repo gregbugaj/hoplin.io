@@ -3,57 +3,49 @@ package io.hoplin.batch;
 import java.util.Date;
 import java.util.UUID;
 
-public class BatchContextTask
-{
-    private Object message;
+public class BatchContextTask {
 
-    private Date startDate;
+  private Object message;
 
-    private boolean completed;
+  private Date startDate;
 
-    private UUID taskId;
+  private boolean completed;
 
-    public <T> BatchContextTask(final T message)
-    {
-        this.message = message;
-        this.taskId = UUID.randomUUID();
-    }
+  private UUID taskId;
 
-    public Object getMessage()
-    {
-        return message;
-    }
+  public <T> BatchContextTask(final T message) {
+    this.message = message;
+    this.taskId = UUID.randomUUID();
+  }
 
-    public BatchContextTask setMessage(final Object message)
-    {
-        this.message = message;
-        return this;
-    }
+  public Object getMessage() {
+    return message;
+  }
 
-    public Date getStartDate()
-    {
-        return startDate;
-    }
+  public BatchContextTask setMessage(final Object message) {
+    this.message = message;
+    return this;
+  }
 
-    public BatchContextTask setStartDate(final Date startDate)
-    {
-        this.startDate = startDate;
-        return this;
-    }
+  public Date getStartDate() {
+    return startDate;
+  }
 
-    public boolean isCompleted()
-    {
-        return completed;
-    }
+  public BatchContextTask setStartDate(final Date startDate) {
+    this.startDate = startDate;
+    return this;
+  }
 
-    public BatchContextTask setCompleted(final boolean completed)
-    {
-        this.completed = completed;
-        return this;
-    }
+  public boolean isCompleted() {
+    return completed;
+  }
 
-    public UUID getTaskId()
-    {
-        return taskId;
-    }
+  public BatchContextTask setCompleted(final boolean completed) {
+    this.completed = completed;
+    return this;
+  }
+
+  public UUID getTaskId() {
+    return taskId;
+  }
 }

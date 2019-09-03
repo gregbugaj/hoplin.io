@@ -1,70 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>logreader</artifactId>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+
+    <dependency>
+      <artifactId>hoplin-client</artifactId>
+      <groupId>io.hoplin</groupId>
+      <scope>compile</scope>
+      <version>1.0.10</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>jopt-simple</artifactId>
+      <groupId>net.sf.jopt-simple</groupId>
+      <version>6.0-alpha-2</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>logback-core</artifactId>
+      <groupId>ch.qos.logback</groupId>
+      <version>1.2.3</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>logback-classic</artifactId>
+      <groupId>ch.qos.logback</groupId>
+      <version>1.2.3</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>junit-jupiter-api</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <scope>test</scope>
+      <version>5.1.0</version>
+    </dependency>
+
+  </dependencies>
+  <groupId>io.hoplin</groupId>
+
   <modelVersion>4.0.0</modelVersion>
+  <name>logreader</name>
+
   <parent>
     <artifactId>hoplin-parent</artifactId>
     <groupId>io.hoplin</groupId>
     <version>1.0.10</version>
   </parent>
 
-  <groupId>io.hoplin</groupId>
-  <artifactId>logreader</artifactId>
 
-  <name>logreader</name>
   <properties>
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
-
-  <dependencies>
-
-    <dependency>
-      <groupId>io.hoplin</groupId>
-      <artifactId>hoplin-client</artifactId>
-      <version>1.0.10</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>net.sf.jopt-simple</groupId>
-      <artifactId>jopt-simple</artifactId>
-      <version>6.0-alpha-2</version>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>1.2.3</version>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>5.1.0</version>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
 
 
 </project>
