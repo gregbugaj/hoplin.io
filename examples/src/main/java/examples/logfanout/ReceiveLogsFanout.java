@@ -25,5 +25,6 @@ public class ReceiveLogsFanout extends BaseExample
     {
         log.info("Incoming context >  {}", context);
         log.info("Incoming msg     >  {}", msg);
+
     }
 }

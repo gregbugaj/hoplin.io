@@ -23,7 +23,7 @@ public class BatchProcessingExample extends BaseExample
 
         client.startNew(context ->
         {
-            for(int i = 0; i < 1000; ++i)
+            for(int i = 0; i < 100; ++i)
             {
                 context.enqueue(() -> new LogDetail("Msg >> " + System.nanoTime(), "info"));
                 context.enqueue(() -> new LogDetail("Msg >> " + System.nanoTime(), "warn"));

@@ -44,6 +44,15 @@ public class ReceiveBatchJob extends BaseExample
         log.info("Incoming correlationId  >  {}", correlationId);
         log.info("Incoming batchId        >  {}", batchId);
 
+        try
+        {
+            Thread.sleep(100);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
         final LogDetail reply = new LogDetail("Reply Message", "WARN");
         mqClient.basicPublish("", replyTo, reply, headers);
     }
