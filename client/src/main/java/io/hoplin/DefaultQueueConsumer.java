@@ -5,7 +5,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import io.hoplin.json.JsonMessageCodec;
+import io.hoplin.json.JsonMessagePayloadCodec;
 import io.hoplin.metrics.QueueMetrics;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -91,9 +91,8 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
         ack = ackFromOptions(queueOptions);
 
-        final Set<Class<?>> handlerClasses = handlers.keySet();
-        final JsonMessageCodec codec = new JsonMessageCodec(handlerClasses, (b)->{});
-
+        final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec(handlers.keySet());
+        System.out.println(new String(body));
         final MessagePayload message = codec.deserialize(body, MessagePayload.class);
         final Object val = message.getPayload();
         final Class<?> targetClass = message.getTypeAsClass();

@@ -7,7 +7,7 @@ import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
 import io.hoplin.RabbitMQClient;
 import io.hoplin.RabbitMQOptions;
-import io.hoplin.json.JsonMessageCodec;
+import io.hoplin.json.JsonMessagePayloadCodec;
 import io.hoplin.metrics.QueueMetrics;
 import java.io.IOException;
 import java.time.Duration;
@@ -33,7 +33,7 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
    * Exchange to send requests to
    */
   private final String exchange;
-  private JsonMessageCodec codec;
+  private JsonMessagePayloadCodec codec;
   /**
    * Channel we are communicating on
    */
@@ -53,7 +53,7 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
     Objects.requireNonNull(binding);
 
     this.client = RabbitMQClient.create(options);
-    this.codec = new JsonMessageCodec();
+    this.codec = new JsonMessagePayloadCodec();
     this.exchange = binding.getExchange();
     this.replyToQueueName = binding.getQueue();
     this.channel = client.channel();

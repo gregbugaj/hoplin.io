@@ -1,6 +1,8 @@
 package io.hoplin;
 
 import java.util.Objects;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
  * Message that will be sent over the wire with additional information;
@@ -9,9 +11,9 @@ import java.util.Objects;
  */
 public class MessagePayload<T> {
 
-  public static int SUCCESS  = 0;
+  public static int SUCCESS = 0;
 
-  public static int FAILURE  = 0;
+  public static int FAILURE = 0;
 
   // 0 = Success
   // 1 = Failure
@@ -32,6 +34,7 @@ public class MessagePayload<T> {
 
   /**
    * Create new message payload
+   *
    * @param msg the message to create
    */
   public MessagePayload(final T msg) {
@@ -53,6 +56,15 @@ public class MessagePayload<T> {
 
   public static MessagePayload error(final Throwable t) {
     return new MessagePayload<>(t, FAILURE);
+  }
+
+  public static <T> MessagePayload of(T out, Class<?> actualClass, int statusValue) {
+
+    final MessagePayload msg = new MessagePayload();
+    msg.setType(actualClass);
+    msg.setPayload(out);
+    msg.setStatus(statusValue);
+    return msg;
   }
 
   public T getPayload() {
@@ -82,12 +94,35 @@ public class MessagePayload<T> {
    * Get the type of message as class
    *
    * @return
+   * @throws IllegalArgumentException if no class can be loaded
    */
   public Class<?> getTypeAsClass() {
-    try {
-      return Class.forName(type);
-    } catch (final ClassNotFoundException e) {
-      throw new HoplinRuntimeException("Can't create class for type :" + type, e);
+
+    //boolean[]", "byte[]", "short[]
+    String fqn = type;
+    switch (type) {
+      case "boolean":
+        return Boolean.class;
+      case "byte":
+        return Byte.class;
+      case "short":
+        return Short.class;
+      case "int":
+        return Integer.class;
+      case "long":
+        return Long.class;
+      case "float":
+        return Float.class;
+      case "double":
+        return Double.class;
+      case "char":
+        return Character.class;
+      default:
+        try {
+          return Class.forName(fqn);
+        } catch (ClassNotFoundException ex) {
+          throw new IllegalArgumentException("Class not found: " + fqn);
+        }
     }
   }
 
@@ -105,5 +140,10 @@ public class MessagePayload<T> {
 
   public boolean isFailure() {
     return status == 1;
+  }
+
+  @Override
+  public String toString() {
+    return ReflectionToStringBuilder.toString(this, ToStringStyle.DEFAULT_STYLE);
   }
 }

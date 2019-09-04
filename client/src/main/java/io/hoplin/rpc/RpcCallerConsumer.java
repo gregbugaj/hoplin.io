@@ -6,7 +6,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
-import io.hoplin.json.JsonMessageCodec;
+import io.hoplin.json.JsonMessagePayloadCodec;
 import io.hoplin.metrics.QueueMetrics;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -29,7 +29,7 @@ public class RpcCallerConsumer extends DefaultConsumer {
 
   private ConcurrentHashMap<String, CompletableFuture> bindings = new ConcurrentHashMap<>();
 
-  private JsonMessageCodec codec;
+  private JsonMessagePayloadCodec codec;
 
   private boolean strictAction = true;
 
@@ -41,7 +41,7 @@ public class RpcCallerConsumer extends DefaultConsumer {
   public RpcCallerConsumer(final Channel channel, final QueueMetrics metrics,
       final Executor executor) {
     super(channel);
-    this.codec = new JsonMessageCodec();
+    this.codec = new JsonMessagePayloadCodec();
     this.executor = Objects.requireNonNull(executor);
     this.metrics = Objects.requireNonNull(metrics);
   }

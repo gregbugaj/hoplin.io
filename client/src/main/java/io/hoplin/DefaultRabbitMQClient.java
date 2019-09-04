@@ -3,7 +3,7 @@ package io.hoplin;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import io.hoplin.json.JsonMessageCodec;
+import io.hoplin.json.JsonMessagePayloadCodec;
 import io.hoplin.metrics.QueueMetrics;
 import java.io.IOException;
 import java.util.Collections;
@@ -32,7 +32,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private ConnectionProvider provider;
 
-  private JsonMessageCodec codec;
+  private JsonMessagePayloadCodec codec;
 
   private DefaultQueueConsumer consumer;
 
@@ -40,7 +40,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
     this.options = Objects.requireNonNull(options, "Options are required and can't be null");
     this.provider = create();
     this.channel = provider.acquire();
-    this.codec = new JsonMessageCodec();
+    this.codec = new JsonMessagePayloadCodec();
 
     channel.addReturnListener(new UnroutableMessageReturnListener(options));
   }
