@@ -72,9 +72,8 @@ public class ReplCliHandler implements CliHandler {
   }
 
   private List<CliHandler> handlers(final OptionParser parser) {
-    final List<CliHandler> handlers = Stream.of(new VersionCliHandler(parser))
+    return Stream.of(new VersionCliHandler(parser))
         .collect(Collectors.toList());
-    return handlers;
   }
 
   private void eval(final Environment environment,

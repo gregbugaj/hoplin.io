@@ -53,7 +53,10 @@ public class BatchReplyConsumer extends DefaultConsumer {
       final Envelope envelope,
       final AMQP.BasicProperties properties,
       final byte[] body) {
-    log.info("received : {}", properties);
+
+    if (log.isDebugEnabled()) {
+      log.debug("batch reply received : {}", properties);
+    }
 
     final Map<String, Object> headers = properties.getHeaders();
     final UUID batchId = UUID.fromString(headers.getOrDefault("x-batch-id", "").toString());

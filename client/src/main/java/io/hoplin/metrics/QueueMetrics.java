@@ -77,9 +77,9 @@ public interface QueueMetrics {
 
     public static QueueMetrics getInstance(final String key) {
       final QueueMetrics metric = metrics.get(key);
-        if (metric != null) {
-            return metric;
-        }
+      if (metric != null) {
+        return metric;
+      }
 
       // attempt to store
       final QueueMetrics existing = metrics.putIfAbsent(key, new DefaultQueueMetrics());

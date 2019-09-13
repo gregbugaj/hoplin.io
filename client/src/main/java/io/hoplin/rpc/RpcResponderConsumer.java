@@ -92,7 +92,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
 
             //0 : there was unhandled exception while processing message
             if (throwable != null) {
-              log.warn("Error dispatching message : {}",context, throwable);
+              log.warn("Error dispatching message : {}", context, throwable);
               replyMessage = createErrorMessage(throwable);
             }
 
@@ -130,7 +130,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
         final O reply = handler.apply((I) requestMsg.getPayload());
         payload = new MessagePayload(reply);
       } catch (final Exception e) {
-        log.warn("Handling message error : {} ",requestMsg, e);
+        log.warn("Handling message error : {} ", requestMsg, e);
         payload = MessagePayload.error(e);
       }
 
@@ -151,7 +151,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
   }
 
   @Override
-  public void handleShutdownSignal(final String consumerTag,final  ShutdownSignalException sig) {
+  public void handleShutdownSignal(final String consumerTag, final ShutdownSignalException sig) {
     log.warn("Handle Shutdown Signal :{} , {}", consumerTag, sig);
   }
 }

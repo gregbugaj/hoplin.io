@@ -10,37 +10,35 @@ public interface Codec {
   /**
    * Serialize object to <code>byte[]</code>
    *
-   * @param value to serialize
-   * @return serialized data
+   * @param value the value to serialize
+   * @return serialized value as <code>byte[]</code>
    */
   byte[] serialize(final Object value);
 
   /**
    * Serialize object to <code>byte[]</code>
    *
-   * @param value
+   * @param value the value to serialize
    * @param clazz
-   * @return
+   * @return serialized value as <code>byte[]</code>
    */
-  byte[] serialize(final Object value, Class<?> clazz);
+  byte[] serialize(final Object value, final Class<?> clazz);
 
   /**
    * Deserialize previously encoded data
    *
-   * @param data
+   * @param data the data to deserialize
    * @param clazz
    * @return
    */
-  <E> E deserialize(byte[] data, Class<? extends E> clazz);
+  <E> E deserialize(final byte[] data, final Class<? extends E> clazz);
 
   /**
    * Deserialize data that might have generic type object Sample usage
    *
-   * @param data
+   * @param data the data to deserialize
    * @param type
    * @return
    */
-  default <E> E deserialize(final byte[] data, final Type type) {
-    throw new RuntimeException("Not Implemented for this serializer");
-  }
+  <E> E deserialize(final byte[] data, final Type type);
 }

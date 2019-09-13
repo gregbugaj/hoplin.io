@@ -57,6 +57,7 @@ public class FunctionMetricsPublisher implements MetricsPublisher {
     executor.scheduleAtFixedRate(this::publish, time, time, unit);
   }
 
+  @SuppressWarnings("unchecked")
   private void publish() {
     final Map<String, QueueMetrics> metrics = QueueMetrics.Factory.getMetrics();
     final Map<String, Map<String, String>> collected = new HashMap<>();

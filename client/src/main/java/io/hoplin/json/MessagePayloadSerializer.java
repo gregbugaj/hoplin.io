@@ -73,7 +73,8 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
 
       if (propertyElement == null) {
         final Optional<Class<?>> located = locateBestMatchingType(jsonObject);
-        final Class<?> type = located.orElseThrow(()-> new IllegalArgumentException("Unable to locate type for : " + jsonObject));
+        final Class<?> type = located.orElseThrow(
+            () -> new IllegalArgumentException("Unable to locate type for : " + jsonObject));
         final Object out = gson.fromJson(jsonObject, type);
         return MessagePayload.of(out, type, MessagePayload.SUCCESS);
       }
@@ -106,8 +107,7 @@ public class MessagePayloadSerializer implements JsonSerializer<MessagePayload>,
         .collect(Collectors.toMap(Entry::getKey, e -> e.getValue()));
 
     final Set<String> set1 = raw.keySet();
-    final int set1Size = set1.size();
-    int count = set1Size;
+    int count = set1.size();
     Class<?> candidate = null;
 
     for (final Map.Entry<Class<?>, Set<String>> e : handlerClassFields.entrySet()) {

@@ -5,7 +5,7 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
- * Message that will be sent over the wire with additional information;
+ * Message that will be sent over the wire with additional information
  *
  * @param <T> The type of the payload
  */
@@ -58,8 +58,8 @@ public class MessagePayload<T> {
     return new MessagePayload<>(t, FAILURE);
   }
 
+  @SuppressWarnings("unchecked")
   public static <T> MessagePayload of(T out, Class<?> actualClass, int statusValue) {
-
     final MessagePayload msg = new MessagePayload();
     msg.setType(actualClass);
     msg.setPayload(out);

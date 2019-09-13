@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -88,11 +87,9 @@ public class DefaultQueueConsumer extends DefaultConsumer {
       final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
 
       try {
-
         ack = ackFromOptions(queueOptions);
-
         final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec(handlers.keySet());
-        System.out.println(new String(body));
+
         final MessagePayload message = codec.deserialize(body, MessagePayload.class);
         final Object val = message.getPayload();
         final Class<?> targetClass = message.getTypeAsClass();
@@ -135,7 +132,6 @@ public class DefaultQueueConsumer extends DefaultConsumer {
       }
 
       AckStrategy.acknowledge(getChannel(), context, ack);
-
     }, executor);
   }
 

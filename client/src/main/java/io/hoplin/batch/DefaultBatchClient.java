@@ -74,7 +74,8 @@ public class DefaultBatchClient implements BatchClient {
       replyToQueueName = replyToQueueName + ".reply-to." + UUID.randomUUID();
     }
 
-    log.info("Param Exchange, ReplyTo, directReply  : {}, {}, {}", exchange, replyToQueueName, directReply);
+    log.info("Param Exchange, ReplyTo, directReply  : {}, {}, {}", exchange, replyToQueueName,
+        directReply);
 
     try {
       if (!directReply) {
@@ -95,7 +96,6 @@ public class DefaultBatchClient implements BatchClient {
     final UUID batchId = context.getBatchId();
     batches.put(batchId, new CompletableFutureWrapperBatchContext(future, context));
 
-    // apply the consumer
     consumer.accept(context);
 
     final List<BatchContextTask> tasks = context.getSubmittedTasks();
@@ -107,7 +107,7 @@ public class DefaultBatchClient implements BatchClient {
       basicPublish(batchId, task, "");
       final UUID taskId = task.getTaskId();
       index.incrementAndGet();
-      log.info("Added task [{} of {}]: {} : {}", index, total, taskId, task);
+      log.info("Batch task added [{} of {}]: {} : {}", index, total, taskId, task);
     }
 
     return future;
@@ -121,15 +121,15 @@ public class DefaultBatchClient implements BatchClient {
    */
   private void basicPublish(final UUID batchId, final BatchContextTask request,
       final String routingKey) {
-      if (routingKey == null) {
-          throw new IllegalArgumentException("routingKey should not be null");
-      }
+    if (routingKey == null) {
+      throw new IllegalArgumentException("routingKey should not be null");
+    }
 
     try {
-        if (log.isDebugEnabled()) {
-            log.debug("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange,
-                routingKey, replyToQueueName);
-        }
+      if (log.isDebugEnabled()) {
+        log.debug("Publishing to Exchange = {}, RoutingKey = {} , ReplyTo = {}", exchange,
+            routingKey, replyToQueueName);
+      }
 
       final UUID taskId = request.getTaskId();
       final Map<String, Object> headers = new HashMap<>();
@@ -150,12 +150,12 @@ public class DefaultBatchClient implements BatchClient {
 
   @Override
   public UUID continueWith(final UUID batchId, final Consumer<BatchContext> context) {
-    return null;
+    throw new RuntimeException("Not yet implemented");
   }
 
   @Override
   public void cancel(final UUID batchId) {
-
+    throw new RuntimeException("Not yet implemented");
   }
 
   private <I> byte[] createRequestPayload(final I request) {
@@ -167,7 +167,7 @@ public class DefaultBatchClient implements BatchClient {
       consumer = new BatchReplyConsumer(channel, batches);
       channel.basicConsume(replyToQueueName, true, consumer);
     } catch (final Exception e) {
-      throw new HoplinRuntimeException("Unable to start RPC client reply consumer", e);
+      throw new HoplinRuntimeException("Unable to create batch consumer", e);
     }
   }
 }

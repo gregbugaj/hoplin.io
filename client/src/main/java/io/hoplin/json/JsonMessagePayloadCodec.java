@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@code Codec} that can encode and decode objects to and create JSON
+ * A {@code Codec} that can encode and decode objects
  *
  * @see MessagePayloadSerializer
  * @see MessagePayload
@@ -55,7 +55,9 @@ public class JsonMessagePayloadCodec implements Codec {
     gson = builder.create();
   }
 
-  private Map<Class<?>, Set<String>> buildMappings(Set<Class<?>> handlerClasses) {
+  private Map<Class<?>, Set<String>> buildMappings(final Set<Class<?>> handlerClasses) {
+    Objects.requireNonNull(handlerClasses);
+
     final Map<Class<?>, Set<String>> handlerClassFields = new HashMap<>();
     for (final Class<?> clz : handlerClasses) {
       final Set<String> names = new HashSet<>();
@@ -70,10 +72,10 @@ public class JsonMessagePayloadCodec implements Codec {
 
   @Override
   public byte[] serialize(final Object value) {
+    Objects.requireNonNull(value);
     final long s = System.currentTimeMillis();
     try {
-      final String payload = gson.toJson(value);
-      return payload.getBytes();
+      return gson.toJson(value).getBytes();
     } finally {
       if (log.isTraceEnabled()) {
         log.trace("serialize time (ms) {}", (System.currentTimeMillis() - s));
@@ -83,10 +85,12 @@ public class JsonMessagePayloadCodec implements Codec {
 
   @Override
   public byte[] serialize(Object value, Class<?> clazz) {
+    Objects.requireNonNull(value);
+    Objects.requireNonNull(clazz);
+
     final long s = System.currentTimeMillis();
     try {
-      final String payload = gson.toJson(value, clazz);
-      return payload.getBytes();
+      return gson.toJson(value, clazz).getBytes();
     } finally {
       if (log.isTraceEnabled()) {
         log.trace("serialize time (ms) {}", (System.currentTimeMillis() - s));
@@ -96,17 +100,7 @@ public class JsonMessagePayloadCodec implements Codec {
 
   @Override
   public <E> E deserialize(final byte[] data, final Class<? extends E> clazz) {
-    final long s = System.currentTimeMillis();
-    try {
-      return gson.fromJson(new String(data, StandardCharsets.UTF_8), clazz);
-    } catch (final Exception t) {
-      log.error("Unable to deserialize", t);
-    } finally {
-      if (log.isTraceEnabled()) {
-        log.trace("de-serialize time (ms) {}", (System.currentTimeMillis() - s));
-      }
-    }
-    return null;
+    return deserialize(data, (Type) clazz);
   }
 
   @Override
