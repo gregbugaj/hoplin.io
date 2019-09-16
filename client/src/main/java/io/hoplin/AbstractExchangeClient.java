@@ -8,7 +8,9 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,7 +144,6 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
       final Map<String, Object> arguments = new HashMap<>();
       // Make sure that the Exchange is declared
-
       client.exchangeDeclare(exchangeName, type, durable, autoDelete, arguments);
     } catch (final Exception e) {
       throw new HoplinRuntimeException("Unable to bind to queue", e);
@@ -156,33 +157,57 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   }
 
   @Override
+  public <T> SubscriptionResult subscribe(final Class<T> clazz, final Consumer<T> handler,
+      final Consumer<SubscriptionConfigurator> cfg) {
+    // wrap handler into our BiFunction
+    final BiFunction<T, MessageContext, Reply<?>> consumer = (msg, context) -> {
+      handler.accept(msg);
+      return Reply.withEmpty();
+    };
+    return subscribe(clazz, consumer, cfg);
+  }
+
+  @Override
   public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
       final BiConsumer<T, MessageContext> handler) {
+
+    final BiFunction<T, MessageContext, Reply<?>> consumer = (msg, context) -> {
+      handler.accept(msg, context);
+      return Reply.withEmpty();
+    };
+
+    return subscribe(clazz, consumer, cfg -> cfg.withSubscriberId(subscriberId));
+  }
+
+  @Override
+  public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
+      final Function<T, Reply<?>> handler) {
+
+    final BiFunction<T, MessageContext, Reply<?>> consumer = (msg, context) -> handler.apply(msg);
+    return subscribe(clazz, consumer, cfg -> cfg.withSubscriberId(subscriberId));
+  }
+
+  @Override
+  public <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
+      final BiFunction<T, MessageContext, Reply<?>> handler) {
+
     return subscribe(clazz, handler, cfg -> cfg.withSubscriberId(subscriberId));
   }
 
   @Override
-  public <T> SubscriptionResult subscribe(Class<T> clazz, BiConsumer<T, MessageContext> handler,
-      Consumer<SubscriptionConfigurator> cfg) {
+  public <T> SubscriptionResult subscribe(final Class<T> clazz,
+      final BiFunction<T, MessageContext, Reply<?>> handler,
+      final Consumer<SubscriptionConfigurator> cfg) {
 
     final SubscriptionConfigurator configurator = new SubscriptionConfigurator();
     cfg.accept(configurator);
 
     final SubscriptionResult subscription = subscribe(configurator.build(), clazz);
-
     log.info("Subscription Exchange : {}", subscription.getExchange());
     log.info("Subscription Queue    : {}", subscription.getQueue());
 
     client.basicConsume(binding.getQueue(), clazz, handler);
     return subscription;
-  }
-
-  @Override
-  public <T> SubscriptionResult subscribe(Class<T> clazz, Consumer<T> handler,
-      Consumer<SubscriptionConfigurator> cfg) {
-    // wrap handler into our BiConsumer
-    final BiConsumer<T, MessageContext> consumer = (msg, context) -> handler.accept(msg);
-    return subscribe(clazz, consumer, cfg);
   }
 
   @Override

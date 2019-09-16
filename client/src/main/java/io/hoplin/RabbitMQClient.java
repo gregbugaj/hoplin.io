@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 /**
@@ -118,12 +119,12 @@ public interface RabbitMQClient {
    * @param <T>
    */
   <T> void basicConsume(final String queue, final Class<T> clazz,
-      final BiConsumer<T, MessageContext> handler);
+      final BiFunction<T, MessageContext, Reply<?>> handler);
 
   <T> void basicConsume(String queue,
       QueueOptions options,
       Class<T> clazz,
-      BiConsumer<T, MessageContext> handler);
+      BiFunction<T, MessageContext, Reply<?>> handler);
 
   /**
    * Consume message create the queue

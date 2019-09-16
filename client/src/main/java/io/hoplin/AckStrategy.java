@@ -28,7 +28,7 @@ public interface AckStrategy extends
 
     private static final Logger log = LoggerFactory.getLogger(Util.class);
 
-    public static boolean acknowledge(final Channel channel, final MessageContext context,
+    static boolean acknowledge(final Channel channel, final MessageContext context,
         final AckStrategy ack) {
       Objects.requireNonNull(channel);
       Objects.requireNonNull(context);

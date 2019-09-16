@@ -18,22 +18,17 @@ public class MultipleTypesReceiver extends BaseExample {
   public static void main(final String... args) throws InterruptedException {
     final ExchangeClient client = FanoutExchangeClient.create(options(), EXCHANGE);
 
-//        client.subscribe(LogDetail.class, MultipleTypesReceiver::handle);
-    client.subscribe("test", LogDetail.class, MultipleTypesReceiver::handle);
-    client.subscribe("test", LogDetailType2.class, MultipleTypesReceiver::handle);
-
-
-       /* LogDetail detail = new LogDetailType2("A", "A");
-        handleXX(detail, null);*/
+    client.subscribe("test", LogDetail.class, MultipleTypesReceiver::handle1);
+    client.subscribe("test", LogDetailType2.class, MultipleTypesReceiver::handle2);
 
     Thread.currentThread().join();
   }
 
-  private static void handle(final LogDetail msg, final MessageContext context) {
+  private static void handle1(final LogDetail msg, final MessageContext context) {
     log.info("Handler-1  >  {}", msg);
   }
 
-  private static void handle(final LogDetailType2 msg, final MessageContext context) {
+  private static void handle2(final LogDetailType2 msg, final MessageContext context) {
     log.info("Handler-2  >  {}", msg);
   }
 }

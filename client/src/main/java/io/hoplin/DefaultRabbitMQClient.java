@@ -1,19 +1,16 @@
 package io.hoplin;
 
 import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import io.hoplin.json.JsonMessagePayloadCodec;
-import io.hoplin.metrics.QueueMetrics;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,16 +29,12 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private ConnectionProvider provider;
 
-  private JsonMessagePayloadCodec codec;
-
   private DefaultQueueConsumer consumer;
 
   public DefaultRabbitMQClient(final RabbitMQOptions options) {
     this.options = Objects.requireNonNull(options, "Options are required and can't be null");
     this.provider = create();
     this.channel = provider.acquire();
-    this.codec = new JsonMessagePayloadCodec();
-
     channel.addReturnListener(new UnroutableMessageReturnListener(options));
   }
 
@@ -66,7 +59,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   @Override
   public <T> void basicConsume(final String queue, final Class<T> clazz,
-      final BiConsumer<T, MessageContext> handler) {
+      final BiFunction<T, MessageContext, Reply<?>> handler) {
     basicConsume(queue, QueueOptions.of(true), clazz, handler);
   }
 
@@ -75,7 +68,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   public synchronized <T> void basicConsume(final String queue,
       final QueueOptions options,
       final Class<T> clazz,
-      final BiConsumer<T, MessageContext> handler) {
+      final BiFunction<T, MessageContext, Reply<?>> handler) {
     Objects.requireNonNull(queue);
     Objects.requireNonNull(clazz);
     Objects.requireNonNull(handler);
@@ -119,8 +112,15 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   public synchronized <T> void basicConsume(final String queue,
       final QueueOptions options,
       final Class<T> clazz,
-      final java.util.function.Consumer<T> handler) {
-    basicConsume(queue, options, clazz, (val, context) -> handler.accept(val));
+      final Consumer<T> handler) {
+
+    // wrap handler into our BiFunction
+    final BiFunction<T, MessageContext, Reply<?>> consumer = (msg, context) -> {
+      handler.accept(msg);
+      return Reply.withEmpty();
+    };
+
+    basicConsume(queue, options, clazz, consumer);
   }
 
 
@@ -172,7 +172,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   @Override
   public void queueBind(final String queue, final String exchange, final String routingKey) {
-    with((channel) -> {
+    with(channel -> {
       channel.queueBind(queue, exchange, routingKey);
       return null;
     });
@@ -196,7 +196,6 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
     } catch (final Exception e) {
       log.error("Unable to execute operation on  channel", e);
     }
-
     return null;
   }
 
@@ -235,29 +234,12 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   public <T> void basicPublish(final String exchange, final String routingKey, final T message,
       final Map<String, Object> headers) {
 
-    try {
-      final String messageId = UUID.randomUUID().toString();
-      final BasicProperties props = new BasicProperties.Builder()
-          .contentType("text/json")
-          .contentEncoding("UTF-8")
-          .messageId(messageId)
-          .deliveryMode(2)
-          .headers(headers)
-          .build();
+    final Publisher publisher = new Publisher();
 
-      log.info("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey,
-          messageId);
-      final byte[] body = codec.serialize(message);
-      channel.basicPublish(exchange, routingKey, props, body);
-
-      // mark
-      final QueueMetrics metrics = QueueMetrics.Factory.getInstance(exchange + "-" + routingKey);
-      metrics.markMessageSent();
-      metrics.incrementSend(body.length);
-    } catch (final IOException e) {
-      // Should try to send to the Error Handling queue ??
-      throw new HoplinRuntimeException("Unable to publish message", e);
-    }
+    with(channel -> {
+      publisher.basicPublish(channel, exchange, routingKey, message, headers);
+      return null;
+    });
   }
 
   @Override

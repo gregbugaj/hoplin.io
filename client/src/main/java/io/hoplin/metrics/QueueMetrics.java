@@ -37,6 +37,13 @@ public interface QueueMetrics {
   long getMessageReceived();
 
   /**
+   * Message publishing failed
+   *
+   * @return
+   */
+  long markMessagePublishFailed();
+
+  /**
    * Increment received total message size by dataSizeInBytes
    *
    * @param dataSizeInBytes the amount to increment by
@@ -102,6 +109,8 @@ public interface QueueMetrics {
 
     private AtomicLong received = new AtomicLong();
 
+    private AtomicLong sentFailed = new AtomicLong();
+
     private AtomicLong sentData = new AtomicLong();
 
     private AtomicLong receivedData = new AtomicLong();
@@ -124,6 +133,11 @@ public interface QueueMetrics {
     @Override
     public long getMessageReceived() {
       return received.get();
+    }
+
+    @Override
+    public long markMessagePublishFailed() {
+      return sentFailed.incrementAndGet();
     }
 
     @Override
@@ -152,6 +166,8 @@ public interface QueueMetrics {
       received.set(0);
       sentData.set(0);
       receivedData.set(0);
+
+      sentFailed.set(0);
     }
   }
 }

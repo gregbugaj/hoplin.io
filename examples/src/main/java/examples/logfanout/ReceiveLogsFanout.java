@@ -16,13 +16,17 @@ public class ReceiveLogsFanout extends BaseExample {
   public static void main(final String... args) throws InterruptedException {
     final ExchangeClient client = FanoutExchangeClient.create(options(), EXCHANGE);
 
-    client.subscribe("Test", String.class, ReceiveLogsFanout::handle);
+    client.subscribe("Test", String.class, ReceiveLogsFanout::handleWithContext);
     Thread.currentThread().join();
   }
 
-  private static void handle(final String msg, final MessageContext context) {
+  private static void handleWithContext(final String msg, final MessageContext context) {
     log.info("Incoming context >  {}", context);
     log.info("Incoming msg     >  {}", msg);
-
   }
+
+  private static void handle(final String msg) {
+    log.info("Incoming msg     >  {}", msg);
+  }
+
 }

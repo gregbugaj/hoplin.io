@@ -5,10 +5,25 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
- * Basic exchange client interface
+ * Exchange client interface
+ *
+ * Primary operations provided by this interface include client creation {@link #create(RabbitMQOptions, Binding)},
+ * subscription {@link #subscribe(String, Class, Consumer)} and publishing {@link #publish(Object)}.
+ * Most methods have both synchronous and asynchronous versions
+ *
+ * <h1>Client subscriptions</h1>
+ *
+ * <ul>
+ *  <li>{@link #subscribe(String, Class, Consumer)}</li>
+ *  <li>{@link #subscribe(String, Class, Function)}</li>
+ *  <li>{@link #subscribe(String, Class, BiFunction)}</li>
+ * </ul>
+ *
  *
  * @see io.hoplin.TopicExchangeClient
  * @see io.hoplin.DirectExchangeClient
@@ -265,12 +280,16 @@ public interface ExchangeClient {
   <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
       final Consumer<T> handler);
 
+  <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
+      final BiConsumer<T, MessageContext> handler);
+
   /**
    * Add subscription and consume messages from the queue Calling this method repeatably will only
    * initialize consumer once to make sure that the Consumer is setup. After that this method will
-   * only add the handlers
+   * only add the handlers.
    * <p>
-   * Handlers should not block.
+   * Handlers should not block, and should execute on configured {@link java.util.concurrent.ExecutorService}
+   * </p>
    *
    * @param subscriberId the unique id of the subscriber
    * @param clazz        the class type that we are interested in receiving messages for
@@ -279,7 +298,24 @@ public interface ExchangeClient {
    * @return SubscriptionResult the result of subscription
    */
   <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
-      final BiConsumer<T, MessageContext> handler);
+      final Function<T, Reply<?>> handler);
+
+  /**
+   * Add subscription and consume messages from the queue Calling this method repeatably will only
+   * initialize consumer once to make sure that the Consumer is setup. After that this method will
+   * only add the handlers.
+   * <p>
+   * Handlers should not block, and should execute on configured {@link java.util.concurrent.ExecutorService}
+   * </p>
+   *
+   * @param subscriberId the unique id of the subscriber
+   * @param clazz        the class type that we are interested in receiving messages for
+   * @param handler      the Consumer that will handle the message
+   * @param <T>          the type this Consumer will handle
+   * @return SubscriptionResult the result of subscription
+   */
+  <T> SubscriptionResult subscribe(final String subscriberId, final Class<T> clazz,
+      final BiFunction<T, MessageContext, Reply<?>> handler);
 
   /**
    * Add subscription and consume messages from the queue Calling this method repeatably will only
@@ -295,7 +331,7 @@ public interface ExchangeClient {
    * @return SubscriptionResult the result of subscription
    */
   <T> SubscriptionResult subscribe(final Class<T> clazz,
-      final BiConsumer<T, MessageContext> handler, final Consumer<SubscriptionConfigurator> config);
+      final BiFunction<T, MessageContext, Reply<?>> handler, final Consumer<SubscriptionConfigurator> config);
 
   /**
    * Add subscription and consume messages from the queue Calling this method repeatably will only

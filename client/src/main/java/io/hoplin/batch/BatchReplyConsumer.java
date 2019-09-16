@@ -24,7 +24,9 @@ public class BatchReplyConsumer extends DefaultConsumer {
   private static final Logger log = LoggerFactory.getLogger(BatchReplyConsumer.class);
 
   private final ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches;
+
   private final Executor executor;
+
   private JsonMessagePayloadCodec codec;
 
   /**
@@ -38,7 +40,7 @@ public class BatchReplyConsumer extends DefaultConsumer {
     super(channel);
     this.executor = Objects.requireNonNull(executor);
     this.batches = Objects.requireNonNull(batches);
-    codec = new JsonMessagePayloadCodec();
+    this.codec = new JsonMessagePayloadCodec();
   }
 
   public BatchReplyConsumer(final Channel channel,
@@ -72,14 +74,17 @@ public class BatchReplyConsumer extends DefaultConsumer {
         final long taskCount = context.decrementAndGetTaskCount();
         found = true;
         if (log.isDebugEnabled()) {
-          log.debug("Reminding task count[batch] : {} {}", batchId, taskCount);
+          log.debug("Remaining task count[batch] : {} {}", batchId, taskCount);
         }
         break;
       }
     }
 
     if (!found) {
-      throw new IllegalStateException("not found : " + correlationId);
+      final IllegalStateException ex = new IllegalStateException(
+          "not found : " + correlationId);
+      completable.completeExceptionally(ex);
+      throw ex;
     }
 
     if (context.isCompleted()) {

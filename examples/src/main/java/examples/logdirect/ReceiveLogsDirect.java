@@ -17,7 +17,7 @@ public class ReceiveLogsDirect extends BaseExample {
   public static void main(final String... args) throws InterruptedException {
     final ExchangeClient client = informative();
     final SubscriptionResult subscription = client
-        .subscribe("test", LogDetail.class, msg -> log.info("Message received [{}]", msg));
+        .subscribe("test", LogDetail.class, msg -> {log.info("Message received [{}]", msg);});
 
     info(subscription);
     Thread.currentThread().join();

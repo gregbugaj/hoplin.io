@@ -35,7 +35,9 @@ public class ReceiveLogsTopic extends BaseExample {
     // Exchange and Binding Queue will be determined based on the supplied Type of the Message
     final ExchangeClient client = ExchangeClient.topic(options());
     final SubscriptionResult sub = client
-        .subscribe("test", LogDetail.class, msg -> log.info("Message received [{}]", msg));
+        .subscribe("test", LogDetail.class, msg -> {
+          log.info("Message received [{}]", msg);
+        });
 
         /*SubscriptionResult subxx =client.subscribe(LogDetail.class, (msg, context) ->
         {

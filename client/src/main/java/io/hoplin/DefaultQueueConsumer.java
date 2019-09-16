@@ -10,12 +10,13 @@ import io.hoplin.metrics.QueueMetrics;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
   private final ConsumerErrorStrategy errorStrategy;
 
-  private ArrayListMultimap<Class<?>, MethodReference> handlers = ArrayListMultimap.create();
+  private ArrayListMultimap<Class<?>, MethodReference<?>> handlers = ArrayListMultimap.create();
 
   private Executor executor;
 
@@ -71,14 +72,13 @@ public class DefaultQueueConsumer extends DefaultConsumer {
    * consumed until RabbitMQ receives the corresponding ack.
    * <p>
    * Note: A message must be acknowledged only once;
-   *
-   * @param properties
-   * @param body
+   * </p>
    */
   @SuppressWarnings("unchecked")
   @Override
   public void handleDelivery(final String consumerTag, final Envelope envelope,
       final AMQP.BasicProperties properties, byte[] body) {
+
     metrics.markMessageReceived();
     metrics.incrementReceived(body.length);
 
@@ -87,30 +87,39 @@ public class DefaultQueueConsumer extends DefaultConsumer {
       final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
 
       try {
-        ack = ackFromOptions(queueOptions);
-        final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec(handlers.keySet());
 
+        ack = ackFromOptions(queueOptions);
+
+        final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec(handlers.keySet());
         final MessagePayload message = codec.deserialize(body, MessagePayload.class);
         final Object val = message.getPayload();
         final Class<?> targetClass = message.getTypeAsClass();
-        final Collection<MethodReference> consumers = handlers.get(targetClass);
+        final Collection<MethodReference<?>> consumers = handlers.get(targetClass);
         final List<Throwable> exceptions = new ArrayList<>();
         int invokedHandlers = 0;
+        final boolean batchRequest = isBatchedRequest(context);
 
+        Reply<?> reply = null;
         for (final MethodReference reference : consumers) {
           try {
-            final BiConsumer handler = reference.handler;
-            final Class root = reference.root;
-
+            final BiFunction<Object, MessageContext, Reply<?>> handler = reference.getHandler();
+            final Class<?> root = reference.getRoot();
+            reply = null;
             if (root == targetClass) {
               ++invokedHandlers;
-              execute(context, val, handler);
+              reply = execute(context, val, handler);
             } else { // Down cast if necessary
               final Optional<?> castedValue = safeCast(val, targetClass);
               if (castedValue.isPresent()) {
                 ++invokedHandlers;
-                execute(context, castedValue.get(), handler);
+                reply = execute(context, castedValue.get(), handler);
               }
+            }
+            // can't have multiple handlers for batched requests
+            log.info("reply : {}", reply);
+            if (batchRequest) {
+              log.info("reply value : {}", reply.getValue());
+              break;
             }
           } catch (final Exception e) {
             exceptions.add(e);
@@ -120,6 +129,21 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
         if (invokedHandlers == 0) {
           throw new HoplinRuntimeException("No handlers defined for type : " + targetClass);
+        }
+
+        if (batchRequest) {
+          final Publisher publisher = new Publisher();
+          final String replyTo = properties.getReplyTo();
+          final String correlationId = properties.getCorrelationId();
+          final Map<String, Object> headers = properties.getHeaders();
+          final Object batchId = headers.get("x-batch-id");
+          headers.put("x-batch-correlationId", correlationId);
+
+          log.info("BatchIncoming context        >  {}", context);
+          log.info("BatchIncoming replyTo        >  {}", replyTo);
+          log.info("BatchIncoming correlationId  >  {}", correlationId);
+          log.info("BatchIncoming batchId        >  {}", batchId);
+          publisher.basicPublish(getChannel(), "", replyTo, reply.getValue(), headers);
         }
       } catch (final Exception e) {
         log.error("Unable to process message", e);
@@ -135,9 +159,28 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     }, executor);
   }
 
+  private boolean isBatchedRequest(MessageContext context) {
+    final AMQP.BasicProperties properties = context.getProperties();
+    final Map<String, Object> headers = properties.getHeaders();
+    if (headers != null) {
+      final Object batchId = headers.get("x-batch-id");
+      if (batchId != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @SuppressWarnings("unchecked")
-  private void execute(final MessageContext context, final Object val, final BiConsumer handler) {
-    handler.accept(val, context);
+  private Reply<?> execute(final MessageContext context, final Object val,
+      final BiFunction<Object, MessageContext, Reply<?>> handler) {
+    System.out.println("context : " + context);
+    System.out.println("val : " + val);
+    System.out.println("handler : " + handler);
+    final Reply<?> reply = handler.apply(val, context);
+    System.out.println("reply : " + reply);
+
+    return reply;
   }
 
   private <S, T> Optional<T> safeCast(final S candidate, Class<T> targetClass) {
@@ -150,7 +193,6 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     if (queueOptions.isAutoAck()) {
       return AcknowledgmentStrategies.NOOP.strategy();
     }
-
     return AcknowledgmentStrategies.BASIC_ACK.strategy();
   }
 
@@ -162,7 +204,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
    * @param <T>
    */
   public synchronized <T> void addHandler(final Class<T> clazz,
-      final BiConsumer<T, MessageContext> handler) {
+      final BiFunction<T, MessageContext, Reply<?>> handler) {
     Objects.requireNonNull(clazz);
     Objects.requireNonNull(handler);
     Class<? super T> clz = clazz;
@@ -172,11 +214,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
         break;
       }
 
-      final MethodReference reference = new MethodReference<>();
-      reference.handler = handler;
-      reference.root = clazz;
-
-      handlers.put(clz, reference);
+      handlers.put(clz, MethodReference.of(clazz, handler));
       clz = clz.getSuperclass();
     }
 
@@ -193,7 +231,26 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
     private Class<T> root;
 
-    private BiConsumer<T, MessageContext> handler;
+    private BiFunction<T, MessageContext, Reply<?>> handler;
+
+    public MethodReference(final Class<T> root,
+        final BiFunction<T, MessageContext, Reply<?>> handler) {
+      this.root = root;
+      this.handler = handler;
+    }
+
+    public static <T> MethodReference of(final Class<T> root,
+        final BiFunction<T, MessageContext, Reply<?>> handler) {
+      return new MethodReference<T>(root, handler);
+    }
+
+    public Class<T> getRoot() {
+      return root;
+    }
+
+    public BiFunction<T, MessageContext, Reply<?>> getHandler() {
+      return handler;
+    }
 
     @Override
     public String toString() {

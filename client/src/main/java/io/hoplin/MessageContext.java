@@ -3,6 +3,7 @@ package io.hoplin;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
 import java.util.Objects;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * Context that message is associated with
@@ -57,5 +58,10 @@ public class MessageContext {
   public MessageContext setProperties(final AMQP.BasicProperties properties) {
     this.properties = properties;
     return this;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
   }
 }
