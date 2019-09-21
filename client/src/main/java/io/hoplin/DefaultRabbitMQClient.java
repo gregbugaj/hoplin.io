@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of {@link RabbitMQClient}
- * <p>
  * https://www.rabbitmq.com/consumer-prefetch.html
  */
 public class DefaultRabbitMQClient implements RabbitMQClient {
