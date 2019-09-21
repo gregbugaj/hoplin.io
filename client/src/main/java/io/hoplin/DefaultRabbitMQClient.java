@@ -235,7 +235,6 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
       final Map<String, Object> headers) {
 
     final Publisher publisher = new Publisher();
-
     with(channel -> {
       publisher.basicPublish(channel, exchange, routingKey, message, headers);
       return null;
