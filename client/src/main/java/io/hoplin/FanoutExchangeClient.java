@@ -3,6 +3,7 @@ package io.hoplin;
 import com.rabbitmq.client.AMQP;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,23 +14,23 @@ public class FanoutExchangeClient extends AbstractExchangeClient {
 
   private static final Logger log = LoggerFactory.getLogger(FanoutExchangeClient.class);
 
-  public FanoutExchangeClient(final RabbitMQOptions options, final Binding binding) {
-    super(options, binding);
+  public FanoutExchangeClient(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    super(options, binding, executor);
     bind("fanout");
   }
 
   /**
    * Create new {@link FanoutExchangeClient} given supplied options and {@link Binding}
    *
-   * @param options the connection options to use
-   * @param binding the {@link Binding} to use
+   * @param options  the connection options to use
+   * @param binding  the {@link Binding} to use
+   * @param executor the {@link ExecutorService} to use
    * @return new Direct Exchange client setup in server mode
    */
-  public static ExchangeClient create(final RabbitMQOptions options, final Binding binding) {
-    Objects.requireNonNull(options);
-    Objects.requireNonNull(binding);
-
-    return new FanoutExchangeClient(options, binding);
+  public static ExchangeClient create(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    return new FanoutExchangeClient(options, binding, executor);
   }
 
   /**
@@ -39,16 +40,16 @@ public class FanoutExchangeClient extends AbstractExchangeClient {
    * @param exchange the exchange to use
    * @return
    */
-  public static ExchangeClient create(final RabbitMQOptions options, final String exchange) {
+  public static ExchangeClient create(final RabbitMQOptions options, final String exchange,
+      final ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(exchange);
 
-    // Producer does not bind to the queue only to the exchange when using FanoutExchange
     final Binding binding = BindingBuilder
         .bind()
         .to(new FanoutExchange(exchange));
 
-    return create(options, binding);
+    return create(options, binding, executor);
   }
 
   SubscriptionResult subscribe() {

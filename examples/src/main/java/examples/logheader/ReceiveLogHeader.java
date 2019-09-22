@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 /**
  * The message is routed based on the header value. All queues with a matching key will receive the
  * message
- * <p>
  * Log receiver
  */
 public class ReceiveLogHeader extends BaseExample {

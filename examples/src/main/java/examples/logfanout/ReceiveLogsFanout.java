@@ -2,7 +2,6 @@ package examples.logfanout;
 
 import examples.BaseExample;
 import io.hoplin.ExchangeClient;
-import io.hoplin.FanoutExchangeClient;
 import io.hoplin.MessageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,7 @@ public class ReceiveLogsFanout extends BaseExample {
   private static final String EXCHANGE = "fanout_logs";
 
   public static void main(final String... args) throws InterruptedException {
-    final ExchangeClient client = FanoutExchangeClient.create(options(), EXCHANGE);
+    final ExchangeClient client = ExchangeClient.fanout(options(), EXCHANGE);
 
     client.subscribe("Test", String.class, ReceiveLogsFanout::handleWithContext);
     Thread.currentThread().join();

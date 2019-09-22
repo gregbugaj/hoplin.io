@@ -1,6 +1,7 @@
 package io.hoplin;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,22 +14,26 @@ public class TopicExchangeClient extends AbstractExchangeClient {
 
   private static final Logger log = LoggerFactory.getLogger(TopicExchangeClient.class);
 
-  public TopicExchangeClient(final RabbitMQOptions options, final Binding binding) {
-    super(options, binding);
+  public TopicExchangeClient(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    super(options, binding, executor);
     bind("topic");
   }
 
   /**
    * Create new {@link TopicExchangeClient}
    *
-   * @param options the connection options to use
-   * @param binding the {@link Binding} to use
+   * @param options  the connection options to use
+   * @param binding  the {@link Binding} to use
+   * @param executor the {@link ExecutorService} to use
    * @return new Topic Exchange client
    */
-  public static ExchangeClient create(final RabbitMQOptions options, final Binding binding) {
+  public static ExchangeClient create(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
-    return new TopicExchangeClient(options, binding);
+    Objects.requireNonNull(executor);
+    return new TopicExchangeClient(options, binding, executor);
   }
 
   /**
@@ -38,12 +43,13 @@ public class TopicExchangeClient extends AbstractExchangeClient {
    * @param exchange the exchange to use
    * @return
    */
-  public static ExchangeClient create(final RabbitMQOptions options, final String exchange) {
+  public static ExchangeClient create(final RabbitMQOptions options, final String exchange,
+      final ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(exchange);
-    // Producer does not bind to the queue only to the exchange when using TopicExchangeClient
+    Objects.requireNonNull(executor);
     // no-routing key required for publishers, but in publish/subscribe mode we want get all messages
-    return create(options, createSensibleBindings(exchange, "", "#"));
+    return create(options, createSensibleBindings(exchange, "", "#"), executor);
   }
 
   /**
@@ -53,11 +59,12 @@ public class TopicExchangeClient extends AbstractExchangeClient {
    * @param options      the options used for connection
    * @param exchangeName the exchangeName to use
    * @param bindingKey   the bindingKey to bind to the exchange
+   * @param executor     the the {@link ExecutorService} to use
    * @return new TopicExchangeClient
    */
   public static ExchangeClient create(final RabbitMQOptions options, final String exchangeName,
-      final String bindingKey) {
-    return create(options, exchangeName, "", bindingKey);
+      final String bindingKey, final ExecutorService executor) {
+    return create(options, exchangeName, "", bindingKey, executor);
   }
 
   /**
@@ -67,13 +74,14 @@ public class TopicExchangeClient extends AbstractExchangeClient {
    * @param exchangeName
    * @param exchangeName the exchangeName to use
    * @param bindingKey   the bindingKey to bind to the exchange
+   * @param executor     the {@link ExecutorService} to use
    * @return new TopicExchangeClient
    */
   public static ExchangeClient create(final RabbitMQOptions options, final String exchangeName,
-      final String queue, final String bindingKey) {
+      final String queue, final String bindingKey, final ExecutorService executor) {
     Objects.requireNonNull(options);
     return new TopicExchangeClient(options,
-        createSensibleBindings(exchangeName, queue, bindingKey));
+        createSensibleBindings(exchangeName, queue, bindingKey), executor);
   }
 
   static Binding createSensibleBindings(final String exchangeName,

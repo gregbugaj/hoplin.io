@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -15,12 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Default implementation of {@link RabbitMQClient}
- * https://www.rabbitmq.com/consumer-prefetch.html
+ * Default implementation of {@link RabbitMQClient} https://www.rabbitmq.com/consumer-prefetch.html
  */
 public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private static final Logger log = LoggerFactory.getLogger(DefaultRabbitMQClient.class);
+
+  private final ExecutorService executor;
 
   private RabbitMQOptions options;
 
@@ -30,7 +32,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private DefaultQueueConsumer consumer;
 
-  public DefaultRabbitMQClient(final RabbitMQOptions options) {
+  public DefaultRabbitMQClient(final RabbitMQOptions options, final ExecutorService executor) {
+    this.executor = Objects.requireNonNull(executor, "Executor can't be null");
     this.options = Objects.requireNonNull(options, "Options are required and can't be null");
     this.provider = create();
     this.channel = provider.acquire();
@@ -90,7 +93,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
           channel.addConfirmListener(this::confirmedAck, this::confirmedNack);
         }
 
-        consumer = new DefaultQueueConsumer(queue, channel, options);
+        consumer = new DefaultQueueConsumer(queue, channel, options, executor);
         channel.basicQos(prefetchCount);
 
         final String consumerTag = channel.basicConsume(queue, autoAck, consumer);

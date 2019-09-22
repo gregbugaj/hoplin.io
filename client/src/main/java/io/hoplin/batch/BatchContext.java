@@ -118,12 +118,12 @@ public class BatchContext implements Iterable<BatchContextTask> {
    * @return
    */
   public Date getStartedAt() {
-    return startedAt;
+    return new Date(startedAt.getTime());
   }
 
   public BatchContext setStartedAt(final Date startedAt) {
     Objects.requireNonNull(startedAt);
-    this.startedAt = new Date(startedAt.getTime());
+    this.startedAt = startedAt;
     return this;
   }
 
@@ -133,7 +133,7 @@ public class BatchContext implements Iterable<BatchContextTask> {
    * @return
    */
   public Date getCompletedAt() {
-    return completedAt;
+    return new Date(completedAt.getTime());
   }
 
   /**

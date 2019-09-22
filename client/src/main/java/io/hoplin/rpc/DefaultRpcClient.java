@@ -3,6 +3,7 @@ package io.hoplin.rpc;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.Binding;
+import io.hoplin.ExchangeClient;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
 import io.hoplin.RabbitMQClient;
@@ -15,6 +16,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,7 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
    * Exchange to send requests to
    */
   private final String exchange;
+
   private JsonMessagePayloadCodec codec;
   /**
    * Channel we are communicating on
@@ -42,17 +45,20 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
    * Queue where we will listen for our RPC replies
    */
   private String replyToQueueName;
+
   private RpcCallerConsumer consumer;
 
   private boolean directReply;
 
   private QueueMetrics metrics;
 
-  public DefaultRpcClient(final RabbitMQOptions options, final Binding binding) {
+  public DefaultRpcClient(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
+    Objects.requireNonNull(executor);
 
-    this.client = RabbitMQClient.create(options);
+    this.client = RabbitMQClient.create(options, executor);
     this.codec = new JsonMessagePayloadCodec();
     this.exchange = binding.getExchange();
     this.replyToQueueName = binding.getQueue();
@@ -66,15 +72,18 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
   /**
    * Create new {@link DefaultRpcClient}
    *
-   * @param options the connection options to use
-   * @param binding the binding to use
+   * @param options  the connection options to use
+   * @param binding  the binding to use
+   * @param executor the executor to use
    * @return new Direct Exchange client setup in server mode
    */
-  public static RpcClient create(final RabbitMQOptions options, final Binding binding) {
-    Objects.requireNonNull(options);
-    Objects.requireNonNull(binding);
+  public static RpcClient create(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    return new DefaultRpcClient<>(options, binding, executor);
+  }
 
-    return new DefaultRpcClient<>(options, binding);
+  public static RpcClient create(final RabbitMQOptions options, final Binding binding) {
+    return create(options, binding, ExchangeClient.createExecutor());
   }
 
   /**
@@ -183,9 +192,9 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
 
   @Override
   public CompletableFuture<O> requestAsync(I request, String routingKey, Duration timeout) {
-      if (routingKey == null) {
-          throw new IllegalArgumentException("routingKey should not be null");
-      }
+    if (routingKey == null) {
+      throw new IllegalArgumentException("routingKey should not be null");
+    }
 
     final CompletableFuture<O> promise = new CompletableFuture<>();
 
@@ -222,8 +231,8 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
   }
 
   public void close() throws IOException {
-      if (client != null) {
-          client.disconnect();
-      }
+    if (client != null) {
+      client.disconnect();
+    }
   }
 }

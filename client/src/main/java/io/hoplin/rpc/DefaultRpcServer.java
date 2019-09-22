@@ -3,6 +3,7 @@ package io.hoplin.rpc;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.Binding;
+import io.hoplin.ExchangeClient;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.RabbitMQClient;
 import io.hoplin.RabbitMQOptions;
@@ -10,7 +11,7 @@ import io.hoplin.metrics.QueueMetrics;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,18 +47,18 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
    */
   private String requestQueueName;
 
-  // executor that will process incoming RPC requests
   private Executor executor;
 
   private Function<I, O> handler;
 
-  public DefaultRpcServer(final RabbitMQOptions options, final Binding binding) {
+  public DefaultRpcServer(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
+    Objects.requireNonNull(executor);
 
-    this.client = RabbitMQClient.create(options);
+    this.client = RabbitMQClient.create(options, executor);
     this.channel = client.channel();
-    this.executor = createExecutor();
 
     this.exchange = binding.getExchange();
     this.routingKey = binding.getRoutingKey();
@@ -79,16 +80,15 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
    * @param binding the binding to use
    * @return new Direct Exchange client setup in server mode
    */
+  public static RpcServer create(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    return new DefaultRpcServer<>(options, binding, executor);
+  }
+
   public static RpcServer create(final RabbitMQOptions options, final Binding binding) {
-    Objects.requireNonNull(options);
-    Objects.requireNonNull(binding);
-
-    return new DefaultRpcServer<>(options, binding);
+    return create(options, binding, ExchangeClient.createExecutor());
   }
 
-  private Executor createExecutor() {
-    return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-  }
 
   private void setupChannel() {
     channel.addShutdownListener(sse ->

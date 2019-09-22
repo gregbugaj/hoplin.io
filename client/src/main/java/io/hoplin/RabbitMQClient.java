@@ -4,9 +4,8 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
+import java.util.concurrent.ExecutorService;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -19,12 +18,12 @@ public interface RabbitMQClient {
   /**
    * Create new instance of {@link DefaultRabbitMQClient}
    *
-   * @param options the options to use to server the client
+   * @param options  the options to use to server the client
+   * @param executor the {@link ExecutorService} to use for processing messages asynchronously
    * @return newly created instance of the client
    */
-  static DefaultRabbitMQClient create(final RabbitMQOptions options) {
-    Objects.requireNonNull(options);
-    return new DefaultRabbitMQClient(options);
+  static DefaultRabbitMQClient create(final RabbitMQOptions options, final ExecutorService executor) {
+    return new DefaultRabbitMQClient(options, executor);
   }
 
   /**
@@ -33,7 +32,7 @@ public interface RabbitMQClient {
    * @return newly created instance of the client
    */
   static DefaultRabbitMQClient create() {
-    return new DefaultRabbitMQClient(RabbitMQOptions.defaults());
+    return new DefaultRabbitMQClient(RabbitMQOptions.defaults(), ExchangeClient.createExecutor());
   }
 
   /**

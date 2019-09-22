@@ -18,7 +18,6 @@ public class ReceiveBatchJob extends BaseExample {
 
   private static final String EXCHANGE = "exchange.batch";
 
-
   public static void main(final String... args) throws InterruptedException {
     final ExchangeClient client = DirectExchangeClient.create(options(), EXCHANGE);
 

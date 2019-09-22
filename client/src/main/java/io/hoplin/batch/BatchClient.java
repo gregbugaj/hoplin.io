@@ -12,7 +12,7 @@ public interface BatchClient {
   /**
    * Create new batch processing request
    *
-   * @param context
+   * @param context the {@link BatchContext} associated with the request
    * @return ID associated with this request
    */
   CompletableFuture<BatchContext> startNew(final Consumer<BatchContext> context);

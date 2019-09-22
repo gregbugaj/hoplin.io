@@ -18,10 +18,10 @@ public class Reply<T> {
    *
    * @return
    */
-  public boolean isEmpty()
-  {
+  public boolean isEmpty() {
     return reply == null;
   }
+
   public static <T> Reply<T> with(T reply) {
     return new Reply<T>(reply);
   }
@@ -32,5 +32,10 @@ public class Reply<T> {
 
   public T getValue() {
     return reply;
+  }
+
+  @Override
+  public String toString() {
+    return "isEmpty:" + isEmpty() + " val:[" + reply + "]";
   }
 }

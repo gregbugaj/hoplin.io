@@ -49,7 +49,6 @@ public class ReceiveLogsTopic extends BaseExample {
     Thread.currentThread().join();
   }
 
-
   private static void metrics(Object o) {
     System.out.println("Metrics Info : " + o);
   }

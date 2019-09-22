@@ -2,7 +2,9 @@ package io.hoplin.json;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -75,7 +77,9 @@ public class JsonMessagePayloadCodec implements Codec {
     Objects.requireNonNull(value);
     final long s = System.currentTimeMillis();
     try {
-      return gson.toJson(value).getBytes();
+      return gson.toJson(value).getBytes("UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new HoplinRuntimeException("Unable to decode message ", e);
     } finally {
       if (log.isTraceEnabled()) {
         log.trace("serialize time (ms) {}", (System.currentTimeMillis() - s));
@@ -90,7 +94,9 @@ public class JsonMessagePayloadCodec implements Codec {
 
     final long s = System.currentTimeMillis();
     try {
-      return gson.toJson(value, clazz).getBytes();
+      return gson.toJson(value, clazz).getBytes(StandardCharsets.UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      throw new HoplinRuntimeException("Unable to encode message ", e);
     } finally {
       if (log.isTraceEnabled()) {
         log.trace("serialize time (ms) {}", (System.currentTimeMillis() - s));

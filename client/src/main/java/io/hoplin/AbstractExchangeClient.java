@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -27,13 +28,13 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
   RabbitMQClient client;
 
-  AbstractExchangeClient(final RabbitMQOptions options, final Binding binding) {
+  AbstractExchangeClient(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
-
-    this.client = RabbitMQClient.create(options);
+    Objects.requireNonNull(executor);
+    this.client = RabbitMQClient.create(options, executor);
     this.binding = binding;
-
     setupErrorHandling();
   }
 
@@ -126,6 +127,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
    * <p>
    * a durable, non-autodelete exchange of "direct" type a durable, non-exclusive, non-autodelete
    * queue with a well-known name
+   * </p>
    */
   void bind(final String type) {
     Objects.requireNonNull(type);
@@ -244,7 +246,6 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   @Override
   public <T> void publish(final T message, final String routingKey,
       final Consumer<MessageConfiguration> cfg) {
-
     _publish(message, routingKey, cfg);
   }
 

@@ -28,11 +28,11 @@ public class BatchContextTask {
   }
 
   public Date getStartDate() {
-    return startDate;
+    return new Date(startDate.getTime());
   }
 
   public BatchContextTask setStartDate(final Date startDate) {
-    this.startDate = startDate;
+    this.startDate = new Date(startDate.getTime());
     return this;
   }
 

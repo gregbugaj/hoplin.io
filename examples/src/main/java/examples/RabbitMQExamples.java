@@ -1,8 +1,9 @@
 package examples;
 
-
 import io.hoplin.RabbitMQClient;
 import io.hoplin.RabbitMQOptions;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class RabbitMQExamples {
 
@@ -36,6 +37,7 @@ public class RabbitMQExamples {
 
     config.setAutomaticRecoveryEnabled(true);
 
-    RabbitMQClient client = RabbitMQClient.create(config);
+    ExecutorService executor = Executors.newCachedThreadPool();
+    RabbitMQClient client = RabbitMQClient.create(config, executor);
   }
 }

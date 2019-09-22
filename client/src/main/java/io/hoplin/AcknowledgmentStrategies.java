@@ -33,7 +33,7 @@ public enum AcknowledgmentStrategies {
   /**
    * The acknowledgement strategy
    *
-   * @return
+   * @return AckStrategy
    */
   public abstract AckStrategy strategy();
 

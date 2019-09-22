@@ -20,7 +20,7 @@ public class ReplCliHandler implements CliHandler {
 
   private static final String REPL_TAG = "re :> ";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ReplCliHandler.class);
+  private static final Logger log = LoggerFactory.getLogger(ReplCliHandler.class);
 
   public ReplCliHandler(final OptionParser parser) {
     parser.accepts("repl");
@@ -32,12 +32,12 @@ public class ReplCliHandler implements CliHandler {
       // probable should use the handlers defined in the entry point
       final OptionParser parser = new OptionParser();
       final List<CliHandler> handlers = handlers(parser);
-      LOGGER.info("cmd [repl] : {}", options);
+      log.info("cmd [repl] : {}", options);
 
       try (final ConsoleDevice console = ConsoleDevice.console()) {
         do {
           final String cmd = console.readLine(REPL_TAG);
-          LOGGER.info("REPL cmd : {}", cmd);
+          log.info("REPL cmd : {}", cmd);
           if (cmd == null || "exit".equals(cmd)) {
             System.exit(0);
           }
@@ -45,7 +45,7 @@ public class ReplCliHandler implements CliHandler {
           eval(environment, handlers, cmd, parser);
         } while (true);
       } catch (final Exception e) {
-        LOGGER.error("Unable to process console", e);
+        log.error("Unable to process console", e);
       }
     }
 
@@ -90,7 +90,7 @@ public class ReplCliHandler implements CliHandler {
         }
       }
     } catch (final Exception e) {
-      LOGGER.error("Unable to process REPL cmd " + cmd, e);
+      log.error("Unable to process REPL cmd " + cmd, e);
     }
   }
 

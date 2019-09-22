@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /**
  * Binding builder between Exchange and Queue
- * <p>
+ *
  * TODO : Implement Exchange to Exchange biding
  */
 public class BindingBuilder {
@@ -154,16 +154,16 @@ public class BindingBuilder {
      * @return
      */
     public HeaderExchangeRoutingKeyConfigurer withArgument(final String key, final Object value) {
-        if (key == null) {
-            throw new IllegalArgumentException("Key can't be null");
-        }
+      if (key == null) {
+        throw new IllegalArgumentException("Key can't be null");
+      }
 
       if ("x-match".equalsIgnoreCase(key)) {
-          if (!("any".equalsIgnoreCase(value.toString()) || "all"
-              .equalsIgnoreCase(value.toString()))) {
-              throw new IllegalArgumentException(
-                  "x-match property  can have 2 values: \"any\" or \"all\" but got :" + value);
-          }
+        if (!("any".equalsIgnoreCase(value.toString()) || "all"
+            .equalsIgnoreCase(value.toString()))) {
+          throw new IllegalArgumentException(
+              "x-match property  can have 2 values: \"any\" or \"all\" but got :" + value);
+        }
       }
 
       arguments.put(key, value);

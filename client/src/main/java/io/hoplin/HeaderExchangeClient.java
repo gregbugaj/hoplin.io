@@ -1,6 +1,7 @@
 package io.hoplin;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,8 +12,8 @@ public class HeaderExchangeClient extends AbstractExchangeClient {
 
   private static final Logger log = LoggerFactory.getLogger(HeaderExchangeClient.class);
 
-  public HeaderExchangeClient(final RabbitMQOptions options, final Binding binding) {
-    super(options, binding);
+  public HeaderExchangeClient(final RabbitMQOptions options, final Binding binding, final ExecutorService executor) {
+    super(options, binding, executor);
     bind("headers");
   }
 
@@ -21,12 +22,12 @@ public class HeaderExchangeClient extends AbstractExchangeClient {
    *
    * @param options the connection options to use
    * @param binding the {@link Binding} to use
+   * @param executor the {@link ExecutorService} to use
    * @return new Header Exchange client
    */
-  public static ExchangeClient create(final RabbitMQOptions options, final Binding binding) {
-    Objects.requireNonNull(options);
-    Objects.requireNonNull(binding);
-    return new HeaderExchangeClient(options, binding);
+  public static ExchangeClient create(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    return new HeaderExchangeClient(options, binding, executor);
   }
 
   /**
@@ -36,16 +37,16 @@ public class HeaderExchangeClient extends AbstractExchangeClient {
    * @param exchange the exchange to use
    * @return
    */
-  public static ExchangeClient create(final RabbitMQOptions options, final String exchange) {
+  public static ExchangeClient create(final RabbitMQOptions options, final String exchange, final ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(exchange);
+    Objects.requireNonNull(executor);
 
-    // Producer does not bind to the queue only to the exchange when using HeaderExchange
-    final Binding binding = BindingBuilder
+    final Binding binding = BindingBuilder    // Producer does not bind to the queue only to the exchange when using HeaderExchange
         .bind()
         .to(new HeaderExchange(exchange))
         .build();
 
-    return create(options, binding);
+    return create(options, binding, executor);
   }
 }

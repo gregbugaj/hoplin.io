@@ -5,13 +5,14 @@ import io.hoplin.RabbitMQOptions;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /**
  * Default Client/Server
  *
- * @param <I>
- * @param <O>
+ * @param <I> the request type
+ * @param <O> the response type
  */
 public class DefaultRpClientServer<I, O> implements RpClientServer<I, O> {
 
@@ -20,12 +21,14 @@ public class DefaultRpClientServer<I, O> implements RpClientServer<I, O> {
   private RpcServer<I, O> server;
 
   @SuppressWarnings("unchecked")
-  public DefaultRpClientServer(final RabbitMQOptions options, final Binding binding) {
+  public DefaultRpClientServer(final RabbitMQOptions options, final Binding binding, final
+  ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
+    Objects.requireNonNull(executor);
 
-    client = Rpc.client(options, binding);
-    server = Rpc.server(options, binding);
+    client = Rpc.client(options, binding, executor);
+    server = Rpc.server(options, binding, executor);
   }
 
   @Override

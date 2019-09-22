@@ -1,8 +1,9 @@
 package io.hoplin;
 
 import io.hoplin.util.ClassUtil;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -12,9 +13,11 @@ import java.util.function.Function;
 /**
  * Exchange client interface
  *
- * Primary operations provided by this interface include client creation {@link #create(RabbitMQOptions, Binding)},
- * subscription {@link #subscribe(String, Class, Consumer)} and publishing {@link #publish(Object)}.
- * Most methods have both synchronous and asynchronous versions
+ * <p>
+ * Primary operations provided by this interface include client creation {@link
+ * #create(RabbitMQOptions, Binding, ExecutorService)}, subscription {@link #subscribe(String,
+ * Class, Consumer)} and publishing {@link #publish(Object)}. Most methods have both synchronous and
+ * asynchronous versions
  *
  * <h1>Client subscriptions</h1>
  *
@@ -23,7 +26,6 @@ import java.util.function.Function;
  *  <li>{@link #subscribe(String, Class, Function)}</li>
  *  <li>{@link #subscribe(String, Class, BiFunction)}</li>
  * </ul>
- *
  *
  * @see io.hoplin.TopicExchangeClient
  * @see io.hoplin.DirectExchangeClient
@@ -35,21 +37,23 @@ public interface ExchangeClient {
   /**
    * Create instance of {@link ExchangeClient}
    *
-   * @param options the connection options
-   * @param binding the binding to use
-   * @return
+   * @param options  the connection options
+   * @param binding  the {@link Binding} to use
+   * @param executor the {@link ExecutorService} to use
+   * @return new {@link ExchangeClient}
    */
-  static ExchangeClient create(final RabbitMQOptions options, final Binding binding) {
+  static ExchangeClient create(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
     final String exchange = binding.getExchange();
     switch (ExchangeType.fromValue(exchange)) {
       case DIRECT:
-        return DirectExchangeClient.create(options, binding);
+        return DirectExchangeClient.create(options, binding, executor);
       case FANOUT:
-        return FanoutExchangeClient.create(options, binding);
+        return FanoutExchangeClient.create(options, binding, executor);
       case TOPIC:
-        return TopicExchangeClient.create(options, binding);
+        return TopicExchangeClient.create(options, binding, executor);
       case HEADER:
-        return HeaderExchangeClient.create(options, binding);
+        return HeaderExchangeClient.create(options, binding, executor);
     }
 
     throw new HoplinRuntimeException("Unhandled exchange type : " + exchange);
@@ -58,126 +62,246 @@ public interface ExchangeClient {
   /**
    * Create new {@link TopicExchangeClient}
    *
-   * @see TopicExchangeClient#create(RabbitMQOptions, String, String, String)
+   * @see TopicExchangeClient#create(RabbitMQOptions, Binding, ExecutorService)
    */
-  static ExchangeClient topic(final RabbitMQOptions options, final Binding binding) {
-    return TopicExchangeClient.create(options, binding);
+  static ExchangeClient topic(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    return TopicExchangeClient.create(options, binding, executor);
   }
 
   /**
    * Create new {@link TopicExchangeClient}
    *
-   * @see TopicExchangeClient#create(RabbitMQOptions, String)}
+   * @see TopicExchangeClient#create(RabbitMQOptions, Binding, ExecutorService)
+   */
+  static ExchangeClient topic(final RabbitMQOptions options, final Binding binding) {
+    return TopicExchangeClient.create(options, binding, createExecutor());
+  }
+
+  /**
+   * Create new {@link TopicExchangeClient}
+   *
+   * @see TopicExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
+   */
+  static ExchangeClient topic(final RabbitMQOptions options, final String exchange,
+      final ExecutorService executor) {
+    return TopicExchangeClient.create(options, exchange, executor);
+  }
+
+  /**
+   * Create new {@link TopicExchangeClient}
+   *
+   * @see TopicExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
    */
   static ExchangeClient topic(final RabbitMQOptions options, final String exchange) {
-    return TopicExchangeClient.create(options, exchange);
+    return TopicExchangeClient.create(options, exchange, createExecutor());
   }
 
   /**
    * Create new {@link TopicExchangeClient} client, this will create default RabbitMQ queues.
    *
-   * @see TopicExchangeClient#topic(RabbitMQOptions, Binding)
+   * @see TopicExchangeClient#topic(RabbitMQOptions, String, String, String, ExecutorService)
    */
   static ExchangeClient topic(final RabbitMQOptions options, final String exchangeName,
       final String bindingKey) {
-    return topic(options, exchangeName, "", bindingKey);
+    return topic(options, exchangeName, "", bindingKey, createExecutor());
   }
 
   /**
    * Create new {@link TopicExchangeClient} client, this will create default RabbitMQ queues.
    *
-   * @see TopicExchangeClient#topic(RabbitMQOptions, Binding)
+   * @see TopicExchangeClient#topic(RabbitMQOptions, String, String, String, ExecutorService)
+   */
+  static ExchangeClient topic(final RabbitMQOptions options, final String exchangeName,
+      final String bindingKey, final ExecutorService executor) {
+    return topic(options, exchangeName, "", bindingKey, executor);
+  }
+
+  /**
+   * Create new {@link TopicExchangeClient} client, this will create default RabbitMQ queues.
+   *
+   * @see TopicExchangeClient#topic(RabbitMQOptions, Binding, ExecutorService)
+   */
+  static ExchangeClient topic(final RabbitMQOptions options, final String exchangeName,
+      final String queue, final String bindingKey, final ExecutorService executor) {
+    return new TopicExchangeClient(options,
+        TopicExchangeClient.createSensibleBindings(exchangeName, queue, bindingKey), executor);
+  }
+
+  /**
+   * Create new {@link TopicExchangeClient} client.
+   *
+   * @see TopicExchangeClient#topic(RabbitMQOptions, String, String, String, ExecutorService)
    */
   static ExchangeClient topic(final RabbitMQOptions options, final String exchangeName,
       final String queue, final String bindingKey) {
-    Objects.requireNonNull(options);
-    return new TopicExchangeClient(options,
-        TopicExchangeClient.createSensibleBindings(exchangeName, queue, bindingKey));
+    return topic(options, exchangeName, queue, bindingKey, createExecutor());
   }
 
   /**
    * Create new {@link DirectExchangeClient}
    *
-   * @see DirectExchangeClient#create(RabbitMQOptions, String, String, String)
+   * @see DirectExchangeClient#create(RabbitMQOptions, String, String, String, ExecutorService)
    */
-  static ExchangeClient direct(final RabbitMQOptions options, final Binding binding) {
-    return DirectExchangeClient.create(options, binding);
+  static ExchangeClient direct(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    return DirectExchangeClient.create(options, binding, executor);
   }
 
   /**
-   * Create new {@link TopicExchangeClient}
+   * Create new {@link DirectExchangeClient}
    *
-   * @see DirectExchangeClient#create(RabbitMQOptions, String)}
+   * @see DirectExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
    */
   static ExchangeClient direct(final RabbitMQOptions options, final String exchange) {
-    return DirectExchangeClient.create(options, exchange);
+    return DirectExchangeClient.create(options, exchange, ExchangeClient.createExecutor());
   }
 
   /**
-   * Create new {@link DirectExchangeClient} client, this will create default RabbitMQ queues.
+   * Create new {@link DirectExchangeClient}
    *
-   * @see DirectExchangeClient#create(RabbitMQOptions, Binding)
+   * @see DirectExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
+   */
+  static ExchangeClient direct(final RabbitMQOptions options, final String exchange,
+      final ExecutorService executor) {
+    return DirectExchangeClient.create(options, exchange, executor);
+  }
+
+  /**
+   * Create new {@link DirectExchangeClient} client.
+   *
+   * @see DirectExchangeClient#create(RabbitMQOptions, String, String, String, ExecutorService)
+   */
+  static ExchangeClient direct(final RabbitMQOptions options, final String exchangeName,
+      final String bindingKey, final ExecutorService executor) {
+    return direct(options, exchangeName, "", bindingKey, executor);
+  }
+
+  /**
+   * Create new {@link DirectExchangeClient} client.
+   *
+   * @see DirectExchangeClient#create(RabbitMQOptions, Binding, ExecutorService)
    */
   static ExchangeClient direct(final RabbitMQOptions options, final String exchangeName,
       final String bindingKey) {
-    return direct(options, exchangeName, "", bindingKey);
+    return direct(options, exchangeName, "", bindingKey, createExecutor());
   }
 
   /**
-   * Create new {@link DirectExchangeClient} client, this will create default RabbitMQ queues.
+   * Create new {@link DirectExchangeClient} client.
    *
-   * @see DirectExchangeClient#create(RabbitMQOptions, Binding)
+   * @see DirectExchangeClient#create(RabbitMQOptions, Binding, ExecutorService)
+   */
+  static ExchangeClient direct(final RabbitMQOptions options, final String exchangeName,
+      final String queue, final String bindingKey, final ExecutorService executor) {
+    return new DirectExchangeClient(options,
+        DirectExchangeClient.createSensibleBindings(exchangeName, queue, bindingKey), executor);
+  }
+
+  /**
+   * Create new {@link DirectExchangeClient} client.
+   *
+   * @see DirectExchangeClient#create(RabbitMQOptions, Binding, ExecutorService)
    */
   static ExchangeClient direct(final RabbitMQOptions options, final String exchangeName,
       final String queue, final String bindingKey) {
-    Objects.requireNonNull(options);
-    return new DirectExchangeClient(options,
-        DirectExchangeClient.createSensibleBindings(exchangeName, queue, bindingKey));
+    return direct(options, exchangeName, queue, bindingKey, createExecutor());
   }
 
   /**
    * Create new {@link FanoutExchangeClient}
    *
-   * @see FanoutExchangeClient#create(RabbitMQOptions, String)}
+   * @param options  the {@link RabbitMQOptions} to use
+   * @param exchange the exchange name to bind to
+   * @param executor the the {@link ExecutorService} to use
+   * @return new {@link FanoutExchangeClient}
+   * @see FanoutExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
+   */
+  static ExchangeClient fanout(final RabbitMQOptions options, final String exchange,
+      final ExecutorService executor) {
+    return FanoutExchangeClient.create(options, exchange, executor);
+  }
+
+  /**
+   * Create new {@link FanoutExchangeClient}
+   *
+   * @see FanoutExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
    */
   static ExchangeClient fanout(final RabbitMQOptions options, final String exchange) {
-    return FanoutExchangeClient.create(options, exchange);
+    return FanoutExchangeClient.create(options, exchange, createExecutor());
   }
 
   /**
-   * Create new {@link FanoutExchangeClient} client, this will create default RabbitMQ queues.
+   * Create new {@link FanoutExchangeClient}
    *
-   * @see FanoutExchangeClient#topic(RabbitMQOptions, Binding)
+   * @see FanoutExchangeClient#create(RabbitMQOptions, Binding, ExecutorService)}
+   */
+  static ExchangeClient fanout(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    return FanoutExchangeClient.create(options, binding, executor);
+  }
+
+  /**
+   * Create new {@link FanoutExchangeClient}
+   *
+   * @see FanoutExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
    */
   static ExchangeClient fanout(final RabbitMQOptions options, final Binding binding) {
-    return FanoutExchangeClient.create(options, binding);
+    return FanoutExchangeClient.create(options, binding, createExecutor());
   }
 
   /**
-   * Create new {@link TopicExchangeClient}, exchange name will be determined based on caller class
+   * Create new {@link TopicExchangeClient} Exchange name will be determined based on caller class
+   * name
+   */
+  static ExchangeClient topic(final RabbitMQOptions options, final ExecutorService executor) {
+    return topic(options, ClassUtil.getRootPackageName(), executor);
+  }
+
+  /**
+   * Create new {@link TopicExchangeClient} Exchange name will be determined based on caller class
    * name
    */
   static ExchangeClient topic(final RabbitMQOptions options) {
-    final String caller = ClassUtil.getRootPackageName();
-    return topic(options, caller);
+    return topic(options, ClassUtil.getRootPackageName(), createExecutor());
   }
 
   /**
-   * Create new {@link TopicExchangeClient}
+   * Create new {@link HeaderExchangeClient}
    *
-   * @see HeaderExchangeClient#create(RabbitMQOptions, Binding)
+   * @see HeaderExchangeClient#create(RabbitMQOptions, Binding, ExecutorService)
+   */
+  static ExchangeClient header(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
+    return HeaderExchangeClient.create(options, binding, executor);
+  }
+
+  /**
+   * Create new {@link HeaderExchangeClient}
+   *
+   * @see HeaderExchangeClient#create(RabbitMQOptions, Binding, ExecutorService)
    */
   static ExchangeClient header(final RabbitMQOptions options, final Binding binding) {
-    return HeaderExchangeClient.create(options, binding);
+    return HeaderExchangeClient.create(options, binding, createExecutor());
   }
 
   /**
-   * Create new {@link TopicExchangeClient}
+   * Create new {@link HeaderExchangeClient}
    *
-   * @see TopicExchangeClient#create(RabbitMQOptions, String)}
+   * @see HeaderExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
+   */
+  static ExchangeClient header(final RabbitMQOptions options, final String exchange,
+      final ExecutorService executor) {
+    return HeaderExchangeClient.create(options, exchange, executor);
+  }
+
+  /**
+   * Create new {@link HeaderExchangeClient}
+   *
+   * @see HeaderExchangeClient#create(RabbitMQOptions, String, ExecutorService)}
    */
   static ExchangeClient header(final RabbitMQOptions options, final String exchange) {
-    return HeaderExchangeClient.create(options, exchange);
+    return HeaderExchangeClient.create(options, exchange, createExecutor());
   }
 
   /**
@@ -288,7 +412,8 @@ public interface ExchangeClient {
    * initialize consumer once to make sure that the Consumer is setup. After that this method will
    * only add the handlers.
    * <p>
-   * Handlers should not block, and should execute on configured {@link java.util.concurrent.ExecutorService}
+   * Handlers should not block, and should execute on configured {@link
+   * java.util.concurrent.ExecutorService}
    * </p>
    *
    * @param subscriberId the unique id of the subscriber
@@ -305,7 +430,8 @@ public interface ExchangeClient {
    * initialize consumer once to make sure that the Consumer is setup. After that this method will
    * only add the handlers.
    * <p>
-   * Handlers should not block, and should execute on configured {@link java.util.concurrent.ExecutorService}
+   * Handlers should not block, and should execute on configured {@link
+   * java.util.concurrent.ExecutorService}
    * </p>
    *
    * @param subscriberId the unique id of the subscriber
@@ -331,7 +457,8 @@ public interface ExchangeClient {
    * @return SubscriptionResult the result of subscription
    */
   <T> SubscriptionResult subscribe(final Class<T> clazz,
-      final BiFunction<T, MessageContext, Reply<?>> handler, final Consumer<SubscriptionConfigurator> config);
+      final BiFunction<T, MessageContext, Reply<?>> handler,
+      final Consumer<SubscriptionConfigurator> config);
 
   /**
    * Add subscription and consume messages from the queue Calling this method repeatably will only
@@ -360,4 +487,13 @@ public interface ExchangeClient {
    * @param unit the time unit to wait
    */
   void awaitQuiescence(long time, TimeUnit unit);
+
+  /**
+   * create new instance of {@link ExecutorService}
+   *
+   * @return
+   */
+  static ExecutorService createExecutor() {
+    return Executors.newCachedThreadPool(new HoplinThreadFactory());
+  }
 }

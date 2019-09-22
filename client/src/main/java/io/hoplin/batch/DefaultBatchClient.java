@@ -3,6 +3,8 @@ package io.hoplin.batch;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.Binding;
+import io.hoplin.DefaultRabbitMQClient;
+import io.hoplin.ExchangeClient;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
 import io.hoplin.RabbitMQClient;
@@ -16,6 +18,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -25,7 +28,6 @@ public class DefaultBatchClient implements BatchClient {
 
   private static final Logger log = LoggerFactory.getLogger(DefaultBatchClient.class);
 
-  private final RabbitMQClient client;
   /**
    * Channel we are communicating on
    */
@@ -39,6 +41,9 @@ public class DefaultBatchClient implements BatchClient {
    * Queue where we will listen for our RPC replies
    */
   private String replyToQueueName;
+  /**
+   * Are we using a direct-reply queue
+   */
   private boolean directReply;
 
   private ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches = new ConcurrentHashMap<>();
@@ -46,10 +51,16 @@ public class DefaultBatchClient implements BatchClient {
   private BatchReplyConsumer consumer;
 
   public DefaultBatchClient(final RabbitMQOptions options, final Binding binding) {
+    this(options, binding, ExchangeClient.createExecutor());
+  }
+
+  public DefaultBatchClient(final RabbitMQOptions options, final Binding binding, final
+  ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
+    Objects.requireNonNull(executor);
 
-    this.client = RabbitMQClient.create(options);
+    final DefaultRabbitMQClient client = RabbitMQClient.create(options, executor);
     this.channel = client.channel();
     this.codec = new JsonMessagePayloadCodec();
 

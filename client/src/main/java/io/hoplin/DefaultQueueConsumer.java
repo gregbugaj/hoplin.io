@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,19 +35,6 @@ public class DefaultQueueConsumer extends DefaultConsumer {
   private ArrayListMultimap<Class<?>, MethodReference<?>> handlers = ArrayListMultimap.create();
 
   private Executor executor;
-
-  /**
-   * Constructs a new instance and records its association to the passed-in channel.
-   *
-   * @param queue
-   * @param channel      the channel to which this consumer is attached
-   * @param queueOptions the options to use for this queue consumer
-   */
-  public DefaultQueueConsumer(String queue, final Channel channel,
-      final QueueOptions queueOptions) {
-    this(queue, channel, queueOptions,
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
-  }
 
   /**
    * Construct a new instance of queue consumer
@@ -91,7 +77,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
         ack = ackFromOptions(queueOptions);
 
         final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec(handlers.keySet());
-        final MessagePayload message = codec.deserialize(body, MessagePayload.class);
+        final MessagePayload<?> message = codec.deserialize(body, MessagePayload.class);
         final Object val = message.getPayload();
         final Class<?> targetClass = message.getTypeAsClass();
         final Collection<MethodReference<?>> consumers = handlers.get(targetClass);
@@ -159,7 +145,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     }, executor);
   }
 
-  private boolean isBatchedRequest(MessageContext context) {
+  private boolean isBatchedRequest(final MessageContext context) {
     final AMQP.BasicProperties properties = context.getProperties();
     final Map<String, Object> headers = properties.getHeaders();
     if (headers != null) {
@@ -218,7 +204,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
       clz = clz.getSuperclass();
     }
 
-    log.info("Adding handler : {}, {}", handlers);
+    log.info("Adding handler : {}", handlers);
   }
 
   @Override
