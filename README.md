@@ -85,3 +85,4 @@ OSSRH-43588
 
 # Notes
 https://stackoverflow.com/questions/1062113/fastest-way-to-write-huge-data-in-text-file-java
+https://stackoverflow.com/questions/44647589/java-how-to-efficiently-write-a-sequential-file-with-occassional-holes-in-it
