@@ -2,19 +2,19 @@ package examples.batch;
 
 import examples.BaseExample;
 import examples.LogDetail;
-import examples.rpc.RpcClientExample;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
 import io.hoplin.DirectExchange;
 import io.hoplin.batch.BatchClient;
 import io.hoplin.batch.DefaultBatchClient;
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BatchProcessingExample extends BaseExample {
+import java.io.IOException;
 
-  private static final Logger log = LoggerFactory.getLogger(BatchProcessingExample.class);
+public class BatchProcessingExample2 extends BaseExample {
+
+  private static final Logger log = LoggerFactory.getLogger(BatchProcessingExample2.class);
 
   public static void main(final String... args) throws IOException, InterruptedException {
     final BatchClient client = new DefaultBatchClient(options(), bind());

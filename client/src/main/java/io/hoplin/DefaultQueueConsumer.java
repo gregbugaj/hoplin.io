@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,12 +83,12 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     metrics.markMessageReceived();
     metrics.incrementReceived(body.length);
 
+    final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
+
     CompletableFuture.runAsync(() -> {
       AckStrategy ack;
-      final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
 
       try {
-
         ack = ackFromOptions(queueOptions);
 
         final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec(handlers.keySet());
@@ -143,6 +144,10 @@ public class DefaultQueueConsumer extends DefaultConsumer {
           log.info("BatchIncoming replyTo        >  {}", replyTo);
           log.info("BatchIncoming correlationId  >  {}", correlationId);
           log.info("BatchIncoming batchId        >  {}", batchId);
+
+          final JobExecutionInformation executionInfo = context.getExecutionInfo();
+          log.info("Handler time : {}", executionInfo.asElapsedMillis());
+
           publisher.basicPublish(getChannel(), "", replyTo, reply.getValue(), headers);
         }
       } catch (final Exception e) {
@@ -173,14 +178,16 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
   @SuppressWarnings("unchecked")
   private Reply<?> execute(final MessageContext context, final Object val,
-      final BiFunction<Object, MessageContext, Reply<?>> handler) {
-    System.out.println("context : " + context);
-    System.out.println("val : " + val);
-    System.out.println("handler : " + handler);
-    final Reply<?> reply = handler.apply(val, context);
-    System.out.println("reply : " + reply);
+                           final BiFunction<Object, MessageContext, Reply<?>> handler) {
+    final JobExecutionInformation exec = new JobExecutionInformation();
+    exec.setStartTime(System.nanoTime());
 
-    return reply;
+    try {
+      return  handler.apply(val, context);
+    } finally {
+      exec.setEndTime(System.nanoTime());
+      context.setExecutionInfo(exec);
+    }
   }
 
   private <S, T> Optional<T> safeCast(final S candidate, Class<T> targetClass) {

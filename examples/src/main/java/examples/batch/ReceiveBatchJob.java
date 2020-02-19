@@ -14,22 +14,21 @@ import org.slf4j.LoggerFactory;
  */
 public class ReceiveBatchJob extends BaseExample {
 
-  private static final Logger log = LoggerFactory.getLogger(ReceiveBatchJob.class);
+    private static final Logger log = LoggerFactory.getLogger(ReceiveBatchJob.class);
 
-  private static final String EXCHANGE = "exchange.batch";
+    private static final String EXCHANGE = "exchange.batch";
 
+    public static void main(final String... args) throws InterruptedException {
+        final ExchangeClient client = DirectExchangeClient.create(options(), EXCHANGE);
 
-  public static void main(final String... args) throws InterruptedException {
-    final ExchangeClient client = DirectExchangeClient.create(options(), EXCHANGE);
+        client.subscribe("test", LogDetail.class, ReceiveBatchJob::handleWithReturn);
+        Thread.currentThread().join();
+    }
 
-    client.subscribe("test", LogDetail.class, ReceiveBatchJob::handleWithReturn);
-    Thread.currentThread().join();
-  }
-
-  private static Reply<LogDetail> handleWithReturn(final LogDetail msg,
-      final MessageContext context) {
-    final LogDetail reply = new LogDetail("Reply Message > " + System.currentTimeMillis(), "WARN");
-
-    return Reply.with(reply);
-  }
+    private static Reply<LogDetail> handleWithReturn(final LogDetail msg,
+                                                     final MessageContext context) {
+        final LogDetail reply = new LogDetail("Reply Message > " + System.nanoTime(), "WARN");
+        log.info("Processing message : {} ", msg, context);
+        return Reply.with(reply);
+    }
 }

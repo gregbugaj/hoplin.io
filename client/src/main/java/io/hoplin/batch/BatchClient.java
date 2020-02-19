@@ -3,6 +3,7 @@ package io.hoplin.batch;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Batch processing interface
@@ -16,6 +17,14 @@ public interface BatchClient {
    * @return ID associated with this request
    */
   CompletableFuture<BatchContext> startNew(final Consumer<BatchContext> context);
+
+  /**
+   * Create new batch processing request
+   *
+   * @param tasksToAdd
+   * @return
+   */
+  CompletableFuture<BatchContext> startNew(final Iterable<Supplier<?>> tasksToAdd);
 
   /**
    * Start new batch after the previous one is finished

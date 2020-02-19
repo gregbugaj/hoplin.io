@@ -1,51 +1,70 @@
 package io.hoplin.batch;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * Individual task detail for the job
+ */
 public class BatchContextTask {
 
-  private Object message;
+    private Object message;
 
-  private Date startDate;
+    private Date startDate;
 
-  private boolean completed;
+    private boolean completed;
 
-  private UUID taskId;
+    private UUID taskId;
 
-  public <T> BatchContextTask(final T message) {
-    this.message = message;
-    this.taskId = UUID.randomUUID();
-  }
+    // reply value for the job
+    private byte[] reply;
 
-  public Object getMessage() {
-    return message;
-  }
+    public <T> BatchContextTask(final T message) {
+        this.message = message;
+        this.taskId = UUID.randomUUID();
+    }
 
-  public BatchContextTask setMessage(final Object message) {
-    this.message = message;
-    return this;
-  }
+    public Object getMessage() {
+        return message;
+    }
 
-  public Date getStartDate() {
-    return startDate;
-  }
+    public BatchContextTask setMessage(final Object message) {
+        this.message = message;
+        return this;
+    }
 
-  public BatchContextTask setStartDate(final Date startDate) {
-    this.startDate = startDate;
-    return this;
-  }
+    public Date getStartDate() {
+        return startDate;
+    }
 
-  public boolean isCompleted() {
-    return completed;
-  }
+    public BatchContextTask setStartDate(final Date startDate) {
+        this.startDate = startDate;
+        return this;
+    }
 
-  public BatchContextTask setCompleted(final boolean completed) {
-    this.completed = completed;
-    return this;
-  }
+    public boolean isCompleted() {
+        return completed;
+    }
 
-  public UUID getTaskId() {
-    return taskId;
-  }
+    public BatchContextTask setCompleted(final boolean completed) {
+        this.completed = completed;
+        return this;
+    }
+
+    public UUID getTaskId() {
+        return taskId;
+    }
+
+    public void setReply(byte[] body) {
+        this.reply = body;
+    }
+
+    public byte[] getReply() {
+        return reply;
+    }
+
+    public String getReplyAsString() {
+        return new String(reply, StandardCharsets.UTF_8);
+    }
 }

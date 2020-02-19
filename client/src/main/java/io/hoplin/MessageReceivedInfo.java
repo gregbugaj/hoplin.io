@@ -7,50 +7,50 @@ package io.hoplin;
  */
 public class MessageReceivedInfo {
 
-  private final long deliveryTag;
-  private final boolean redelivered;
-  private final String exchange;
-  private final String routingKey;
-  private long ctime;
-  private String consumerTag;
+    private final long deliveryTag;
+    private final boolean redelivered;
+    private final String exchange;
+    private final String routingKey;
+    private long ctime;
+    private String consumerTag;
 
 
-  public MessageReceivedInfo(final String consumerTag,
-      long deliveryTag,
-      boolean redelivered,
-      String exchange,
-      String routingKey,
-      final long ctime) {
+    public MessageReceivedInfo(final String consumerTag,
+                               long deliveryTag,
+                               boolean redelivered,
+                               String exchange,
+                               String routingKey,
+                               final long ctime) {
 
-    this.consumerTag = consumerTag;
-    this.deliveryTag = deliveryTag;
-    this.redelivered = redelivered;
-    this.exchange = exchange;
-    this.routingKey = routingKey;
-    this.ctime = ctime;
-  }
+        this.consumerTag = consumerTag;
+        this.deliveryTag = deliveryTag;
+        this.redelivered = redelivered;
+        this.exchange = exchange;
+        this.routingKey = routingKey;
+        this.ctime = ctime;
+    }
 
-  public long getDeliveryTag() {
-    return deliveryTag;
-  }
+    public long getDeliveryTag() {
+        return deliveryTag;
+    }
 
-  public boolean isRedelivered() {
-    return redelivered;
-  }
+    public boolean isRedelivered() {
+        return redelivered;
+    }
 
-  public String getExchange() {
-    return exchange;
-  }
+    public String getExchange() {
+        return exchange;
+    }
 
-  public String getRoutingKey() {
-    return routingKey;
-  }
+    public String getRoutingKey() {
+        return routingKey;
+    }
 
-  public long getCtime() {
-    return ctime;
-  }
+    public long getCtime() {
+        return ctime;
+    }
 
-  public String getConsumerTag() {
-    return consumerTag;
-  }
+    public String getConsumerTag() {
+        return consumerTag;
+    }
 }

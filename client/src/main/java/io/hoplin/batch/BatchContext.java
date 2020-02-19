@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 /**
  * Context in which the batch will execute
+ * Batch = Job
  */
 public class BatchContext implements Iterable<BatchContextTask> {
 
@@ -40,6 +41,12 @@ public class BatchContext implements Iterable<BatchContextTask> {
   private boolean completed;
 
   private long taskCounter;
+
+  /**
+   * Job priority
+   * Priority values can range from -1000 to 1000, with -1000 being the lowest priority and 1000 being the highest priority
+   */
+  private int priority;
 
   /**
    * Enqueue new batch request
