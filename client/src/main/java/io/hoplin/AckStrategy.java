@@ -37,8 +37,11 @@ public interface AckStrategy extends
       try {
         final String messageId = context.getProperties().getMessageId();
         final long deliveryTag = context.getReceivedInfo().getDeliveryTag();
-        log.info("Acknowledging  [strategy, messageId, deliveryTag] : {}, {}, {}", ack, messageId,
-            deliveryTag);
+        if (log.isDebugEnabled()) {
+          log.debug("Acknowledging  [messageId, deliveryTag] : {}, {}",
+              messageId,
+              deliveryTag);
+        }
 
         ack.accept(channel, deliveryTag);
         return true;

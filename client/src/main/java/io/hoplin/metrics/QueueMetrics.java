@@ -80,7 +80,7 @@ public interface QueueMetrics {
 
     private static final Logger log = LoggerFactory.getLogger(QueueMetrics.class);
 
-    private static final Map<String, QueueMetrics> metrics = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, QueueMetrics> metrics = new ConcurrentHashMap<>();
 
     public static QueueMetrics getInstance(final String key) {
       final QueueMetrics metric = metrics.get(key);
@@ -166,7 +166,6 @@ public interface QueueMetrics {
       received.set(0);
       sentData.set(0);
       receivedData.set(0);
-
       sentFailed.set(0);
     }
   }

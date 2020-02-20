@@ -54,13 +54,13 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   @Override
   public <T> void basicConsume(final String queue, final Class<T> clazz,
       final java.util.function.Consumer<T> handler) {
-    basicConsume(queue, QueueOptions.of(true), clazz, handler);
+    basicConsume(queue, QueueOptions.of(false), clazz, handler);
   }
 
   @Override
   public <T> void basicConsume(final String queue, final Class<T> clazz,
       final BiFunction<T, MessageContext, Reply<?>> handler) {
-    basicConsume(queue, QueueOptions.of(true), clazz, handler);
+    basicConsume(queue, QueueOptions.of(false), clazz, handler);
   }
 
 
@@ -125,11 +125,11 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
 
   private void confirmedAck(long deliveryTag, boolean multiple) {
-    log.info("Confirmed ACK :: {}", deliveryTag);
+    log.info("PublisherConfirmed ACK(deliveryTag, multiple) :: {}, {}", deliveryTag, multiple);
   }
 
   private void confirmedNack(long deliveryTag, boolean multiple) {
-    log.info("Confirmed NACK :: {}", deliveryTag);
+    log.info("PublisherConfirmed NACK(deliveryTag, multiple) :: {}, {}", deliveryTag, multiple);
   }
 
   @Override

@@ -9,62 +9,71 @@ import java.util.UUID;
  */
 public class BatchContextTask {
 
-    private Object message;
+  private Object message;
 
-    private Date startDate;
+  private Date startDate;
 
-    private boolean completed;
+  private boolean completed;
 
-    private UUID taskId;
+  private UUID taskId;
 
-    // reply value for the job
-    private byte[] reply;
+  // reply value for the job
+  private byte[] reply;
 
-    public <T> BatchContextTask(final T message) {
-        this.message = message;
-        this.taskId = UUID.randomUUID();
-    }
+  public <T> BatchContextTask(final T message) {
+    this.message = message;
+    this.taskId = UUID.randomUUID();
+  }
 
-    public Object getMessage() {
-        return message;
-    }
+  public Object getMessage() {
+    return message;
+  }
 
-    public BatchContextTask setMessage(final Object message) {
-        this.message = message;
-        return this;
-    }
+  public BatchContextTask setMessage(final Object message) {
+    this.message = message;
+    return this;
+  }
 
-    public Date getStartDate() {
-        return startDate;
-    }
+  public Date getStartDate() {
+    return startDate;
+  }
 
-    public BatchContextTask setStartDate(final Date startDate) {
-        this.startDate = startDate;
-        return this;
-    }
+  public BatchContextTask setStartDate(final Date startDate) {
+    this.startDate = startDate;
+    return this;
+  }
 
-    public boolean isCompleted() {
-        return completed;
-    }
+  public boolean isCompleted() {
+    return completed;
+  }
 
-    public BatchContextTask setCompleted(final boolean completed) {
-        this.completed = completed;
-        return this;
-    }
+  public BatchContextTask setCompleted(final boolean completed) {
+    this.completed = completed;
+    return this;
+  }
 
-    public UUID getTaskId() {
-        return taskId;
-    }
+  public UUID getTaskId() {
+    return taskId;
+  }
 
-    public void setReply(byte[] body) {
-        this.reply = body;
-    }
+  public void setReply(byte[] body) {
+    this.reply = body;
+  }
 
-    public byte[] getReply() {
-        return reply;
-    }
+  public byte[] getReply() {
+    return reply;
+  }
 
-    public String getReplyAsString() {
-        return new String(reply, StandardCharsets.UTF_8);
-    }
+  public String getReplyAsString() {
+    return new String(reply, StandardCharsets.UTF_8);
+  }
+
+  @Override
+  public String toString() {
+    return "BatchContextTask{" +
+        "startDate=" + startDate +
+        ", completed=" + completed +
+        ", taskId=" + taskId +
+        '}';
+  }
 }

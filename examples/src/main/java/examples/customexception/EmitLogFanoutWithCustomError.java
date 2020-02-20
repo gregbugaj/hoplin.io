@@ -24,13 +24,14 @@ public class EmitLogFanoutWithCustomError extends BaseExample {
     log.info("Binding : {}", binding);
 
     final ExchangeClient client = ExchangeClient.fanout(options(), binding);
+    client.publish("Msg : " + System.currentTimeMillis());
 
-    while (true) {
+   /* while (true) {
       client.publish("Msg : " + System.currentTimeMillis());
       Thread.sleep(1000L);
-    }
+    }*/
 
-    //        Thread.currentThread().join();
+    Thread.currentThread().join();
   }
 
   private static Binding bind() {

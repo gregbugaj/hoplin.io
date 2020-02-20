@@ -27,6 +27,25 @@ To make working with RabbitMQ as simple as possible with minimum dependencies.
 
 ## Error handling
 
+## Metrics
+Metrics can be added to the current client
+
+```java
+    FunctionMetricsPublisher
+        .consumer(EmitLogTopic::metrics)
+        .withInterval(1, TimeUnit.SECONDS)
+        .withResetOnReporting(false)
+        .build()
+        .start();
+```
+
+Signature for the reporting method 
+```java
+  void metrics(final Map<String, Map<String, String>> o) {
+    System.out.println(String.format("Metrics Info : %s", o));
+  }
+```
+
 # Client Interoperability
 The client is able to communicate between different RabbitMQ client (C#, Python, Ruby, etc...)
 by using reflection based message parsing. This means that there is no need for `MessagePayload` envelope,

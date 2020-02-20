@@ -1,4 +1,4 @@
-package io.hoplin.batch;
+package io.hoplin;
 
 /**
  * Represents the result of a the request

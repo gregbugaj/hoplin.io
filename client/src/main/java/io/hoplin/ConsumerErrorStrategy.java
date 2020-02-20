@@ -6,7 +6,8 @@ package io.hoplin;
 public interface ConsumerErrorStrategy {
 
   /**
-   * Handle consumer error
+   * Handle consumer error, this can include {@link io.hoplin.DefaultQueueConsumer.MethodReference}
+   * as well as {@link DefaultQueueConsumer} errors.
    *
    * @param context   the context the error is attached to
    * @param throwable the exception that we try to handle

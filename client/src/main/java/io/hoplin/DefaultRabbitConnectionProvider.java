@@ -188,11 +188,11 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
     final Channel channel = connection.createChannel();
     channel.addShutdownListener(sse ->
     {
-
       if (sse.isInitiatedByApplication()) {
         log.info("Channel #{} closed.", channel.getChannelNumber());
       } else {
         log.info("Channel #{} suddenly closed.", channel.getChannelNumber());
+        log.error("Channel closed", sse);
       }
     });
     return channel;

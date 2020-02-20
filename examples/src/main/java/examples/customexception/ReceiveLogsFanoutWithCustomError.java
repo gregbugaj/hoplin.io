@@ -2,6 +2,7 @@ package examples.customexception;
 
 import examples.BaseExample;
 import io.hoplin.ExchangeClient;
+import io.hoplin.MessageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,20 @@ public class ReceiveLogsFanoutWithCustomError extends BaseExample {
     Thread.currentThread().join();
   }
 
-  private static void handle(final String msg) {
-    log.info("Incoming msg : {}", msg);
+  private static void handle(final String msg, MessageContext context) {
+    try {
+
+      log.info("Incoming msg : {}, {}", msg, context.getProperties());
+      if (true) {
+        throw new IllegalStateException("Processing error");
+      }
+
+    } finally {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        // noop
+      }
+    }
   }
 }

@@ -16,7 +16,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,8 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     super(channel);
     this.queueOptions = Objects.requireNonNull(queueOptions);
     this.executor = Objects.requireNonNull(executor);
-    this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
+//    this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
+    this.errorStrategy = new DeadLetterErrorStrategy(channel);
     this.metrics = QueueMetrics.Factory.getInstance(queue);
   }
 
@@ -104,7 +104,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
         for (final MethodReference reference : consumers) {
           try {
             final BiFunction<Object, MessageContext, Reply<?>> handler = reference.getHandler();
-            final Class<?> root = reference.getRoot();
+            final Class<?> root = reference.getRootType();
             reply = null;
             if (root == targetClass) {
               ++invokedHandlers;
@@ -128,6 +128,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
           }
         }
 
+        // TODO : This should be handled better
         if (invokedHandlers == 0) {
           throw new HoplinRuntimeException("No handlers defined for type : " + targetClass);
         }
@@ -149,6 +150,12 @@ public class DefaultQueueConsumer extends DefaultConsumer {
           log.info("Handler time : {}", executionInfo.asElapsedMillis());
 
           publisher.basicPublish(getChannel(), "", replyTo, reply.getValue(), headers);
+
+        } else {
+          if (reply.isExceptional()) {
+            final Exception exception = reply.getException();
+            ack = errorStrategy.handleConsumerError(context, exception);
+          }
         }
       } catch (final Exception e) {
         log.error("Unable to process message", e);
@@ -164,6 +171,12 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     }, executor);
   }
 
+  /**
+   * Check if this is a batch request
+   *
+   * @param context
+   * @return
+   */
   private boolean isBatchedRequest(MessageContext context) {
     final AMQP.BasicProperties properties = context.getProperties();
     final Map<String, Object> headers = properties.getHeaders();
@@ -178,15 +191,18 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
   @SuppressWarnings("unchecked")
   private Reply<?> execute(final MessageContext context, final Object val,
-                           final BiFunction<Object, MessageContext, Reply<?>> handler) {
+      final BiFunction<Object, MessageContext, Reply<?>> handler) {
     final JobExecutionInformation exec = new JobExecutionInformation();
+    context.setExecutionInfo(exec);
     exec.setStartTime(System.nanoTime());
 
     try {
-      return  handler.apply(val, context);
+      final Reply<?> reply = handler.apply(val, context);
+      return reply;
+    } catch (final Exception e) {
+      return Reply.exceptionally(e);
     } finally {
       exec.setEndTime(System.nanoTime());
-      context.setExecutionInfo(exec);
     }
   }
 
@@ -242,16 +258,29 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
     public MethodReference(final Class<T> root,
         final BiFunction<T, MessageContext, Reply<?>> handler) {
-      this.root = root;
-      this.handler = handler;
+      this.root = Objects.requireNonNull(root);
+      this.handler = Objects.requireNonNull(handler);
     }
 
-    public static <T> MethodReference of(final Class<T> root,
+    /**
+     * Create new method reference for a specific handler
+     *
+     * @param root
+     * @param handler
+     * @param <T>
+     * @return
+     */
+    public static <T> MethodReference<T> of(final Class<T> root,
         final BiFunction<T, MessageContext, Reply<?>> handler) {
       return new MethodReference<T>(root, handler);
     }
 
-    public Class<T> getRoot() {
+    /**
+     * Get the root type for the handler
+     *
+     * @return
+     */
+    public Class<T> getRootType() {
       return root;
     }
 

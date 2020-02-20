@@ -83,9 +83,14 @@ abstract class AbstractExchangeClient implements ExchangeClient {
         binding.setQueue(queueName);
       }
 
+      final Map<String, Object> args = new HashMap<>(arguments);
+      args.put("x-dead-letter-exchange", String.format("%s.%s", "dead", exchangeName));
+//      arguments.put("x-dead-letter-routing-key", bindingKey);
+      log.info("subscribing queue : {}", args);
+
       // when the queue name is empty we will create a queue dynamically and bind to that queue
       final AMQP.Queue.DeclareOk queueDeclare = client
-          .queueDeclare(queueName, true, false, autoDelete, arguments);
+          .queueDeclare(queueName, true, false, autoDelete, args);
 
       queueName = queueDeclare.getQueue();
 
@@ -130,21 +135,26 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   void bind(final String type) {
     Objects.requireNonNull(type);
     final String exchangeName = binding.getExchange();
-
     // prevent changing default queues
     if (Strings.isNullOrEmpty(exchangeName)) {
       throw new IllegalArgumentException("Exchange name can't be empty");
     }
 
     try {
+
       // survive a server restart
       final boolean durable = true;
       // keep it even if not in use
       final boolean autoDelete = false;
 
       final Map<String, Object> arguments = new HashMap<>();
+
       // Make sure that the Exchange is declared
       client.exchangeDeclare(exchangeName, type, durable, autoDelete, arguments);
+
+      // declare DLQ exchange if need to be
+      final String dlqExchangeName = String.format("%s.%s", "dead", exchangeName);
+      client.exchangeDeclare(dlqExchangeName, type, durable, autoDelete, arguments);
     } catch (final Exception e) {
       throw new HoplinRuntimeException("Unable to bind to queue", e);
     }

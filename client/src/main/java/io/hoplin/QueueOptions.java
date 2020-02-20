@@ -5,18 +5,31 @@ import java.util.function.Consumer;
 /**
  * Specify queue consumer settings when calling {@link RabbitMQClient#basicConsume(String, Class,
  * Consumer)}
+ *
+ * <p>
+ * Default values
+ * <pre>
+ *  AutoAck = False
+ *  Prefetch Count = 1
+ *  Publisher Confirm = true
+ * </pre>
+ * <p>
+ * https://www.rabbitmq.com/confirms.html#acknowledgement-modes
  */
 public class QueueOptions {
 
-  private boolean autoAck = true;
+  //
+  private boolean autoAck = false;
 
+  // Indicates that the incoming messages will be stored locally
   private boolean keepMostRecent = false;
 
+  // Size of how many messages to keep internally
   private int maxInternalQueueSize = Integer.MAX_VALUE;
 
-  private boolean publisherConfirms;
+  private boolean publisherConfirms = true;
 
-  private int prefetchCount = 10;
+  private int prefetchCount = 1;
 
   public static QueueOptions of(boolean autoAck, boolean keepMostRecent, int maxInternalQueueSize) {
     return new QueueOptions()
@@ -47,6 +60,9 @@ public class QueueOptions {
   }
 
   /**
+   * In automatic acknowledgement mode, a message is considered to be successfully delivered
+   * immediately after it is sent.
+   *
    * @param autoAck true if the server should consider messages acknowledged once delivered; false
    *                if the server should expect explicit acknowledgements
    */

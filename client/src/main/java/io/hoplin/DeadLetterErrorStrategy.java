@@ -8,9 +8,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of Dead Letter Strategy
- * <p>
- * https://github.com/newcontext/rabbitmq-java-client/blob/master/test/src/com/rabbitmq/client/test/functional/DeadLetterExchange.java
- * https://www.rabbitmq.com/dlx.html https://medium.com/@kiennguyen88/rabbitmq-delay-retry-schedule-with-dead-letter-exchange-31fb25a440fc
+ *
+ * <pre>
+ *  x-death header
+ *  The x-death header is automatically added or filled by RabbitMQ when a message is discarded from a queue
+ * </pre>
+ * https://www.rabbitmq.com/dlx.html
+ * https://pubs.vmware.com/vfabricRabbitMQ31/index.jsp?topic=/com.vmware.vfabric.rabbitmq.3.1/rabbit-web-docs/dlx.html
+ * https://github.com/rabbitmq/rabbitmq-java-client/blob/master/src/test/java/com/rabbitmq/client/test/functional/DeadLetterExchange.java
+ * https://medium.com/@kiennguyen88/rabbitmq-delay-retry-schedule-with-dead-letter-exchange-31fb25a440fc
  */
 public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy {
 
@@ -27,7 +33,8 @@ public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy {
   public AckStrategy handleConsumerError(final MessageContext context, final Throwable throwable) {
 
     if (true) {
-      return AcknowledgmentStrategies.BASIC_ACK.strategy();
+//      return AcknowledgmentStrategies..strategy();
+//      return AcknowledgmentStrategies.BASIC_ACK.strategy();
     }
 
     if (context == null) {
@@ -36,7 +43,6 @@ public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy {
     }
 
     final Map<String, Object> headers = context.getProperties().getHeaders();
-
     if (headers == null) {
       log.warn("Headers are null, NACK requeue = false");
       return AcknowledgmentStrategies.NACK_WITHOUT_REQUEUE.strategy();
@@ -48,8 +54,9 @@ public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy {
 
     final ArrayList<Object> death = (ArrayList<Object>) headers.get("x-death");
 
+    // Fist attempt at NACK_WITHOUT_REQUEUE
     if (death == null) {
-      return AcknowledgmentStrategies.NACK_WITHOUT_REQUEUE.strategy();
+      return AcknowledgmentStrategies.REJECT.strategy();
     }
 
     int retries = 0;
@@ -64,9 +71,9 @@ public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy {
     log.info("DLQ retry : {} of {}", retries, maxRetries);
 
     if (retries < maxRetries) {
-      return AcknowledgmentStrategies.NACK_WITHOUT_REQUEUE.strategy();
+      return AcknowledgmentStrategies.NACK_WITH_REQUEUE.strategy();
     }
 
-    return AcknowledgmentStrategies.NACK_WITH_REQUEUE.strategy();
+    return AcknowledgmentStrategies.NACK_WITHOUT_REQUEUE.strategy();
   }
 }
