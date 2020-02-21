@@ -105,3 +105,7 @@ OSSRH-43588
 # Notes
 https://stackoverflow.com/questions/1062113/fastest-way-to-write-huge-data-in-text-file-java
 https://stackoverflow.com/questions/44647589/java-how-to-efficiently-write-a-sequential-file-with-occassional-holes-in-it
+
+
+https://github.com/EasyNetQ/EasyNetQ/blob/2573e8a76a8ccf57f2477672782d8f8a5afafe76/Source/EasyNetQ/Consumer/DefaultConsumerErrorStrategy.cs
+https://stackoverflow.com/questions/32189335/easynetq-custom-error-queue-name-based-on-the-original-queue
