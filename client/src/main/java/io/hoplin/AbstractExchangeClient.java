@@ -33,24 +33,29 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
     this.client = RabbitMQClient.create(options);
     this.binding = binding;
-
-    setupErrorHandling();
   }
 
   /**
    * setup error handling queues
    */
-  private void setupErrorHandling() {
-    final String exchangeName = DEFAULT_ERROR_EXCHANGE;
+  private void setupErrorHandling( String exchangeName) {
+
+    // declare DLQ exchange if need to be
+    if (exchangeName == null || exchangeName.isEmpty()) {
+      exchangeName = DEFAULT_ERROR_EXCHANGE;
+    }
+
+    final String dlqExchangeName = String.format("%s.%s", "dead", exchangeName);
+
     // survive a server restart
     final boolean durable = true;
-    // keep it even if not in user
+    // keep it even if not in use
     final boolean autoDelete = false;
     final String type = "direct";
 
     try {
       // Make sure that the Exchange is declared
-      client.exchangeDeclare(exchangeName, type, durable, autoDelete);
+      client.exchangeDeclare(dlqExchangeName, type, durable, autoDelete);
     } catch (final Exception e) {
       log.error("Unable to declare error exchange", e);
       throw new HoplinRuntimeException("Unable to declare error exchange", e);
@@ -109,7 +114,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   }
 
   /**
-   * Generate queue name from supplied parameters Default format
+   * Generate queue name from supplied parameters. Default queue name format
    *
    * <pre>
    *     subscriber:exchange:class
@@ -152,9 +157,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
       // Make sure that the Exchange is declared
       client.exchangeDeclare(exchangeName, type, durable, autoDelete, arguments);
 
-      // declare DLQ exchange if need to be
-      final String dlqExchangeName = String.format("%s.%s", "dead", exchangeName);
-      client.exchangeDeclare(dlqExchangeName, type, durable, autoDelete, arguments);
+      setupErrorHandling();
     } catch (final Exception e) {
       throw new HoplinRuntimeException("Unable to bind to queue", e);
     }
