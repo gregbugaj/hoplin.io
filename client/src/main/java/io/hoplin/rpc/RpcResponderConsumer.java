@@ -5,13 +5,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
-import io.hoplin.AckStrategy;
-import io.hoplin.AcknowledgmentStrategies;
-import io.hoplin.ConsumerErrorStrategy;
-import io.hoplin.DeadLetterErrorStrategy;
-import io.hoplin.HoplinRuntimeException;
-import io.hoplin.MessageContext;
-import io.hoplin.MessagePayload;
+import io.hoplin.*;
 import io.hoplin.json.JsonMessagePayloadCodec;
 import io.hoplin.metrics.QueueMetrics;
 import java.util.Objects;
@@ -65,7 +59,7 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
     this.handler = Objects.requireNonNull(handler);
     this.metrics = Objects.requireNonNull(metrics);
     this.codec = new JsonMessagePayloadCodec();
-    this.errorStrategy = new DeadLetterErrorStrategy(channel);
+    this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
   }
 
   @Override

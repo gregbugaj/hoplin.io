@@ -62,8 +62,8 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     super(channel);
     this.queueOptions = Objects.requireNonNull(queueOptions);
     this.executor = Objects.requireNonNull(executor);
-//    this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
-    this.errorStrategy = new DeadLetterErrorStrategy(channel);
+    this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
+//    this.errorStrategy = new DeadLetterErrorStrategy(channel);
     this.metrics = QueueMetrics.Factory.getInstance(queue);
   }
 
