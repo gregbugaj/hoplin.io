@@ -8,18 +8,25 @@ package io.hoplin;
 public class MessageReceivedInfo {
 
     private final long deliveryTag;
-    private final boolean redelivered;
-    private final String exchange;
-    private final String routingKey;
-    private long ctime;
-    private String consumerTag;
 
+    private final boolean redelivered;
+
+    private final String exchange;
+
+    private final String routingKey;
+
+    private final String queue;
+
+    private long ctime;
+
+    private String consumerTag;
 
     public MessageReceivedInfo(final String consumerTag,
                                long deliveryTag,
                                boolean redelivered,
                                String exchange,
                                String routingKey,
+                               String queue,
                                final long ctime) {
 
         this.consumerTag = consumerTag;
@@ -27,6 +34,7 @@ public class MessageReceivedInfo {
         this.redelivered = redelivered;
         this.exchange = exchange;
         this.routingKey = routingKey;
+        this.queue = queue;
         this.ctime = ctime;
     }
 
@@ -52,5 +60,9 @@ public class MessageReceivedInfo {
 
     public String getConsumerTag() {
         return consumerTag;
+    }
+
+    public String getQueue() {
+        return queue;
     }
 }

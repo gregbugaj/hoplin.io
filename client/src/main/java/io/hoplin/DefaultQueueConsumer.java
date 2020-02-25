@@ -27,6 +27,8 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
   private static final Logger log = LoggerFactory.getLogger(DefaultQueueConsumer.class);
 
+  private final String queue;
+
   private final QueueOptions queueOptions;
 
   private final QueueMetrics metrics;
@@ -60,10 +62,11 @@ public class DefaultQueueConsumer extends DefaultConsumer {
   public DefaultQueueConsumer(final String queue, final Channel channel,
       final QueueOptions queueOptions, final Executor executor) {
     super(channel);
+
+    this.queue = queue;
     this.queueOptions = Objects.requireNonNull(queueOptions);
     this.executor = Objects.requireNonNull(executor);
     this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
-//    this.errorStrategy = new DeadLetterErrorStrategy(channel);
     this.metrics = QueueMetrics.Factory.getInstance(queue);
   }
 
@@ -83,7 +86,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     metrics.markMessageReceived();
     metrics.incrementReceived(body.length);
 
-    final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
+    final MessageContext context = MessageContext.create(queue, consumerTag, envelope, properties, body);
 
     CompletableFuture.runAsync(() -> {
       AckStrategy ack;

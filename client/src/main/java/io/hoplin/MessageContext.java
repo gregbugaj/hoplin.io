@@ -1,80 +1,109 @@
 package io.hoplin;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Envelope;
-
 import java.util.Objects;
-
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
- * Context that message is associated with
+ * Context that message is associated with Queue name will be populated when it is known
  */
 public class MessageContext {
 
-    private MessageReceivedInfo receivedInfo;
+  // Message body
+  private byte[] body;
 
-    private AMQP.BasicProperties properties;
+  private MessageReceivedInfo receivedInfo;
 
-    private JobExecutionInformation executionInfo;
+  private AMQP.BasicProperties properties;
 
-    /**
-     * Create new message context
-     *
-     * @param consumerTag
-     * @param envelope
-     * @param properties
-     * @return newly created {@link MessageContext}
-     */
-    public static MessageContext create(final String consumerTag, final Envelope envelope,
-                                        AMQP.BasicProperties properties) {
-        Objects.requireNonNull(consumerTag);
-        Objects.requireNonNull(envelope);
+  private JobExecutionInformation executionInfo;
 
-        final MessageReceivedInfo receivedInfo = new MessageReceivedInfo(consumerTag,
-                envelope.getDeliveryTag(),
-                envelope.isRedeliver(),
-                envelope.getExchange(),
-                envelope.getRoutingKey(),
-                System.currentTimeMillis()
-        );
+  /**
+   * Create new message context
+   *
+   * @param queue
+   * @param consumerTag
+   * @param envelope
+   * @param properties
+   * @return newly created {@link MessageContext}
+   */
+  public static MessageContext create(final String queue, final String consumerTag,
+      final Envelope envelope,
+      BasicProperties properties, byte[] body) {
+    Objects.requireNonNull(consumerTag);
+    Objects.requireNonNull(envelope);
 
-        final MessageContext context = new MessageContext();
-        context.setReceivedInfo(receivedInfo);
-        context.setProperties(properties);
+    final MessageReceivedInfo receivedInfo = new MessageReceivedInfo(consumerTag,
+        envelope.getDeliveryTag(),
+        envelope.isRedeliver(),
+        envelope.getExchange(),
+        envelope.getRoutingKey(),
+        queue,
+        System.currentTimeMillis()
+    );
 
-        return context;
-    }
+    final MessageContext context = new MessageContext();
+    context.setBody(body);
+    context.setReceivedInfo(receivedInfo);
+    context.setProperties(properties);
 
-    public MessageReceivedInfo getReceivedInfo() {
-        return receivedInfo;
-    }
+    return context;
+  }
 
-    public MessageContext setReceivedInfo(final MessageReceivedInfo receivedInfo) {
-        this.receivedInfo = receivedInfo;
-        return this;
-    }
+  /**
+   * Create new message context
+   *
+   * @param envelope
+   * @param properties
+   * @param body
+   * @return newly created {@link MessageContext}
+   */
+  public static MessageContext create(final String consumerTag,
+      final Envelope envelope,
+      BasicProperties properties, byte[] body) {
 
-    public AMQP.BasicProperties getProperties() {
-        return properties;
-    }
+    return create("", consumerTag, envelope, properties, body);
+  }
 
-    public MessageContext setProperties(final AMQP.BasicProperties properties) {
-        this.properties = properties;
-        return this;
-    }
+  public MessageReceivedInfo getReceivedInfo() {
+    return receivedInfo;
+  }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
+  public MessageContext setReceivedInfo(final MessageReceivedInfo receivedInfo) {
+    this.receivedInfo = receivedInfo;
+    return this;
+  }
+
+  public AMQP.BasicProperties getProperties() {
+    return properties;
+  }
+
+  public MessageContext setProperties(final AMQP.BasicProperties properties) {
+    this.properties = properties;
+    return this;
+  }
+
+  public byte[] getBody() {
+    return body;
+  }
+
+  public void setBody(byte[] body) {
+    this.body = body;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
 
 
-    public JobExecutionInformation getExecutionInfo() {
-        return executionInfo;
-    }
+  public JobExecutionInformation getExecutionInfo() {
+    return executionInfo;
+  }
 
-    public void setExecutionInfo(JobExecutionInformation executionInfo) {
-        this.executionInfo = Objects.requireNonNull(executionInfo);
-    }
+  public void setExecutionInfo(JobExecutionInformation executionInfo) {
+    this.executionInfo = Objects.requireNonNull(executionInfo);
+  }
 }

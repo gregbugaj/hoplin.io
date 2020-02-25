@@ -74,12 +74,13 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
     metrics.markMessageReceived();
     metrics.incrementReceived(body.length);
 
+    final MessageContext context = MessageContext.create(consumerTag, envelope, properties, body);
+
     // 1 : Perform the action required in the RPC request
     CompletableFuture
         .supplyAsync(() -> dispatch(body), executor)
         .whenComplete((reply, throwable) ->
         {
-          final MessageContext context = MessageContext.create(consumerTag, envelope, properties);
 
           try {
             byte[] replyMessage = reply;
@@ -101,9 +102,8 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
             log.info("replyTo, correlationId :  {}, {}", replyTo, properties.getCorrelationId());
 
             getChannel().basicPublish("", replyTo, replyProperties, replyMessage);
-            // 4 : Send the ack to the RPC request
 
-            // Invoke ACK
+            // 4 : Send the ack to the RPC request
             AckStrategy
                 .acknowledge(getChannel(), context, AcknowledgmentStrategies.BASIC_ACK.strategy());
 
