@@ -38,7 +38,7 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
     }
 
     if (context == null) {
-      log.warn("Message context is null while handling consumer error", throwable);
+      log.warn("Message context is null while handling consumer error");
       return AcknowledgmentStrategies.NACK_WITH_REQUEUE.strategy();
     }
 
