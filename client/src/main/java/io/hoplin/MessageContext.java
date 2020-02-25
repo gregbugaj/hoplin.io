@@ -4,14 +4,12 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Envelope;
 import java.util.Objects;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * Context that message is associated with Queue name will be populated when it is known
  */
 public class MessageContext {
 
-  // Message body
   private byte[] body;
 
   private MessageReceivedInfo receivedInfo;
@@ -93,12 +91,6 @@ public class MessageContext {
     this.body = body;
   }
 
-  @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this);
-  }
-
-
   public JobExecutionInformation getExecutionInfo() {
     return executionInfo;
   }
@@ -106,4 +98,15 @@ public class MessageContext {
   public void setExecutionInfo(JobExecutionInformation executionInfo) {
     this.executionInfo = Objects.requireNonNull(executionInfo);
   }
+
+
+  public String toString() {
+    return "MessageContext{" +
+        "receivedInfo=" + receivedInfo +
+        ", properties=" + properties +
+        ", executionInfo=" + executionInfo +
+        ", body=" + new String(body) +
+        '}';
+  }
+
 }

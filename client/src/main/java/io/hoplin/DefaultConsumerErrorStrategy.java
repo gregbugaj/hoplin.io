@@ -46,6 +46,8 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
     try {
       publisher
           .basicPublish(channel, info.getExchange(), info.getRoutingKey(), properties, message);
+
+      return AcknowledgmentStrategies.BASIC_ACK.strategy();
     } catch (final Exception e) {
       log.error("Unable to handle consumer error", e);
     }

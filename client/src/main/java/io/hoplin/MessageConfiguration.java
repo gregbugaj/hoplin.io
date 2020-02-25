@@ -4,8 +4,6 @@ import com.rabbitmq.client.BasicProperties;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
  * Message configuration that will be populated for each outgoing message
@@ -22,14 +20,14 @@ public class MessageConfiguration {
     return headers;
   }
 
-  public MessageConfiguration()
-  {
+  public MessageConfiguration() {
     nativeMessageFormat = false;
   }
+
   /**
    * Add new header
    *
-   * @param key the key value to add
+   * @param key   the key value to add
    * @param value the value to add
    * @return
    */
@@ -54,6 +52,10 @@ public class MessageConfiguration {
 
   @Override
   public String toString() {
-    return ToStringBuilder.reflectionToString(this, ToStringStyle.DEFAULT_STYLE);
+    return "MessageConfiguration{" +
+        "nativeMessageFormat=" + nativeMessageFormat +
+        ", properties=" + properties +
+        ", headers=" + headers +
+        '}';
   }
 }

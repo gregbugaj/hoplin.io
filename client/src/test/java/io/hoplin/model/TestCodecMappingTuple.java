@@ -1,8 +1,5 @@
 package io.hoplin.model;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-
 public class TestCodecMappingTuple {
 
   private long valA;
@@ -29,6 +26,9 @@ public class TestCodecMappingTuple {
 
   @Override
   public String toString() {
-    return ReflectionToStringBuilder.toString(this, ToStringStyle.DEFAULT_STYLE);
+    return "TestCodecMappingTuple{" +
+        "valA=" + valA +
+        ", valB=" + valB +
+        '}';
   }
 }

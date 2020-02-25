@@ -1,8 +1,6 @@
 package io.hoplin;
 
 import java.util.Objects;
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
  * Message that will be sent over the wire with additional information
@@ -144,6 +142,11 @@ public class MessagePayload<T> {
 
   @Override
   public String toString() {
-    return ReflectionToStringBuilder.toString(this, ToStringStyle.DEFAULT_STYLE);
+    return "MessagePayload{" +
+        "status=" + status +
+        ", payload=" + payload +
+        ", type='" + type + '\'' +
+        ", ctime=" + ctime +
+        '}';
   }
 }

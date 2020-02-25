@@ -1,70 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <artifactId>hoplin-client</artifactId>
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-                <groupId>org.apache.maven.plugins</groupId>
-            </plugin>
-        </plugins>
-    </build>
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>hoplin-client</artifactId>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+    </plugins>
+  </build>
 
-    <dependencies>
+  <dependencies>
 
-        <dependency>
-            <artifactId>amqp-client</artifactId>
-            <groupId>com.rabbitmq</groupId>
-            <version>5.4.0</version>
-        </dependency>
+    <dependency>
+      <artifactId>amqp-client</artifactId>
+      <groupId>com.rabbitmq</groupId>
+      <version>5.4.0</version>
+    </dependency>
 
-        <dependency>
-            <artifactId>slf4j-api</artifactId>
-            <groupId>org.slf4j</groupId>
-            <version>1.7.25</version>
-        </dependency>
+    <dependency>
+      <artifactId>slf4j-api</artifactId>
+      <groupId>org.slf4j</groupId>
+      <version>1.7.25</version>
+    </dependency>
 
-        <dependency>
-            <artifactId>gson</artifactId>
-            <groupId>com.google.code.gson</groupId>
-            <version>2.8.5</version>
-        </dependency>
+    <dependency>
+      <artifactId>gson</artifactId>
+      <groupId>com.google.code.gson</groupId>
+      <version>2.8.5</version>
+    </dependency>
 
-        <dependency>
-            <artifactId>guava</artifactId>
-            <groupId>com.google.guava</groupId>
-            <version>25.0-jre</version>
-        </dependency>
+    <dependency>
+      <artifactId>guava</artifactId>
+      <groupId>com.google.guava</groupId>
+      <version>25.0-jre</version>
+    </dependency>
 
-        <dependency>
-            <artifactId>junit-jupiter-api</artifactId>
-            <groupId>org.junit.jupiter</groupId>
-            <scope>test</scope>
-            <version>5.1.0</version>
-        </dependency>
+    <dependency>
+      <artifactId>junit-jupiter-api</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <scope>test</scope>
+      <version>5.1.0</version>
+    </dependency>
 
-    </dependencies>
+  </dependencies>
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
+  <name>hoplin-client</name>
 
-    <name>hoplin-client</name>
+  <parent>
+    <artifactId>hoplin-parent</artifactId>
+    <groupId>io.hoplin</groupId>
+    <version>1.0.10</version>
+  </parent>
 
-    <parent>
-        <artifactId>hoplin-parent</artifactId>
-        <groupId>io.hoplin</groupId>
-        <version>1.0.10</version>
-    </parent>
-
-    <properties>
-        <java.version>1.8</java.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
+  <properties>
+    <java.version>1.8</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 
 </project>

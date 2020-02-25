@@ -4,6 +4,7 @@ package io.hoplin;
  * Default implementations of acknowledgment strategies
  * <p>
  * https://www.rabbitmq.com/confirms.html#acknowledgement-modes
+ * </p>
  */
 public enum AcknowledgmentStrategies {
 
