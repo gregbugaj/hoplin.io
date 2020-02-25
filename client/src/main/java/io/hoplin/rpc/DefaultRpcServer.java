@@ -44,10 +44,10 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
   /**
    * Queue name used for incoming request
    */
-  private String requestQueueName;
+  private final String requestQueueName;
 
   // executor that will process incoming RPC requests
-  private Executor executor;
+  private final Executor executor;
 
   private Function<I, O> handler;
 

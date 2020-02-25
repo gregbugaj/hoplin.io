@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 public class ProcessHelper {
 
   public static final int EXIT_FAILURE = 1;
-  private static Logger log = LoggerFactory.getLogger(ProcessHelper.class);
+  private static final Logger log = LoggerFactory.getLogger(ProcessHelper.class);
 
   /**
    * Execute command arguments,

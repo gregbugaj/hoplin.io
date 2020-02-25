@@ -116,15 +116,15 @@ public interface QueueMetrics {
 
   class DefaultQueueMetrics implements QueueMetrics {
 
-    private AtomicLong sent = new AtomicLong();
+    private final AtomicLong sent = new AtomicLong();
 
-    private AtomicLong received = new AtomicLong();
+    private final AtomicLong received = new AtomicLong();
 
-    private AtomicLong sentFailed = new AtomicLong();
+    private final AtomicLong sentFailed = new AtomicLong();
 
-    private AtomicLong sentData = new AtomicLong();
+    private final AtomicLong sentData = new AtomicLong();
 
-    private AtomicLong receivedData = new AtomicLong();
+    private final AtomicLong receivedData = new AtomicLong();
 
     @Override
     public long markMessageSent() {

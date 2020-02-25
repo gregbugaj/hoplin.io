@@ -102,8 +102,8 @@ in envelope do not need to perform `type` determination.
 
 ```java
 public class LogDetail {
-  private String msg;
-  private String level;
+  private final String msg;
+  private final String level;
 
   public LogDetail(final String msg, final String level) {
     this.msg = msg;

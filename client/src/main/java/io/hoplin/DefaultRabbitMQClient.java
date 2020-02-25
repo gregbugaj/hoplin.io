@@ -23,11 +23,11 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private static final Logger log = LoggerFactory.getLogger(DefaultRabbitMQClient.class);
 
-  private RabbitMQOptions options;
+  private final RabbitMQOptions options;
 
-  private Channel channel;
+  private final Channel channel;
 
-  private ConnectionProvider provider;
+  private final ConnectionProvider provider;
 
   private DefaultQueueConsumer consumer;
 

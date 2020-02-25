@@ -17,9 +17,9 @@ public class MessageReceivedInfo {
 
     private final String queue;
 
-    private long ctime;
+    private final long ctime;
 
-    private String consumerTag;
+    private final String consumerTag;
 
     public MessageReceivedInfo(final String consumerTag,
                                long deliveryTag,

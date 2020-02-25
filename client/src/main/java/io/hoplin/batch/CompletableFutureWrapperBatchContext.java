@@ -5,9 +5,9 @@ import java.util.concurrent.CompletableFuture;
 
 public class CompletableFutureWrapperBatchContext {
 
-  private CompletableFuture<BatchContext> future;
+  private final CompletableFuture<BatchContext> future;
 
-  private BatchContext context;
+  private final BatchContext context;
 
   public CompletableFutureWrapperBatchContext(final CompletableFuture<BatchContext> future,
       final BatchContext context) {

@@ -15,9 +15,9 @@ import java.util.function.Function;
  */
 public class DefaultRpClientServer<I, O> implements RpClientServer<I, O> {
 
-  private RpcClient<I, O> client;
+  private final RpcClient<I, O> client;
 
-  private RpcServer<I, O> server;
+  private final RpcServer<I, O> server;
 
   @SuppressWarnings("unchecked")
   public DefaultRpClientServer(final RabbitMQOptions options, final Binding binding) {

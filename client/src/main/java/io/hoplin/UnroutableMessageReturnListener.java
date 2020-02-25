@@ -26,7 +26,7 @@ public class UnroutableMessageReturnListener implements ReturnListener {
 
   private final RabbitMQOptions options;
 
-  private Path unroutableDirectory;
+  private final Path unroutableDirectory;
 
   public UnroutableMessageReturnListener(final RabbitMQOptions options) {
     this.options = Objects.requireNonNull(options);

@@ -14,7 +14,7 @@ public class MessageConfiguration {
 
   private BasicProperties properties;
 
-  private Map<String, Object> headers = new HashMap<>();
+  private final Map<String, Object> headers = new HashMap<>();
 
   public Map<String, Object> getHeaders() {
     return headers;

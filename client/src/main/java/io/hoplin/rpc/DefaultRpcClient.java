@@ -33,7 +33,7 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
    * Exchange to send requests to
    */
   private final String exchange;
-  private JsonMessagePayloadCodec codec;
+  private final JsonMessagePayloadCodec codec;
   /**
    * Channel we are communicating on
    */

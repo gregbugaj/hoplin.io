@@ -40,7 +40,7 @@ public class DefaultBatchClient implements BatchClient {
      * Exchange to send requests to
      */
     private final String exchange;
-    private JsonMessagePayloadCodec codec;
+    private final JsonMessagePayloadCodec codec;
     /**
      * Queue where we will listen for our Batch-RPC replies
      */
@@ -48,7 +48,7 @@ public class DefaultBatchClient implements BatchClient {
 
     private boolean directReply;
 
-    private ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, CompletableFutureWrapperBatchContext> batches = new ConcurrentHashMap<>();
 
     private BatchReplyConsumer consumer;
 

@@ -7,7 +7,7 @@ public abstract class AbstractExchange implements Exchange {
   private Map<String, Object> arguments;
 
   // exchange name
-  private String name;
+  private final String name;
 
   // exchange is deleted when last queue is unbound create it
   private boolean autoDelete;

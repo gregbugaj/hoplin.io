@@ -15,7 +15,7 @@ public class BatchContextTask {
 
   private boolean completed;
 
-  private UUID taskId;
+  private final UUID taskId;
 
   // reply value for the job
   private byte[] reply;

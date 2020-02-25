@@ -32,13 +32,13 @@ public class FunctionMetricsPublisher implements MetricsPublisher {
 
     private final Consumer consumer;
 
-    private boolean resetOnReporting;
+    private final boolean resetOnReporting;
 
-    private long time;
+    private final long time;
 
-    private TimeUnit unit;
+    private final TimeUnit unit;
 
-    private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     private FunctionMetricsPublisher(Consumer consumer, long time, TimeUnit unit,
                                      boolean resetOnReporting) {
@@ -87,7 +87,7 @@ public class FunctionMetricsPublisher implements MetricsPublisher {
 
     public static class Builder {
 
-        private Consumer<Map<String, Map<String, String>>> consumer;
+        private final Consumer<Map<String, Map<String, String>>> consumer;
 
         private long time;
 

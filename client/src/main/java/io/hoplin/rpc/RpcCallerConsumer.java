@@ -27,11 +27,11 @@ public class RpcCallerConsumer extends DefaultConsumer {
 
   private final Executor executor;
 
-  private ConcurrentHashMap<String, CompletableFuture> bindings = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, CompletableFuture> bindings = new ConcurrentHashMap<>();
 
-  private JsonMessagePayloadCodec codec;
+  private final JsonMessagePayloadCodec codec;
 
-  private boolean strictAction = true;
+  private final boolean strictAction = true;
 
   /**
    * Constructs a new instance and records its association to the passed-in channel.

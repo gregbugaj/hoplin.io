@@ -22,7 +22,7 @@ public class DeadLetterErrorStrategy extends DefaultConsumerErrorStrategy {
 
   private static final Logger log = LoggerFactory.getLogger(DeadLetterErrorStrategy.class);
 
-  private int maxRetries = 3;
+  private final int maxRetries = 3;
 
   public DeadLetterErrorStrategy(final Channel channel) {
     super(channel);

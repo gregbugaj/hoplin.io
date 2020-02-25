@@ -35,9 +35,10 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
   private final ConsumerErrorStrategy errorStrategy;
 
-  private ArrayListMultimap<Class<?>, MethodReference<?>> handlers = ArrayListMultimap.create();
+  private final ArrayListMultimap<Class<?>, MethodReference<?>> handlers = ArrayListMultimap
+      .create();
 
-  private Executor executor;
+  private final Executor executor;
 
   /**
    * Constructs a new instance and records its association to the passed-in channel.
@@ -186,10 +187,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     final AMQP.BasicProperties properties = context.getProperties();
     final Map<String, Object> headers = properties.getHeaders();
     if (headers != null) {
-      final Object batchId = headers.get("x-batch-id");
-      if (batchId != null) {
-        return true;
-      }
+      return headers.get("x-batch-id") != null;
     }
     return false;
   }
@@ -200,7 +198,6 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     final JobExecutionInformation exec = new JobExecutionInformation();
     context.setExecutionInfo(exec);
     exec.setStartTime(System.nanoTime());
-
     try {
       return handler.apply(val, context);
     } catch (final Exception e) {
@@ -236,16 +233,12 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     Objects.requireNonNull(handler);
     Class<? super T> clz = clazz;
 
-    while (true) {
-      if (clz == Object.class) {
-        break;
-      }
-
+    while (clz != Object.class) {
       handlers.put(clz, MethodReference.of(clazz, handler));
       clz = clz.getSuperclass();
     }
 
-    log.info("Adding handler : {}, {}", handlers);
+    log.info("Adding handlers : {}", handlers);
   }
 
   @Override
@@ -256,9 +249,9 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
   private static class MethodReference<T> {
 
-    private Class<T> root;
+    private final Class<T> root;
 
-    private BiFunction<T, MessageContext, Reply<?>> handler;
+    private final BiFunction<T, MessageContext, Reply<?>> handler;
 
     public MethodReference(final Class<T> root,
         final BiFunction<T, MessageContext, Reply<?>> handler) {

@@ -23,7 +23,7 @@ public class BatchContext implements Iterable<BatchContextTask> {
   /**
    * Task associated with this batch
    */
-  private List<BatchContextTask> tasks = new ArrayList<>();
+  private final List<BatchContextTask> tasks = new ArrayList<>();
 
   /**
    * Time the batch was started

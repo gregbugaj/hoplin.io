@@ -8,9 +8,9 @@ import java.util.Objects;
  */
 public class SubscriptionResult {
 
-  private String exchange;
+  private final String exchange;
 
-  private String queue;
+  private final String queue;
 
   private final String errorExchangeName;
 

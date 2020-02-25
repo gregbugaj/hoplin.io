@@ -2,7 +2,7 @@ package io.hoplin;
 
 public class Queue {
 
-  private String name;
+  private final String name;
 
   public Queue(final String name) {
     this.name = name;

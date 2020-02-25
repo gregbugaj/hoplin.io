@@ -30,7 +30,7 @@ public class BindingBuilder {
 
   public static class DestinationConfigurer {
 
-    private Queue queue;
+    private final Queue queue;
 
     public DestinationConfigurer(final Queue queue) {
       this.queue = Objects.requireNonNull(queue);
@@ -136,7 +136,7 @@ public class BindingBuilder {
   public static class HeaderExchangeRoutingKeyConfigurer extends
       RoutingKeyConfigurer<HeaderExchange, HeaderExchangeRoutingKeyConfigurer> {
 
-    private Map<String, Object> arguments = new HashMap<>();
+    private final Map<String, Object> arguments = new HashMap<>();
 
     public HeaderExchangeRoutingKeyConfigurer(final DestinationConfigurer configurer,
         final HeaderExchange exchange) {

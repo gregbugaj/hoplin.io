@@ -32,7 +32,7 @@ public class BatchReplyConsumer extends DefaultConsumer {
 
     private final Executor executor;
 
-    private JsonMessagePayloadCodec codec;
+    private final JsonMessagePayloadCodec codec;
 
     /**
      * Constructs a new instance and records its association to the passed-in channel.

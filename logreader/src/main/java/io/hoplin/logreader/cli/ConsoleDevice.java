@@ -9,7 +9,7 @@ import java.io.Reader;
 
 public abstract class ConsoleDevice implements AutoCloseable {
 
-  private static ConsoleDevice DEFAULT =
+  private static final ConsoleDevice DEFAULT =
       (System.console() == null) ? streamDevice(System.in, System.out)
           : new NativeConsole(System.console());
 

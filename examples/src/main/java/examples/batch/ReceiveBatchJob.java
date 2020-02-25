@@ -30,8 +30,8 @@ public class ReceiveBatchJob extends BaseExample {
     final LogDetail reply = new LogDetail("Reply Message > " + System.nanoTime(), "WARN");
     log.info("Processing message : {} , {}", msg, context);
 
-    if(true)
-      throw new IllegalStateException("Hello Error");
+   /* if(true)
+      throw new IllegalStateException("Hello Error");*/
 
     return Reply.with(reply);
   }

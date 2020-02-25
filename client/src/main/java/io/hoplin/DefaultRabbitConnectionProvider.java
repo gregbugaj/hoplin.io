@@ -171,11 +171,15 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
   private void establishConnection(final RabbitMQOptions config)
       throws IOException, TimeoutException {
     long s = System.currentTimeMillis();
-    log.debug("Connecting to rabbitmq...");
+    if (log.isDebugEnabled()) {
+      log.debug("Connecting to rabbitmq...");
+    }
     connection = newConnection(config);
     channel = createChannel();
     long ms = System.currentTimeMillis() - s;
-    log.debug("Connected to rabbitmq in {} ms", ms);
+    if (log.isDebugEnabled()) {
+      log.debug("Connected to rabbitmq in {} ms", ms);
+    }
   }
 
   /**
@@ -202,7 +206,9 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
   public void disconnect() {
     this.executor.shutdownNow();
     try {
-      log.debug("Disconnecting  rabbitmq...");
+      if (log.isDebugEnabled()) {
+        log.debug("Disconnecting  rabbitmq...");
+      }
 
       if (channel != null) {
         try {
@@ -222,7 +228,9 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
         }
       }
 
-      log.debug("Disconnected rabbitmq !");
+      if (log.isDebugEnabled()) {
+        log.debug("Disconnected rabbitmq !");
+      }
     } finally {
       connection = null;
       channel = null;

@@ -7,10 +7,10 @@ import java.util.Objects;
  */
 public class Reply<T> {
 
-  private static Reply EMPTY = new Reply(null, null);
+  private static final Reply EMPTY = new Reply(null, null);
 
   // The reply value to the client
-  private T reply;
+  private final T reply;
 
 
   // The exception hit during the execution of the request (or null if there was no exception).

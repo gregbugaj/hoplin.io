@@ -38,9 +38,9 @@ public class RpcResponderConsumer<I, O> extends DefaultConsumer {
 
   private final QueueMetrics metrics;
 
-  private JsonMessagePayloadCodec codec;
+  private final JsonMessagePayloadCodec codec;
 
-  private ConsumerErrorStrategy errorStrategy;
+  private final ConsumerErrorStrategy errorStrategy;
 
   /**
    * Constructs a new instance and records its association to the passed-in channel.

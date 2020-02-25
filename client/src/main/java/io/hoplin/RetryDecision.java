@@ -8,7 +8,7 @@ import java.time.Duration;
 public class RetryDecision {
 
   // Should the retry be performed
-  private boolean shouldRetry;
+  private final boolean shouldRetry;
 
   // The duration to wait before performing the retry.
   private Duration retryDelay;
