@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Client options
@@ -101,6 +102,8 @@ public class RabbitMQOptions {
   private long networkRecoveryInterval = DEFAULT_NETWORK_RECOVERY_INTERNAL;
   private boolean automaticRecoveryEnabled = DEFAULT_AUTOMATIC_RECOVERY_ENABLED;
   private boolean includeProperties = false;
+
+  private long reconnectDelay = TimeUnit.SECONDS.toMillis(5);
 
   private Map<String, Object> clientProperties;
 
@@ -416,5 +419,9 @@ public class RabbitMQOptions {
 
   public void setTlsEnabled(boolean tlsEnabled) {
     this.tlsEnabled = tlsEnabled;
+  }
+
+  public long getReconnectDelay() {
+    return reconnectDelay;
   }
 }

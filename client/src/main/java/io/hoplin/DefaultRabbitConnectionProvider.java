@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of {@ConnectionProvider} This provider handles basic retry and disconnect
- * policy
+ * policy.
  */
 public class DefaultRabbitConnectionProvider implements ConnectionProvider {
 
@@ -170,10 +170,10 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
 
   private void establishConnection(final RabbitMQOptions config)
       throws IOException, TimeoutException {
-    long s = System.currentTimeMillis();
     if (log.isDebugEnabled()) {
       log.debug("Connecting to rabbitmq...");
     }
+    long s = System.currentTimeMillis();
     connection = newConnection(config);
     channel = createChannel();
     long ms = System.currentTimeMillis() - s;
@@ -190,8 +190,7 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
    */
   private Channel createChannel() throws IOException {
     final Channel channel = connection.createChannel();
-    channel.addShutdownListener(sse ->
-    {
+    channel.addShutdownListener(sse -> {
       if (sse.isInitiatedByApplication()) {
         log.info("Channel #{} closed.", channel.getChannelNumber());
       } else {
@@ -258,7 +257,7 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
     }
 
     abortConnection();
-    long delay = 5L;
+    final long delay = config.getReconnectDelay();
     log.info(
         "RabbitMQ connection shutdown! The client will attempt to reconnect automatically in : {} sec, caused by : {}",
         delay, cause);
@@ -266,6 +265,6 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
   }
 
   private void asyncWaitAndReconnect(final long delay) {
-    executor.schedule(this::connect, delay, TimeUnit.SECONDS);
+    executor.schedule(this::connect, delay, TimeUnit.MILLISECONDS);
   }
 }
