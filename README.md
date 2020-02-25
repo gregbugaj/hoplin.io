@@ -27,6 +27,32 @@ To make working with RabbitMQ as simple as possible with minimum dependencies.
 
 ## Error handling
 
+Sample `MessageError` with original payload.
+
+Messages are routed to efault error exchange : `hoplin.error.exchange`
+
+```json
+{
+  "exchange": "exchange.batch",
+  "queue": "test:exchange.batch:examples.LogDetail",
+  "routingKey": "",
+  "creationTime": 1582627056671,
+  "exception": "examples.batch.ReceiveBatchJob.handleWithReturn(ReceiveBatchJob.java:34)\n",
+  "body": "{\n  \"status\": 0,\n  \"payload\": {\n    \"msg\": \"Msg \\u003e\\u003e 738745336710241\",\n    \"level\": \"info\"\n  },\n  \"type\": \"examples.LogDetail\",\n  \"ctime\": 1582627056560,\n  \"_payload_type_\": \"examples.LogDetail\"\n}",
+  "properties": {
+    "headers": {
+      "x-batch-id": {
+        "bytes": "ODljOGIyOGUtYWYyZS00NGM2LWIzNWQtNDU2NzA2YTI2YTVj"
+      },
+      "x-batch-correlationId": "77646972-e269-42f5-9b5b-388c27c13a86"
+    },
+    "correlationId": "77646972-e269-42f5-9b5b-388c27c13a86",
+    "replyTo": "batch.documents.reply-to.dd846234-bcce-466a-a841-360e9f9aa356",
+    "bodySize": 204
+  }
+}
+```
+
 ## Metrics
 Metrics can be added to the current client
 

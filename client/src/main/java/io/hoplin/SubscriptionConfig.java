@@ -1,5 +1,8 @@
 package io.hoplin;
 
+/**
+ * Subscription configuration
+ */
 public class SubscriptionConfig {
 
   private String subscriberId;

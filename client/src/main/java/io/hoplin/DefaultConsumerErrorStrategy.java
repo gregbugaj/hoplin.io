@@ -1,8 +1,9 @@
 package io.hoplin;
 
+import static io.hoplin.json.JsonMessagePayloadCodec.serializeWithDefaults;
+
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import io.hoplin.json.JsonMessagePayloadCodec;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -12,7 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Default consumer error handler
+ * Default consumer error handler Messages are put in dedicated error queues.
+ * <p>
+ * This is not this same as Dead Letter Queue, but rather error handling queue that handles errors
+ * that can be scheduled for retry based on the RetryPolicy
  */
 public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
 
@@ -21,7 +25,7 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
   private final Channel channel;
 
   public DefaultConsumerErrorStrategy(final Channel channel) {
-    this.channel = channel;
+    this.channel = Objects.requireNonNull(channel);
   }
 
   @SuppressWarnings("unchecked")
@@ -43,9 +47,17 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
     final BasicProperties properties = publisher.createBasisProperties(Collections.emptyMap());
     final byte[] message = createMessage(context, throwable);
 
+    if (log.isDebugEnabled()) {
+      log.debug("Error message : {}", new String(message));
+    }
+
     try {
+      final String dlqExchangeName = ConsumerErrorStrategy
+          .createDlqExchangeName(info.getExchange());
+      final String routingKey = info.getRoutingKey();
+
       publisher
-          .basicPublish(channel, info.getExchange(), info.getRoutingKey(), properties, message);
+          .basicPublish(channel, dlqExchangeName, routingKey, properties, message);
 
       return AcknowledgmentStrategies.BASIC_ACK.strategy();
     } catch (final Exception e) {
@@ -55,17 +67,11 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
     return AcknowledgmentStrategies.NACK_WITHOUT_REQUEUE.strategy();
   }
 
-  /**
-   * @param context
-   * @param throwable
-   * @return
-   */
   private byte[] createMessage(final MessageContext context, final Throwable throwable) {
-
     Objects.requireNonNull(context);
     Objects.requireNonNull(throwable);
 
-    final ProcessingError error = new ProcessingError();
+    final ErrorMessage error = new ErrorMessage();
     final MessageReceivedInfo info = context.getReceivedInfo();
 
     error.setExchange(info.getExchange())
@@ -76,18 +82,20 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
         .setException(toString(throwable))
         .setProperties(context.getProperties());
 
-    final JsonMessagePayloadCodec serializer = new JsonMessagePayloadCodec();
-    return serializer.serialize(error);
+    return serializeWithDefaults(error);
   }
 
-  private String toString(Throwable throwable) {
+  private String toString(final Throwable throwable) {
     if (throwable == null) {
       return "";
     }
-
-    final StringWriter sw = new StringWriter();
-    final PrintWriter pw = new PrintWriter(sw);
-    throwable.printStackTrace(pw);
-    return sw.toString();
+    final StackTraceElement[] elements = throwable.getStackTrace();
+    if (elements.length > 0) {
+      final StringWriter sw = new StringWriter();
+      final PrintWriter pw = new PrintWriter(sw);
+      pw.println(elements[0]);
+      return sw.toString();
+    }
+    return "";
   }
 }

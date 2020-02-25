@@ -86,7 +86,8 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     metrics.markMessageReceived();
     metrics.incrementReceived(body.length);
 
-    final MessageContext context = MessageContext.create(queue, consumerTag, envelope, properties, body);
+    final MessageContext context = MessageContext
+        .create(queue, consumerTag, envelope, properties, body);
 
     CompletableFuture.runAsync(() -> {
       AckStrategy ack;
@@ -152,13 +153,14 @@ public class DefaultQueueConsumer extends DefaultConsumer {
           final JobExecutionInformation executionInfo = context.getExecutionInfo();
           log.info("Handler time : {}", executionInfo.asElapsedMillis());
 
-          publisher.basicPublish(getChannel(), "", replyTo, reply.getValue(), headers);
-
-        } else {
-          if (reply.isExceptional()) {
-            final Exception exception = reply.getException();
-            ack = errorStrategy.handleConsumerError(context, exception);
+          if (!reply.isExceptional()) {
+            publisher.basicPublish(getChannel(), "", replyTo, reply.getValue(), headers);
+            ack = AcknowledgmentStrategies.BASIC_ACK.strategy();
           }
+        }
+
+        if (reply.isExceptional()) {
+          ack = errorStrategy.handleConsumerError(context, reply.getException());
         }
       } catch (final Exception e) {
         log.error("Unable to process message", e);
@@ -200,8 +202,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     exec.setStartTime(System.nanoTime());
 
     try {
-      final Reply<?> reply = handler.apply(val, context);
-      return reply;
+      return handler.apply(val, context);
     } catch (final Exception e) {
       return Reply.exceptionally(e);
     } finally {

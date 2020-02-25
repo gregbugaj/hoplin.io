@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
  */
 public class JsonMessagePayloadCodec implements Codec {
 
+  private static final JsonMessagePayloadCodec SERIALIZER = new JsonMessagePayloadCodec();
+
   private static final Logger log = LoggerFactory.getLogger(JsonMessagePayloadCodec.class);
 
   private final Gson gson;
@@ -55,6 +57,17 @@ public class JsonMessagePayloadCodec implements Codec {
     gson = builder.create();
   }
 
+  /**
+   * Serialize data using default serializer
+   *
+   * @param value
+   * @return
+   */
+  public static byte[] serializeWithDefaults(final Object value) {
+    Objects.requireNonNull(value);
+    return SERIALIZER.serialize(value);
+  }
+
   private Map<Class<?>, Set<String>> buildMappings(final Set<Class<?>> handlerClasses) {
     Objects.requireNonNull(handlerClasses);
 
@@ -70,7 +83,7 @@ public class JsonMessagePayloadCodec implements Codec {
     return handlerClassFields;
   }
 
-  @Override
+
   public byte[] serialize(final Object value) {
     Objects.requireNonNull(value);
     final long s = System.currentTimeMillis();

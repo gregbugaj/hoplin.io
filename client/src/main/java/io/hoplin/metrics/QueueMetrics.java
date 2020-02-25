@@ -8,9 +8,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Metrics tracking
+ * Metric tracking
  */
 public interface QueueMetrics {
+
+  /**
+   * Get key for the metric
+   *
+   * @param exchange
+   * @param routingKey
+   * @return
+   */
+  static String getKey(String exchange, String routingKey) {
+    return String.format("%s-%s", exchange, routingKey);
+  }
 
   /**
    * Mark when a messages has been sent

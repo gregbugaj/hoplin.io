@@ -6,6 +6,11 @@ package io.hoplin;
 public interface ConsumerErrorStrategy {
 
   /**
+   * Default error exchange
+   */
+  String DEFAULT_ERROR_EXCHANGE = "hoplin.error.exchange";
+
+  /**
    * Handle consumer error, this can include {@link io.hoplin.DefaultQueueConsumer.MethodReference}
    * as well as {@link DefaultQueueConsumer} errors.
    *
@@ -27,4 +32,30 @@ public interface ConsumerErrorStrategy {
     return AcknowledgmentStrategies.NACK_WITH_REQUEUE.strategy();
   }
 
+  /**
+   * Create DLX exchange name
+   *
+   * @param exchangeName
+   * @return
+   */
+  static String createDlqExchangeName(final String exchangeName) {
+    // TODO : this should be controlled via a policy
+    if (true) {
+      return DEFAULT_ERROR_EXCHANGE;
+    }
+    final String name =
+        (exchangeName == null || exchangeName.isEmpty()) ? DEFAULT_ERROR_EXCHANGE : exchangeName;
+    return String.format("%s.%s", "hoplin.dead", name);
+  }
+
+
+  /**
+   * Create DLQ queue name
+   *
+   * @param queueName
+   * @return
+   */
+  static String createDlqQueueName(String queueName) {
+    return queueName + ".error";
+  }
 }

@@ -5,7 +5,7 @@ import com.rabbitmq.client.AMQP.BasicProperties;
 /**
  * Encapsulated error information for error reprocessing
  */
-public class ProcessingError {
+public class ErrorMessage {
 
   private String exchange;
 
@@ -24,7 +24,7 @@ public class ProcessingError {
     return properties;
   }
 
-  public ProcessingError setProperties(BasicProperties properties) {
+  public ErrorMessage setProperties(BasicProperties properties) {
     this.properties = properties;
     return this;
   }
@@ -35,7 +35,7 @@ public class ProcessingError {
     return exchange;
   }
 
-  public ProcessingError setExchange(String exchange) {
+  public ErrorMessage setExchange(String exchange) {
     this.exchange = exchange;
     return this;
   }
@@ -44,7 +44,7 @@ public class ProcessingError {
     return queue;
   }
 
-  public ProcessingError setQueue(String queue) {
+  public ErrorMessage setQueue(String queue) {
     this.queue = queue;
     return this;
   }
@@ -53,7 +53,7 @@ public class ProcessingError {
     return routingKey;
   }
 
-  public ProcessingError setRoutingKey(String routingKey) {
+  public ErrorMessage setRoutingKey(String routingKey) {
     this.routingKey = routingKey;
     return this;
   }
@@ -62,7 +62,7 @@ public class ProcessingError {
     return creationTime;
   }
 
-  public ProcessingError setCreationTime(long creationTime) {
+  public ErrorMessage setCreationTime(long creationTime) {
     this.creationTime = creationTime;
     return this;
   }
@@ -71,7 +71,7 @@ public class ProcessingError {
     return exception;
   }
 
-  public ProcessingError setException(String exception) {
+  public ErrorMessage setException(String exception) {
     this.exception = exception;
     return this;
   }
@@ -80,7 +80,7 @@ public class ProcessingError {
     return body;
   }
 
-  public ProcessingError setBody(String body) {
+  public ErrorMessage setBody(String body) {
     this.body = body;
     return this;
   }

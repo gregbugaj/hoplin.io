@@ -1,8 +1,11 @@
 package io.hoplin;
 
+import static io.hoplin.json.JsonMessagePayloadCodec.serializeWithDefaults;
+import static io.hoplin.metrics.QueueMetrics.Factory.getInstance;
+import static io.hoplin.metrics.QueueMetrics.getKey;
+
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import io.hoplin.json.JsonMessagePayloadCodec;
 import io.hoplin.metrics.QueueMetrics;
 import java.io.IOException;
 import java.util.Map;
@@ -11,23 +14,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Helper class for publishing message to the queue
+ * Helper class for publishing messages, that does not require a client
  *
  * @see DefaultRabbitMQClient
  * @see DefaultQueueConsumer
+ * @see RetryPolicy
  */
 public class Publisher {
 
   private static final Logger log = LoggerFactory.getLogger(Publisher.class);
 
-  private JsonMessagePayloadCodec codec;
-
-  public Publisher() {
-    this.codec = new JsonMessagePayloadCodec();
-  }
-
   /***
-   * Publish message to a specific channel.
+   * Publish message to a specific exchange.
    *
    * @param channel
    * @param exchange
@@ -39,7 +37,7 @@ public class Publisher {
   public <T> void basicPublish(final Channel channel, final String exchange,
       final String routingKey, final T message,
       final Map<String, Object> headers) {
-    final QueueMetrics metrics = QueueMetrics.Factory.getInstance(exchange + "-" + routingKey);
+    final QueueMetrics metrics = getInstance(getKey(exchange, routingKey));
 
     try {
       final BasicProperties props = createBasisProperties(headers);
@@ -47,7 +45,7 @@ public class Publisher {
 
       log.info("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey,
           messageId);
-      final byte[] body = codec.serialize(message);
+      final byte[] body = serializeWithDefaults(message);
       channel.basicPublish(exchange, routingKey, props, body);
 
       // mark
@@ -60,7 +58,7 @@ public class Publisher {
   }
 
   /**
-   * Publish message to a specific channel
+   * Publish message to a specific exchange
    *
    * @param channel
    * @param exchange
@@ -71,7 +69,8 @@ public class Publisher {
    */
   public <T> void basicPublish(final Channel channel, final String exchange,
       final String routingKey, BasicProperties props, byte[] body) {
-    final QueueMetrics metrics = QueueMetrics.Factory.getInstance(exchange + "-" + routingKey);
+
+    final QueueMetrics metrics = getInstance(getKey(exchange, routingKey));
     try {
       log.info("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey,
           props.getMessageId());
@@ -87,6 +86,12 @@ public class Publisher {
     }
   }
 
+  /**
+   * Create {@link com.rabbitmq.client.BasicProperties}
+   *
+   * @param headers
+   * @return
+   */
   public BasicProperties createBasisProperties(
       final Map<String, Object> headers) {
     return new BasicProperties.Builder()
