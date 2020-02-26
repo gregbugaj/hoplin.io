@@ -530,8 +530,30 @@ Sample `MessageError` with original payload.
 ```
 
 ## Metrics
-Metrics can be added to the current client by starting Metrics Publisher
+Hoplin does not have any dependencies on any existing metrics libraries but rather it provides a way 
+to hook into the underlying metrics via `MetricsPublisher` interface. 
+Metrics expose a number of key/value pairs that are updated and send to metrics consumers. 
 
+Depending on which client we use the metrics key will be different and it is up to the consumer to normalize the name. 
+Data is packed into a `Map<String, Map<String,String>>` structure, this allows us to add metrics easily without breaking any API.
+
+**Sample Payload**
+
+```json
+ {exchange.rpc.logs-rpc.request.log={received.size=211, sent.size=204, received.count=1, sent.count=1}}
+``` 
+ 
+```text
+Metrics Key      = exchange.rpc.logs-rpc.request.log 
+received.size    = Amount of data received by this client
+received.count   = Number of messages received
+
+sent.size        = Amount of data sent by this client
+sent.count       = Number of messages sent
+``` 
+
+**Instantiating metrics consumer**
+ 
 ```java
     FunctionMetricsPublisher
         .consumer(EmitLogTopic::metrics)
@@ -549,14 +571,16 @@ Signature for the reporting method
   }
 ```
 
+
 # Client Interoperability
+
 The client is able to communicate between different RabbitMQ client (C#, Python, Ruby, etc...)
 by using reflection based message parsing. This means that there is no need for `MessagePayload` envelope,
 except when using RPC client. Trade of here is speed and lack of message polymorphism. Messages wrapped
 in envelope do not need to perform `type` determination. 
 
 ### With envelope
-```json5
+```json
 {
   "status": 0,
   "payload": {
