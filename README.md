@@ -539,7 +539,7 @@ Data is packed into a `Map<String, Map<String,String>>` structure, this allows u
 
 **Sample Payload**
 
-```json
+```text
  {exchange.rpc.logs-rpc.request.log={received.size=211, sent.size=204, received.count=1, sent.count=1}}
 ``` 
  
