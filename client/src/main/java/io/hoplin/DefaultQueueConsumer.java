@@ -121,10 +121,12 @@ public class DefaultQueueConsumer extends DefaultConsumer {
                 reply = execute(context, castedValue.get(), handler);
               }
             }
+            if (log.isDebugEnabled()) {
+              log.debug("reply : {}", reply);
+            }
+
             // can't have multiple handlers for batched requests
-            log.info("reply : {}", reply);
             if (batchRequest) {
-              log.info("reply value : {}", reply.getValue());
               break;
             }
           } catch (final Exception e) {
@@ -146,13 +148,17 @@ public class DefaultQueueConsumer extends DefaultConsumer {
           final Object batchId = headers.get("x-batch-id");
           headers.put("x-batch-correlationId", correlationId);
 
-          log.info("BatchIncoming context        >  {}", context);
-          log.info("BatchIncoming replyTo        >  {}", replyTo);
-          log.info("BatchIncoming correlationId  >  {}", correlationId);
-          log.info("BatchIncoming batchId        >  {}", batchId);
+          if (log.isDebugEnabled()) {
+            log.debug("BatchIncoming context        >  {}", context);
+            log.debug("BatchIncoming replyTo        >  {}", replyTo);
+            log.debug("BatchIncoming correlationId  >  {}", correlationId);
+            log.debug("BatchIncoming batchId        >  {}", batchId);
+          }
 
           final JobExecutionInformation executionInfo = context.getExecutionInfo();
-          log.info("Handler time : {}", executionInfo.asElapsedMillis());
+          if (log.isDebugEnabled()) {
+            log.debug("Handler time : {}", executionInfo.asElapsedMillis());
+          }
 
           if (!reply.isExceptional()) {
             publisher.basicPublish(getChannel(), "", replyTo, reply.getValue(), headers);

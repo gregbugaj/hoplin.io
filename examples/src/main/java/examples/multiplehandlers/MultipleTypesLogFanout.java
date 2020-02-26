@@ -2,6 +2,7 @@ package examples.multiplehandlers;
 
 import examples.BaseExample;
 import examples.LogDetail;
+import examples.LogDetailType2;
 import io.hoplin.Binding;
 import io.hoplin.BindingBuilder;
 import io.hoplin.ExchangeClient;
@@ -22,7 +23,7 @@ public class MultipleTypesLogFanout extends BaseExample {
     final ExchangeClient client = ExchangeClient.fanout(options(), binding);
 
     client.publish(new LogDetail("DetailType A", "info"));
-//      client.publish(new LogDetailType2("DetailType B", "info"));
+    client.publish(new LogDetailType2("DetailType B", "info"));
   }
 
   private static Binding bind() {

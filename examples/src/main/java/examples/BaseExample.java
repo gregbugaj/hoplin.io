@@ -27,7 +27,7 @@ public abstract class BaseExample {
     }
 
     /**
-     * s Create options from connection string
+     * Create options from connection string
      *
      * @param connectionString
      * @return
@@ -43,8 +43,10 @@ public abstract class BaseExample {
      */
     protected static void info(final SubscriptionResult subscription) {
         Objects.requireNonNull(subscription);
-        log.info("Subscription Exchange : {}", subscription.getExchange());
-        log.info("Subscription Queue    : {}", subscription.getQueue());
+        log.info("Subscription Exchange         : {}", subscription.getExchange());
+        log.info("Subscription Queue            : {}", subscription.getQueue());
+        log.info("Subscription ErrorExchange    : {}", subscription.getErrorExchangeName());
+        log.info("Subscription ErrrorQueue      : {}", subscription.getErrorQueueName());
     }
 
 }

@@ -27,6 +27,19 @@ public class RpcClientExample extends BaseExample {
     final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient
         .create(options(), binding);
 
+    final LogDetailResponse response = client
+        .request(new LogDetailRequest("Request message 1", "info"));
+  }
+
+
+  public static void mainXX(final String... args) throws IOException {
+    final Binding binding = bind();
+    log.info("Binding : {}", binding);
+
+    // Blocking
+    final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient
+        .create(options(), binding);
+
     System.out.println("Waiting");
 //        while(true)
     {

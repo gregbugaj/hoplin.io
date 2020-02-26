@@ -6,6 +6,7 @@ import io.hoplin.DirectExchangeClient;
 import io.hoplin.ExchangeClient;
 import io.hoplin.MessageContext;
 import io.hoplin.Reply;
+import io.hoplin.SubscriptionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,18 +22,22 @@ public class ReceiveBatchJob extends BaseExample {
   public static void main(final String... args) throws InterruptedException {
     final ExchangeClient client = DirectExchangeClient.create(options(), EXCHANGE);
 
-    client.subscribe("test", LogDetail.class, ReceiveBatchJob::handleWithReturn);
+    final SubscriptionResult subscription = client
+        .subscribe("test", LogDetail.class, ReceiveBatchJob::handleWithReply);
+
+    log.info("Subscription : {}", subscription);
     Thread.currentThread().join();
   }
 
-  private static Reply<LogDetail> handleWithReturn(final LogDetail msg,
+  private static Reply<LogDetail> handleWithReply(final LogDetail msg,
       final MessageContext context) {
     final LogDetail reply = new LogDetail("Reply Message > " + System.nanoTime(), "WARN");
     log.info("Processing message : {} , {}", msg, context);
 
-   /* if(true)
-      throw new IllegalStateException("Hello Error");*/
-
     return Reply.with(reply);
+  }
+
+  private static LogDetail handleDirectReturn(final LogDetail msg) {
+    return new LogDetail("ReplyX Message > " + System.nanoTime(), "WARN");
   }
 }
