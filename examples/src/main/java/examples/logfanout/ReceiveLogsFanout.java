@@ -21,8 +21,7 @@ public class ReceiveLogsFanout extends BaseExample {
   }
 
   private static void handleWithContext(final String msg, final MessageContext context) {
-    log.info("Incoming context >  {}", context);
-    log.info("Incoming msg     >  {}", msg);
+      log.info("Incoming msg     >  {}", msg);
   }
 
   private static void handle(final String msg) {

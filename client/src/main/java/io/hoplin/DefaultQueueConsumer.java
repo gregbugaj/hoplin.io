@@ -38,6 +38,8 @@ public class DefaultQueueConsumer extends DefaultConsumer {
   private final ArrayListMultimap<Class<?>, MethodReference<?>> handlers = ArrayListMultimap
       .create();
 
+  private final Publisher publisher;
+
   private final Executor executor;
 
   /**
@@ -69,6 +71,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
     this.executor = Objects.requireNonNull(executor);
     this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
     this.metrics = QueueMetrics.Factory.getInstance(queue);
+    this.publisher = new Publisher(executor);
   }
 
   /**
@@ -141,7 +144,6 @@ public class DefaultQueueConsumer extends DefaultConsumer {
         }
 
         if (batchRequest) {
-          final Publisher publisher = new Publisher();
           final String replyTo = properties.getReplyTo();
           final String correlationId = properties.getCorrelationId();
           final Map<String, Object> headers = properties.getHeaders();

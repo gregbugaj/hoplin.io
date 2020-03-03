@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,9 +25,13 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
 
   private final Channel channel;
 
+  private final Publisher publisher;
+
   public DefaultConsumerErrorStrategy(final Channel channel) {
     this.channel = Objects.requireNonNull(channel);
+    this.publisher = new Publisher(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
   }
+
 
   @SuppressWarnings("unchecked")
   @Override
@@ -43,7 +48,6 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
     }
 
     final MessageReceivedInfo info = context.getReceivedInfo();
-    final Publisher publisher = new Publisher();
     final BasicProperties properties = publisher.createBasisProperties(Collections.emptyMap());
     final byte[] message = createMessage(context, throwable);
 
@@ -57,7 +61,7 @@ public class DefaultConsumerErrorStrategy implements ConsumerErrorStrategy {
       final String routingKey = info.getRoutingKey();
 
       publisher
-          .basicPublish(channel, dlqExchangeName, routingKey, properties, message);
+          .basicPublishAsync(channel, dlqExchangeName, routingKey, properties, message);
 
       return AcknowledgmentStrategies.BASIC_ACK.strategy();
     } catch (final Exception e) {

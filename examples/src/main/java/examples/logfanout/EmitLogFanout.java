@@ -25,14 +25,19 @@ public class EmitLogFanout extends BaseExample {
 
     final ExchangeClient client = ExchangeClient.fanout(options(), binding);
 
+    long msgId = 0;
     int i = 0;
-    while (i++ < 1000) {
-      client.publish("Msg : " + System.currentTimeMillis());
-      Thread.sleep(1000L);
+//    while (i++ < 1000) {
+    while(true){
+
+      for(int j = 0; j< 100; j++) {
+        client.publish("Msg : "+ (++msgId) +" > " + System.currentTimeMillis());
+      }
+      Thread.sleep(10L);
 //            break;
     }
 
-    Thread.currentThread().join();
+//    Thread.currentThread().join();
   }
 
   private static Binding bind() {

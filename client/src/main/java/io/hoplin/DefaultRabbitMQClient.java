@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -31,10 +32,14 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private DefaultQueueConsumer consumer;
 
+  private final Publisher publisher;
+
   public DefaultRabbitMQClient(final RabbitMQOptions options) {
     this.options = Objects.requireNonNull(options, "Options are required and can't be null");
     this.provider = create();
     this.channel = provider.acquire();
+    this.publisher = new Publisher(Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors()));
+
     channel.addReturnListener(new UnroutableMessageReturnListener(options));
   }
 
@@ -234,9 +239,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   public <T> void basicPublish(final String exchange, final String routingKey, final T message,
       final Map<String, Object> headers) {
 
-    final Publisher publisher = new Publisher();
     with(channel -> {
-      publisher.basicPublish(channel, exchange, routingKey, message, headers);
+      publisher.basicPublishAsync(channel, exchange, routingKey, message, headers);
       return null;
     });
   }

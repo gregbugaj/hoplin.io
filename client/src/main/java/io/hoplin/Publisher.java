@@ -9,12 +9,16 @@ import com.rabbitmq.client.Channel;
 import io.hoplin.metrics.QueueMetrics;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Helper class for publishing messages, that does not require a client
+ * Helper class for publishing messages, that does not require a full client
  *
  * @see DefaultRabbitMQClient
  * @see DefaultQueueConsumer
@@ -24,8 +28,54 @@ public class Publisher {
 
   private static final Logger log = LoggerFactory.getLogger(Publisher.class);
 
+  private final Executor executor;
+
+  public Publisher(final Executor executor) {
+    this.executor = Objects.requireNonNull(executor);
+  }
+
   /***
    * Publish message to a specific exchange.
+   *
+   * @param <T>
+   * @param channel
+   * @param exchange
+   * @param routingKey
+   * @param message
+   * @param headers
+   * @return
+   */
+  public <T> CompletableFuture<Void> basicPublishAsync(final Channel channel, final String exchange,
+      final String routingKey, final T message,
+      final Map<String, Object> headers) {
+    Objects.requireNonNull(channel);
+    Objects.requireNonNull(exchange);
+
+    return CompletableFuture.runAsync(() -> {
+      final QueueMetrics metrics = getInstance(getKey(exchange, routingKey));
+
+      try {
+        final BasicProperties props = createBasisProperties(headers);
+        final String messageId = props.getMessageId();
+
+        if (log.isDebugEnabled()) {
+          log.debug("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey,
+              messageId);
+        }
+
+        final byte[] body = serializeWithDefaults(message);
+        channel.basicPublish(exchange, routingKey, props, body);
+        metrics.markMessageSent();
+        metrics.incrementSend(body.length);
+      } catch (final IOException e) {
+        metrics.markMessagePublishFailed();
+        throw new HoplinRuntimeException("Unable to publish message", e);
+      }
+    }, executor);
+  }
+
+  /**
+   * Publish message on specific channel. This method blocks
    *
    * @param channel
    * @param exchange
@@ -37,53 +87,48 @@ public class Publisher {
   public <T> void basicPublish(final Channel channel, final String exchange,
       final String routingKey, final T message,
       final Map<String, Object> headers) {
-    final QueueMetrics metrics = getInstance(getKey(exchange, routingKey));
-
+    final CompletableFuture<Void> completable = basicPublishAsync(channel, exchange,
+        routingKey, message, headers);
     try {
-      final BasicProperties props = createBasisProperties(headers);
-      final String messageId = props.getMessageId();
-
-      log.info("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey,
-          messageId);
-      final byte[] body = serializeWithDefaults(message);
-      channel.basicPublish(exchange, routingKey, props, body);
-
-      // mark
-      metrics.markMessageSent();
-      metrics.incrementSend(body.length);
-    } catch (final IOException e) {
-      metrics.markMessagePublishFailed();
-      throw new HoplinRuntimeException("Unable to publish message", e);
+      completable.get();
+    } catch (final InterruptedException | ExecutionException e) {
+      throw new HoplinRuntimeException("Publishing exception ", e);
     }
   }
 
   /**
    * Publish message to a specific exchange
    *
+   * @param <T>
    * @param channel
    * @param exchange
    * @param routingKey
    * @param props
    * @param body
-   * @param <T>
+   * @return
    */
-  public <T> void basicPublish(final Channel channel, final String exchange,
+  public <T> CompletableFuture<Void> basicPublishAsync(final Channel channel, final String exchange,
       final String routingKey, BasicProperties props, byte[] body) {
 
-    final QueueMetrics metrics = getInstance(getKey(exchange, routingKey));
-    try {
-      log.info("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey,
-          props.getMessageId());
+    Objects.requireNonNull(channel);
+    Objects.requireNonNull(exchange);
+    Objects.requireNonNull(body);
 
-      channel.basicPublish(exchange, routingKey, props, body);
-
-      // mark
-      metrics.markMessageSent();
-      metrics.incrementSend(body.length);
-    } catch (final IOException e) {
-      metrics.markMessagePublishFailed();
-      throw new HoplinRuntimeException("Unable to publish message", e);
-    }
+    return CompletableFuture.runAsync(() -> {
+      final QueueMetrics metrics = getInstance(getKey(exchange, routingKey));
+      try {
+        if (log.isDebugEnabled()) {
+          log.debug("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey,
+              props.getMessageId());
+        }
+        channel.basicPublish(exchange, routingKey, props, body);
+        metrics.markMessageSent();
+        metrics.incrementSend(body.length);
+      } catch (final IOException e) {
+        metrics.markMessagePublishFailed();
+        throw new HoplinRuntimeException("Unable to publish message", e);
+      }
+    }, executor);
   }
 
   /**
