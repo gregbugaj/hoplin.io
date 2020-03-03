@@ -3,6 +3,7 @@ package io.hoplin.rpc;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.Binding;
+import io.hoplin.ConnectionProvider;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
 import io.hoplin.RabbitMQClient;
@@ -27,36 +28,40 @@ import org.slf4j.LoggerFactory;
 public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
 
   private static final Logger log = LoggerFactory.getLogger(DefaultRpcClient.class);
-
-  private final RabbitMQClient client;
   /**
    * Exchange to send requests to
    */
   private final String exchange;
+
   private final JsonMessagePayloadCodec codec;
+
   /**
    * Channel we are communicating on
    */
   private Channel channel;
+
   /**
    * Queue where we will listen for our RPC replies
    */
   private String replyToQueueName;
+
   private RpcCallerConsumer consumer;
 
   private boolean directReply;
 
   private QueueMetrics metrics;
 
+  private final ConnectionProvider provider;
+
   public DefaultRpcClient(final RabbitMQOptions options, final Binding binding) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
 
-    this.client = RabbitMQClient.create(options);
+    this.provider = ConnectionProvider.createAndConnect(options);
     this.codec = new JsonMessagePayloadCodec();
     this.exchange = binding.getExchange();
     this.replyToQueueName = binding.getQueue();
-    this.channel = client.channel();
+    this.channel = provider.acquire();
 
     setupChannel();
     bind();
@@ -113,7 +118,7 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
     channel.addShutdownListener(sse ->
     {
       log.info("Channel Shutdown, reacquiring : channel #{}", channel.getChannelNumber());
-      channel = client.channel();
+      channel = provider.acquire();
 
       if (channel != null) {
         log.info("New channel #{}, open = {}", channel, channel.isOpen());
@@ -183,9 +188,9 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
 
   @Override
   public CompletableFuture<O> requestAsync(I request, String routingKey, Duration timeout) {
-      if (routingKey == null) {
-          throw new IllegalArgumentException("routingKey should not be null");
-      }
+    if (routingKey == null) {
+      throw new IllegalArgumentException("routingKey should not be null");
+    }
 
     final CompletableFuture<O> promise = new CompletableFuture<>();
 
@@ -208,6 +213,7 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
       metrics.incrementSend(payload.length);
       metrics.markMessageSent();
     } catch (final IOException e) {
+      metrics.markMessagePublishFailed();
       promise.completeExceptionally(e);
       log.error("Unable to send request", e);
     }
@@ -222,8 +228,8 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
   }
 
   public void close() throws IOException {
-      if (client != null) {
-          client.disconnect();
-      }
+    if (provider != null) {
+      provider.disconnect();
+    }
   }
 }

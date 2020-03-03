@@ -29,6 +29,8 @@ public class RpcClientExample extends BaseExample {
 
     final LogDetailResponse response = client
         .request(new LogDetailRequest("Request message 1", "info"));
+
+    log.info("RPC Value = {}", response);
   }
 
 

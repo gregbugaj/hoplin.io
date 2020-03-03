@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Connection provider to RabbitMQ
+ */
 public interface ConnectionProvider extends ShutdownListener {
 
   /**
@@ -16,6 +19,26 @@ public interface ConnectionProvider extends ShutdownListener {
   static ConnectionProvider create(final RabbitMQOptions config) {
     return new DefaultRabbitConnectionProvider(config);
   }
+
+  /**
+   * Create default connection provider and try to establish connection
+   *
+   * @param options
+   * @return
+   */
+  static ConnectionProvider createAndConnect(RabbitMQOptions options) {
+    try {
+      final ConnectionProvider provider = create(options);
+      if (!provider.connect()) {
+        throw new IllegalStateException("Unable to connect to broker : " + options);
+      }
+
+      return provider;
+    } catch (final IOException | TimeoutException e) {
+      throw new HoplinRuntimeException("Unable to connect to broker", e);
+    }
+  }
+
 
   /**
    * Acquire underlying {@link Channel}

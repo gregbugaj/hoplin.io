@@ -36,25 +36,13 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   public DefaultRabbitMQClient(final RabbitMQOptions options) {
     this.options = Objects.requireNonNull(options, "Options are required and can't be null");
-    this.provider = create();
+    this.provider = ConnectionProvider.createAndConnect(options);
     this.channel = provider.acquire();
     this.publisher = new Publisher(Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors()));
 
     channel.addReturnListener(new UnroutableMessageReturnListener(options));
   }
 
-  private ConnectionProvider create() {
-    try {
-      final ConnectionProvider provider = ConnectionProvider.create(options);
-      if (!provider.connect()) {
-        throw new IllegalStateException("Unable to connect to broker : " + options);
-      }
-
-      return provider;
-    } catch (final IOException | TimeoutException e) {
-      throw new HoplinRuntimeException("Unable to connect to broker", e);
-    }
-  }
 
   @Override
   public <T> void basicConsume(final String queue, final Class<T> clazz,
