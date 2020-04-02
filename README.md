@@ -7,6 +7,19 @@ To make working with RabbitMQ as simple as possible with minimum dependencies.
 
 # Quick start
 
+
+## Add dependency to your project 
+
+Via Maven
+
+```java
+	<dependency>
+		<groupId>io.hoplin</groupId>
+		<artifactId>hoplin-client</artifactId>
+		<version>1.1.2</version>
+	</dependency>
+```
+
 ## Connecting to a broker
 
 Minimal example that will bootstrap a `direct` exchange client and connect to local instance 
