@@ -1,4 +1,4 @@
-package clientspam.metrics;
+package clientspam;
 
 import examples.BaseExample;
 import examples.LogDetail;

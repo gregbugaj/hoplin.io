@@ -1,4 +1,4 @@
-package examples.metrics.logtopic;
+package examples.metrics;
 
 import examples.BaseExample;
 import examples.LogDetail;
@@ -13,17 +13,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Metrics usage
+ * Metrics usage example for publisher
  */
-public class EmitLogTopic extends BaseExample {
+public class EmitMetrics extends BaseExample {
 
-  private static final Logger log = LoggerFactory.getLogger(EmitLogTopic.class);
+  private static final Logger log = LoggerFactory.getLogger(EmitMetrics.class);
 
   private static final String EXCHANGE = "examples.metrics";
 
   public static void main(final String... args) throws InterruptedException {
     FunctionMetricsPublisher
-        .consumer(EmitLogTopic::metrics)
+        .consumer(EmitMetrics::metrics)
         .withInterval(1, TimeUnit.SECONDS)
         .withResetOnReporting(false)
         .build()
@@ -52,7 +52,7 @@ public class EmitLogTopic extends BaseExample {
   }
 
   private static void metrics(final Map<String, Map<String, String>> o) {
-    System.out.println("Metrics Info : " + o);
+    log.info("Metrics Info : {}", o);
   }
 
   private static ExchangeClient clientFromExchange() {

@@ -1,19 +1,18 @@
-package examples.metrics.logtopic;
+package examples.metrics;
 
 import examples.BaseExample;
 import examples.LogDetail;
 import examples.logdirect.EmitLogDirect;
-import io.hoplin.Binding;
-import io.hoplin.BindingBuilder;
 import io.hoplin.ExchangeClient;
 import io.hoplin.SubscriptionResult;
-import io.hoplin.TopicExchange;
 import io.hoplin.metrics.FunctionMetricsPublisher;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-public class ReceiverMetrics extends BaseExample {
+/**
+ * Metrics usage example for consumer
+ */
+public class MetricsReceiver extends BaseExample {
 
   private static final Logger log = LoggerFactory.getLogger(EmitLogDirect.class);
 
@@ -21,7 +20,7 @@ public class ReceiverMetrics extends BaseExample {
 
     // Setup metrics
     FunctionMetricsPublisher
-        .consumer(ReceiverMetrics::metrics)
+        .consumer(MetricsReceiver::metrics)
         .withInterval(1, TimeUnit.SECONDS)
         .withResetOnReporting(false)
         .build()

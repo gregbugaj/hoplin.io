@@ -71,11 +71,13 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
   /**
    * Create new {@link DefaultRpcClient}
    *
+   * @param <I> Input type
+   * @param <O> Output type
    * @param options the connection options to use
    * @param binding the binding to use
    * @return new Direct Exchange client setup in server mode
    */
-  public static RpcClient create(final RabbitMQOptions options, final Binding binding) {
+  public static<I,O> RpcClient<I, O> create(final RabbitMQOptions options, final Binding binding) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
 
