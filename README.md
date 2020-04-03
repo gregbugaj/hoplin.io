@@ -28,8 +28,10 @@ Gradle Kotlin DSL
 ```java
 implementation("io.hoplin:hoplin-client:1.1.3")
 ```
-
-
+Download directly from Maven Central
+```
+https://repo1.maven.org/maven2/io/hoplin/
+```
 
 ## Connecting to a broker
 
