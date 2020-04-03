@@ -678,6 +678,9 @@ rabbitmqctl list_connections
 # Code Style
 [Google Style Guides](https://github.com/google/styleguide)
 
+# Versioning
+Following [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) guidline.
+
 # Resources
 
 [RabbitMQ](https://www.rabbitmq.com/)
