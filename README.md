@@ -15,18 +15,18 @@ Apache Maven
 	<dependency>
 		<groupId>io.hoplin</groupId>
 		<artifactId>hoplin-client</artifactId>
-		<version>1.1.3</version>
+		<version>1.1.4-SNAPSHOT</version>
 	</dependency>
 ```
 
 Gradle Groovy DSL
 ```java
-implementation 'io.hoplin:hoplin-client:1.1.3'
+implementation 'io.hoplin:hoplin-client:1.1.4-SNAPSHOT'
 ```
 
 Gradle Kotlin DSL
 ```java
-implementation("io.hoplin:hoplin-client:1.1.3")
+implementation("io.hoplin:hoplin-client:1.1.4-SNAPSHOT")
 ```
 Download directly from Maven Central
 ```

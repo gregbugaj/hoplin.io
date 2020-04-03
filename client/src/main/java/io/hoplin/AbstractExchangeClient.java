@@ -357,7 +357,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
     // Wrap our message original message
     final MessagePayload<T> payload = new MessagePayload<>(message);
     payload.setType(message.getClass());
-    client.basicPublish(binding.getExchange(), "", payload);
+    client.basicPublish(binding.getExchange(), routingKey, payload);
 
     return promise;
   }
