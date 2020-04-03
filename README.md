@@ -639,6 +639,14 @@ public class LogDetail {
 }
 ```
 
+Publishing a message without envelope. For `Consumer<MessageConfiguration>` `setNativeMessageFormat(true)`.
+```java
+// configuring publish without envelope
+ExchangeClient client = clientFromExchange();
+LogDetail detail = getLogDetail();
+client.publish(detail, cfg -> cfg.setNativeMessageFormat(true));
+```
+
 ## Closing clients
 Client can be closed couple ways.
 First by calling `close` method on the client itself.
