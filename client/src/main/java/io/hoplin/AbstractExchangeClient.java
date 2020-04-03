@@ -310,11 +310,8 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
     // populate our configurations with default etc...
     final MessageConfiguration conf = new MessageConfiguration();
-    final Consumer<MessageConfiguration> composite = cfg.andThen(after -> {
-      after.setNativeMessageFormat(true);
-    });
 
-    composite.accept(conf);
+    cfg.accept(conf);
     Object val;
 
     if (conf.isNativeMessageFormat()) {
