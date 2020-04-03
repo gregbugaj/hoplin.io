@@ -2,8 +2,9 @@ package clientspam;
 
 import examples.BaseExample;
 import examples.LogDetail;
+import io.hoplin.CloseableExchangeClient;
 import io.hoplin.ExchangeClient;
-import java.util.Map;
+import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,19 +19,40 @@ public class SpamClients extends BaseExample {
 
   public static void main(final String... args) throws InterruptedException {
     log.info("Starting producer for exchange : {}", EXCHANGE);
+// Connections will not be closed until client exits the application
+    spam();
 
-    for(int i = 0 ; i < 1; ++i) {
-      final ExchangeClient client = clientFromExchange();
-      client.publish(createMessage("warning"), "log.spam");
 
-      client.awaitQuiescence();
-    }
+    // Connections will not be closed by calling close
+//     spamAndClose();
+
+    // Connections will not be closed via try-with-resources
+//    spamAndAutoClose();
 
     Thread.currentThread().join();
   }
 
-  private static void metrics(final Map<String, Map<String, String>> o) {
-    log.info("Metrics Info : {}", o);
+  private static void spam() {
+    for (int i = 0; i < 1; ++i) {
+      final ExchangeClient client = clientFromExchange();
+      client.publish(createMessage("warning"), "log.spam");
+    }
+  }
+
+  private static void spamAndClose() {
+    for (int i = 0; i < 100; ++i) {
+      final ExchangeClient client = clientFromExchange();
+      client.publish(createMessage("warning"), "log.spam");
+      client.close();
+    }
+  }
+
+  private static void spamAndAutoClose() {
+    for (int i = 0; i < 100; ++i) {
+      try (final CloseableExchangeClient client = clientFromExchange().asClosable()) {
+        client.publish(createMessage("warning"), "log.spam");
+      }
+    }
   }
 
   private static ExchangeClient clientFromExchange() {

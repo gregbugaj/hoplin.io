@@ -33,6 +33,7 @@ public class EmitMetrics extends BaseExample {
     final ExchangeClient client = clientFromBinding();
     client.publish(createMessage("warning"), "log.critical.warning");
 
+
     Thread.currentThread().join();
 
     if (true) {

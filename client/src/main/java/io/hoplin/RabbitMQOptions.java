@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.ProtectionDomain;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -216,7 +217,12 @@ public class RabbitMQOptions {
   }
 
   private String findApplicationName() {
-    return "unknown";
+    final String name = new File(RabbitMQOptions.class.getProtectionDomain()
+        .getCodeSource()
+        .getLocation()
+        .getPath())
+        .getName();
+    return name;
   }
 
   private String getHostName() {

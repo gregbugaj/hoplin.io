@@ -48,11 +48,13 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
         throw new IllegalArgumentException("Invalid rabbitmq connection uri " + uri);
       }
     } else {
+
       cf.setUsername(config.getUser());
       cf.setPassword(config.getPassword());
       cf.setHost(config.getHost());
       cf.setPort(config.getPort());
       cf.setVirtualHost(config.getVirtualHost());
+
     }
 
     if (config.isTlsEnabled()) {

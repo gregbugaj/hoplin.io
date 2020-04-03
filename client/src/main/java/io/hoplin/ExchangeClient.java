@@ -360,4 +360,15 @@ public interface ExchangeClient {
    * @param unit the time unit to wait
    */
   void awaitQuiescence(long time, TimeUnit unit);
+
+  /**
+   * Closes associated connections, handlers, executors
+   */
+  void close();
+
+  /**
+   * Wrap existing client in {@link AutoCloseable}
+   * @return io.hoplin.ClosableExchangeClient
+   */
+  CloseableExchangeClient asClosable();
 }

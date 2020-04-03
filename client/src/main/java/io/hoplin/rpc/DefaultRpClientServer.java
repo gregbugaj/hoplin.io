@@ -69,6 +69,25 @@ public class DefaultRpClientServer<I, O> implements RpClientServer<I, O> {
   }
 
   @Override
+
+  public void close() {
+    if (server != null) {
+      try {
+        server.close();
+      } catch (Exception e) {
+        // suppressed
+      }
+    }
+    if (client != null) {
+      try {
+        client.close();
+      } catch (Exception e) {
+        // suppressed
+      }
+    }
+  }
+
+  @Override
   public void respondAsync(final Function<I, O> handler) {
     server.respondAsync(handler);
   }

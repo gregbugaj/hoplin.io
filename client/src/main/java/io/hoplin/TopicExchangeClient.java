@@ -28,6 +28,7 @@ public class TopicExchangeClient extends AbstractExchangeClient {
   public static ExchangeClient create(final RabbitMQOptions options, final Binding binding) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
+
     return new TopicExchangeClient(options, binding);
   }
 

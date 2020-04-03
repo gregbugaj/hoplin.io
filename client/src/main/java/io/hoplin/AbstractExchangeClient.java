@@ -6,6 +6,7 @@ import static io.hoplin.ConsumerErrorStrategy.createDlqQueueName;
 import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -351,6 +352,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
     Objects.requireNonNull(routingKey);
     Objects.requireNonNull(cfg);
 
+    // FIXME : This is broken
     final CompletableFuture<Void> promise = new CompletableFuture<>();
     // Wrap our message original message
     final MessagePayload<T> payload = new MessagePayload<>(message);
@@ -362,11 +364,27 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
   @Override
   public void awaitQuiescence() {
-
+    // NOOP
   }
 
   @Override
   public void awaitQuiescence(long time, TimeUnit unit) {
+    // NOOP
+  }
 
+  @Override
+  public void close() {
+    if (client != null) {
+      try {
+        client.disconnect();
+      } catch (IOException e) {
+        log.warn("Error during close", e);
+      }
+    }
+  }
+
+  @Override
+  public CloseableExchangeClient asClosable() {
+    return new DefaultClosableExchangeClient(this);
   }
 }

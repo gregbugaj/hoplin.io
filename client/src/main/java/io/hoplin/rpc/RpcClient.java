@@ -1,5 +1,6 @@
 package io.hoplin.rpc;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
@@ -85,4 +86,8 @@ public interface RpcClient<I, O> {
   CompletableFuture<O> requestAsync(final I request, final String routingKey,
       final Duration timeout);
 
+  /**
+   * Closes associated connections, handlers, executors
+   */
+  void close();
 }

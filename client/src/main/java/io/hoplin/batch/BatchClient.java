@@ -44,5 +44,8 @@ public interface BatchClient {
    */
   void cancel(final UUID batchId);
 
-
+  /**
+   * Closes associated connections, handlers, executors
+   */
+  void close();
 }

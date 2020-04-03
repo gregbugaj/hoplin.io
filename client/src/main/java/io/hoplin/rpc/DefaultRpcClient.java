@@ -71,13 +71,14 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
   /**
    * Create new {@link DefaultRpcClient}
    *
-   * @param <I> Input type
-   * @param <O> Output type
+   * @param <I>     Input type
+   * @param <O>     Output type
    * @param options the connection options to use
    * @param binding the binding to use
    * @return new Direct Exchange client setup in server mode
    */
-  public static<I,O> RpcClient<I, O> create(final RabbitMQOptions options, final Binding binding) {
+  public static <I, O> RpcClient<I, O> create(final RabbitMQOptions options,
+      final Binding binding) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
 
@@ -229,9 +230,14 @@ public class DefaultRpcClient<I, O> implements RpcClient<I, O> {
     return codec.serialize(msg);
   }
 
-  public void close() throws IOException {
+  @Override
+  public void close() {
     if (provider != null) {
-      provider.disconnect();
+      try {
+        provider.disconnect();
+      } catch (IOException e) {
+        log.warn("Error during close", e);
+      }
     }
   }
 }

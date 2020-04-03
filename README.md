@@ -626,6 +626,40 @@ public class LogDetail {
 }
 ```
 
+## Closing clients
+Client can be closed couple ways.
+First by calling `close` method on the client itself.
+
+```java
+  ExchangeClient client = clientFromExchange();
+  // do something here 
+  client.close();
+```
+
+Second method would to be get the client wrapped in `AutoCloseable` as `CloseableExchangeClient`
+and using `try-with-resources` 
+```java
+    try (CloseableExchangeClient client = clientFromExchange().asClosable()) {
+       // do something here  
+    }
+```
+Both of this methods will  invoke the same `close` method. Deciding which method suit best depends
+on the use case of how the client is used.
+
+## Notes
+
+Checking number of active rabbitmq connections
+
+Method 1
+```bash
+    sudo netstat -anp | grep :5672 | grep ESTABLISHED | wc -l
+```
+Method 2
+
+```bash
+rabbitmqctl list_connections
+```
+
 `hoplin_default_error_queue`
 
 # Code Style

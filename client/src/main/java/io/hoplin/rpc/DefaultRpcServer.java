@@ -3,6 +3,7 @@ package io.hoplin.rpc;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import io.hoplin.Binding;
+import io.hoplin.ConnectionProvider;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.RabbitMQClient;
 import io.hoplin.RabbitMQOptions;
@@ -24,8 +25,8 @@ import org.slf4j.LoggerFactory;
 public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
 
   private static final Logger log = LoggerFactory.getLogger(DefaultRpcServer.class);
-
-  private final RabbitMQClient client;
+ 
+  private final ConnectionProvider provider;
 
   private final QueueMetrics metrics;
   /**
@@ -55,8 +56,8 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
 
-    this.client = RabbitMQClient.create(options);
-    this.channel = client.channel();
+    this.provider = ConnectionProvider.createAndConnect(options);
+    this.channel = provider.acquire();
     this.executor = createExecutor();
 
     this.exchange = binding.getExchange();
@@ -94,7 +95,7 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
     channel.addShutdownListener(sse ->
     {
       log.info("Channel Shutdown, reacquiring : channel #{}", channel.getChannelNumber());
-      channel = client.channel();
+      channel = provider.acquire();
 
       if (channel != null) {
         log.info("New channel #{}, open = {}", channel, channel.isOpen());
@@ -156,9 +157,14 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
     consumeRequest(handler);
   }
 
-  public void close() throws IOException {
-    if (client != null) {
-      client.disconnect();
+  @Override
+  public void close() {
+    if (provider != null) {
+      try {
+        provider.disconnect();
+      } catch (IOException e) {
+        log.warn("Error during close", e);
+      }
     }
   }
 }
