@@ -10,15 +10,26 @@ To make working with RabbitMQ as simple as possible with minimum dependencies.
 
 ## Add dependency to your project 
 
-Via Maven
-
+Apache Maven
 ```java
 	<dependency>
 		<groupId>io.hoplin</groupId>
 		<artifactId>hoplin-client</artifactId>
-		<version>1.1.2</version>
+		<version>1.1.3</version>
 	</dependency>
 ```
+
+Gradle Groovy DSL
+```java
+implementation 'io.hoplin:hoplin-client:1.1.3'
+```
+
+Gradle Kotlin DSL
+```java
+implementation("io.hoplin:hoplin-client:1.1.3")
+```
+
+
 
 ## Connecting to a broker
 
