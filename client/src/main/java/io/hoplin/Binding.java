@@ -15,16 +15,28 @@ public class Binding {
   // The queue we are binding
   private String queue;
 
+  private QueueOptions options;
+
   public Binding(final String queue, final String exchange, final Map<String, Object> arguments) {
-    this(queue, exchange, null, arguments);
+    this(queue, exchange, null, arguments, buildDefaultOptions());
   }
 
   public Binding(final String queue, final String exchange, final String routingKey,
-      final Map<String, Object> arguments) {
+      final Map<String, Object> arguments, final QueueOptions options) {
     this.queue = queue;
     this.exchange = exchange;
     this.arguments = arguments;
     this.routingKey = routingKey;
+    this.options = options;
+  }
+
+  private static QueueOptions buildDefaultOptions() {
+    final QueueOptions options = new QueueOptions();
+    options.setPublisherConfirms(true);
+    options.setPrefetchCount(1);
+    options.setAutoAck(false);
+    options.setKeepMostRecent(true);
+    return options;
   }
 
   public String getQueue() {
@@ -51,5 +63,9 @@ public class Binding {
   @Override
   public String toString() {
     return exchange + ":" + queue + ":" + routingKey + ":" + arguments;
+  }
+
+  public QueueOptions getOptions() {
+    return options;
   }
 }

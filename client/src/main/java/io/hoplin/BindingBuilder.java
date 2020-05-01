@@ -103,6 +103,14 @@ public class BindingBuilder {
       return (T) this;
     }
 
+    QueueOptions buildOptions() {
+      final QueueOptions options = new QueueOptions();
+      options.setPublisherConfirms(publisherConfirms);
+      options.setPrefetchCount(prefetchCount);
+      options.setAutoAck(autoAck);
+      return options;
+    }
+
     public abstract Binding build();
   }
 
@@ -115,7 +123,7 @@ public class BindingBuilder {
     }
 
     public Binding build() {
-      return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap());
+      return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap(), buildOptions());
     }
   }
 
@@ -129,7 +137,7 @@ public class BindingBuilder {
 
     @Override
     public Binding build() {
-      return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap());
+      return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap(), buildOptions());
     }
   }
 
@@ -154,16 +162,16 @@ public class BindingBuilder {
      * @return
      */
     public HeaderExchangeRoutingKeyConfigurer withArgument(final String key, final Object value) {
-        if (key == null) {
-            throw new IllegalArgumentException("Key can't be null");
-        }
+      if (key == null) {
+        throw new IllegalArgumentException("Key can't be null");
+      }
 
       if ("x-match".equalsIgnoreCase(key)) {
-          if (!("any".equalsIgnoreCase(value.toString()) || "all"
-              .equalsIgnoreCase(value.toString()))) {
-              throw new IllegalArgumentException(
-                  "x-match property  can have 2 values: \"any\" or \"all\" but got :" + value);
-          }
+        if (!("any".equalsIgnoreCase(value.toString()) || "all"
+            .equalsIgnoreCase(value.toString()))) {
+          throw new IllegalArgumentException(
+              "x-match property  can have 2 values: \"any\" or \"all\" but got :" + value);
+        }
       }
 
       arguments.put(key, value);
@@ -184,7 +192,7 @@ public class BindingBuilder {
 
     @Override
     public Binding build() {
-      return new Binding(destination.queue.getName(), exchange, "", arguments);
+      return new Binding(destination.queue.getName(), exchange, "", arguments, buildOptions());
     }
   }
 }

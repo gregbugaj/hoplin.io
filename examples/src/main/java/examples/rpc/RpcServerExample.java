@@ -52,6 +52,7 @@ public class RpcServerExample extends BaseExample {
     return BindingBuilder
         .bind("rpc.request.log")
         .to(new DirectExchange("exchange.rpc.logs"))
+        .withPrefetchCount(1)
         .build()
         ;
   }

@@ -27,10 +27,11 @@ public class RpcClientExample extends BaseExample {
     final RpcClient<LogDetailRequest, LogDetailResponse> client = DefaultRpcClient
         .create(options(), binding);
 
-    final LogDetailResponse response = client
-        .request(new LogDetailRequest("Request message 1", "info"));
-
-    log.info("RPC Value = {}", response);
+    for(int i =0 ; i < 100; ++i) {
+      final LogDetailResponse response = client
+          .request(new LogDetailRequest("Request message 1", "info"));
+      log.info("RPC Value = {}", response);
+    }
   }
 
 
@@ -97,6 +98,7 @@ public class RpcClientExample extends BaseExample {
     return BindingBuilder
         .bind("rpc.request.log")
         .to(new DirectExchange("exchange.rpc.logs"))
+        .withPrefetchCount(4)
         .build()
         ;
   }

@@ -6,7 +6,6 @@ import io.hoplin.Binding;
 import io.hoplin.ConnectionProvider;
 import io.hoplin.HoplinRuntimeException;
 import io.hoplin.MessagePayload;
-import io.hoplin.RabbitMQClient;
 import io.hoplin.RabbitMQOptions;
 import io.hoplin.json.JsonMessagePayloadCodec;
 import io.hoplin.metrics.QueueMetrics;

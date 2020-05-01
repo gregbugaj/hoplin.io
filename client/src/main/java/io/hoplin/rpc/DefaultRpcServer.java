@@ -5,13 +5,14 @@ import com.rabbitmq.client.Channel;
 import io.hoplin.Binding;
 import io.hoplin.ConnectionProvider;
 import io.hoplin.HoplinRuntimeException;
-import io.hoplin.RabbitMQClient;
+import io.hoplin.QueueOptions;
 import io.hoplin.RabbitMQOptions;
 import io.hoplin.metrics.QueueMetrics;
 import java.io.IOException;
 import java.util.Objects;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ import org.slf4j.LoggerFactory;
 public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
 
   private static final Logger log = LoggerFactory.getLogger(DefaultRpcServer.class);
- 
+
   private final ConnectionProvider provider;
 
   private final QueueMetrics metrics;
@@ -33,6 +34,7 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
    * Exchange to send requests to
    */
   private final String exchange;
+
   /**
    * Channel we are communicating on Upon disconnect this channel will be reinitialized
    **/
@@ -41,29 +43,32 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
    * Routing key to use for requests
    */
   private String routingKey;
-
   /**
    * Queue name used for incoming request
    */
   private final String requestQueueName;
 
   // executor that will process incoming RPC requests
-  private final Executor executor;
+  private final ExecutorService executor;
 
   private Function<I, O> handler;
 
-  public DefaultRpcServer(final RabbitMQOptions options, final Binding binding) {
+  private final Binding binding;
+
+  public DefaultRpcServer(final RabbitMQOptions options, final Binding binding,
+      final ExecutorService executor) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
+    Objects.requireNonNull(executor);
 
     this.provider = ConnectionProvider.createAndConnect(options);
+    this.executor = executor;
     this.channel = provider.acquire();
-    this.executor = createExecutor();
-
     this.exchange = binding.getExchange();
     this.routingKey = binding.getRoutingKey();
     this.requestQueueName = binding.getQueue();
 
+    this.binding = binding;
     if (routingKey == null) {
       routingKey = "";
     }
@@ -76,18 +81,18 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
   /**
    * Create new {@link DefaultRpcServer}
    *
+   * @param <I>
+   * @param <O>
    * @param options the connection options to use
    * @param binding the binding to use
    * @return new Direct Exchange client setup in server mode
    */
-  public static RpcServer create(final RabbitMQOptions options, final Binding binding) {
-    Objects.requireNonNull(options);
-    Objects.requireNonNull(binding);
-
-    return new DefaultRpcServer<>(options, binding);
+  public static <I, O> RpcServer<I, O> create(final RabbitMQOptions options,
+      final Binding binding) {
+    return new DefaultRpcServer<>(options, binding, createExecutor());
   }
 
-  private Executor createExecutor() {
+  private static ExecutorService createExecutor() {
     return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
   }
 
@@ -132,7 +137,23 @@ public class DefaultRpcServer<I, O> implements RpcServer<I, O> {
       final AMQP.Queue.BindOk bindStatus = channel
           .queueBind(requestQueueName, exchange, routingKey);
       log.info("consumeRequest requestQueueName : {}, {}", requestQueueName, bindStatus);
-      channel.basicQos(1);
+
+      int prefetchSize = 1;
+      if (binding.getOptions() != null) {
+        final QueueOptions options = binding.getOptions();
+        prefetchSize = options.getPrefetchCount();
+      }
+      // QOS prefetch is set to unlimited (0 or -1) so we are capping it at the core pool size
+      if (prefetchSize < 1) {
+        if (executor instanceof ThreadPoolExecutor) {
+          prefetchSize = ((ThreadPoolExecutor) executor).getCorePoolSize();
+        } else {
+          prefetchSize = 1;
+        }
+      }
+
+      log.info("QOS prefetch set to : {}", prefetchSize);
+      channel.basicQos(prefetchSize);
       channel.basicConsume(requestQueueName, false,
           new RpcResponderConsumer(channel, handler, executor, metrics));
     } catch (final Exception e) {
