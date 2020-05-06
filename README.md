@@ -683,6 +683,16 @@ rabbitmqctl list_connections
 
 `hoplin_default_error_queue`
 
+
+# Release Notes
+
+## Version 1.1.5
+
+* RPC suppor tto handle multiple messages
+* Prefetch Size (QOS) can be set for the RPC Server
+* Custom executor can be supplied to RPC server
+
+
 # Code Style
 [Google Style Guides](https://github.com/google/styleguide)
 

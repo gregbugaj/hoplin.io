@@ -21,7 +21,7 @@
       <artifactId>hoplin-client</artifactId>
       <groupId>io.hoplin</groupId>
       <scope>compile</scope>
-      <version>1.1.5-SNAPSHOT</version>
+      <version>1.1.5</version>
     </dependency>
 
     <dependency>
@@ -43,7 +43,7 @@
   <parent>
     <artifactId>hoplin-parent</artifactId>
     <groupId>io.hoplin</groupId>
-    <version>1.1.5-SNAPSHOT</version>
+    <version>1.1.5</version>
   </parent>
 
   <properties>
