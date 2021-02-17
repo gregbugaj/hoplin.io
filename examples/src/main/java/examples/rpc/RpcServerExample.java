@@ -6,6 +6,7 @@ import io.hoplin.BindingBuilder;
 import io.hoplin.DirectExchange;
 import io.hoplin.metrics.FunctionMetricsPublisher;
 import io.hoplin.rpc.DefaultRpcServer;
+import io.hoplin.rpc.DefaultServer;
 import io.hoplin.rpc.RpcServer;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;

@@ -26,6 +26,7 @@ public class ReceiveLogHeader extends BaseExample {
     final ExchangeClient client = clientFromBinding(EXCHANGE, "info", "service-xyz");
     client.subscribe("test", LogDetail.class, ReceiveLogHeader::handler);
 
+
     Thread.currentThread().join();
   }
 
