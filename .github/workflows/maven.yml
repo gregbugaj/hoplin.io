@@ -22,3 +22,6 @@ jobs:
         java-version: 1.8
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+
+    - name: Create Issue Branch
+      uses: robvanderleek/create-issue-branch@v1.5
