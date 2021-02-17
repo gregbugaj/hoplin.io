@@ -109,7 +109,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
         final boolean batchRequest = isBatchedRequest(context);
 
         Reply<?> reply = null;
-        for (final MethodReference reference : consumers) {
+        for (final MethodReference reference : consumers)
           try {
             final BiFunction<Object, MessageContext, Reply<?>> handler = reference.getHandler();
             final Class<?> root = reference.getRootType();
@@ -136,7 +136,6 @@ public class DefaultQueueConsumer extends DefaultConsumer {
             exceptions.add(e);
             log.error("Handler error for message  : " + message, e);
           }
-        }
 
         // TODO : This should be handled better
         if (invokedHandlers == 0) {

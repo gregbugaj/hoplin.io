@@ -32,7 +32,7 @@
   <parent>
     <artifactId>hoplin-parent</artifactId>
     <groupId>io.hoplin</groupId>
-    <version>1.1.5</version>
+    <version>1.1.6</version>
   </parent>
 
 

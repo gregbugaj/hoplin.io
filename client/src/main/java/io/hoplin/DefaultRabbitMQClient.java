@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -38,7 +37,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
     this.options = Objects.requireNonNull(options, "Options are required and can't be null");
     this.provider = ConnectionProvider.createAndConnect(options);
     this.channel = provider.acquire();
-    this.publisher = new Publisher(Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors()));
+    this.publisher = new Publisher(
+        Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors()));
 
     channel.addReturnListener(new UnroutableMessageReturnListener(options));
   }
@@ -160,7 +160,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
       final boolean autoDelete,
       final Map<String, Object> arguments) {
     return with(
-        (channel) -> channel.queueDeclare(queue, durable, exclusive, autoDelete, arguments));
+        channel -> channel.queueDeclare(queue, durable, exclusive, autoDelete, arguments));
   }
 
   @Override

@@ -11,10 +11,11 @@ import java.util.function.Function;
 
 /**
  * Exchange client interface
- *
- * Primary operations provided by this interface include client creation {@link #create(RabbitMQOptions, Binding)},
- * subscription {@link #subscribe(String, Class, Consumer)} and publishing {@link #publish(Object)}.
- * Most methods have both synchronous and asynchronous versions
+ * <p>
+ * Primary operations provided by this interface include client creation {@link
+ * #create(RabbitMQOptions, Binding)}, subscription {@link #subscribe(String, Class, Consumer)} and
+ * publishing {@link #publish(Object)}. Most methods have both synchronous and asynchronous
+ * versions
  *
  * <h1>Client subscriptions</h1>
  *
@@ -23,7 +24,6 @@ import java.util.function.Function;
  *  <li>{@link #subscribe(String, Class, Function)}</li>
  *  <li>{@link #subscribe(String, Class, BiFunction)}</li>
  * </ul>
- *
  *
  * @see io.hoplin.TopicExchangeClient
  * @see io.hoplin.DirectExchangeClient
@@ -288,7 +288,8 @@ public interface ExchangeClient {
    * initialize consumer once to make sure that the Consumer is setup. After that this method will
    * only add the handlers.
    * <p>
-   * Handlers should not block, and should execute on configured {@link java.util.concurrent.ExecutorService}
+   * Handlers should not block, and should execute on configured {@link
+   * java.util.concurrent.ExecutorService}
    * </p>
    *
    * @param subscriberId the unique id of the subscriber
@@ -305,7 +306,8 @@ public interface ExchangeClient {
    * initialize consumer once to make sure that the Consumer is setup. After that this method will
    * only add the handlers.
    * <p>
-   * Handlers should not block, and should execute on configured {@link java.util.concurrent.ExecutorService}
+   * Handlers should not block, and should execute on configured {@link
+   * java.util.concurrent.ExecutorService}
    * </p>
    *
    * @param subscriberId the unique id of the subscriber
@@ -331,7 +333,8 @@ public interface ExchangeClient {
    * @return SubscriptionResult the result of subscription
    */
   <T> SubscriptionResult subscribe(final Class<T> clazz,
-      final BiFunction<T, MessageContext, Reply<?>> handler, final Consumer<SubscriptionConfigurator> config);
+      final BiFunction<T, MessageContext, Reply<?>> handler,
+      final Consumer<SubscriptionConfigurator> config);
 
   /**
    * Add subscription and consume messages from the queue Calling this method repeatably will only
@@ -368,6 +371,7 @@ public interface ExchangeClient {
 
   /**
    * Wrap existing client in {@link AutoCloseable}
+   *
    * @return io.hoplin.ClosableExchangeClient
    */
   CloseableExchangeClient asClosable();

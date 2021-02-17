@@ -8,7 +8,6 @@ import java.net.UnknownHostException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.ProtectionDomain;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -176,13 +175,15 @@ public class RabbitMQOptions {
   private Map<String, Object> createDefaultClientProperties() {
     final Map<String, Object> props = new HashMap<>();
 
+    final HostInfo hostInfo = getHostInfo();
     props.put("client_api", "hoplin.io");
     props.put("connection_name", findApplicationName());
     props.put("platform", OsUtil.platform());
     props.put("version", findApplicationVersion());
     props.put("application", findApplicationName());
     props.put("application_location", findWorkingDirectory());
-    props.put("machine_name", getHostName());
+    props.put("machine_name", hostInfo.hostname);
+    props.put("client_ip", hostInfo.address);
     props.put("user", System.getProperty("user.name"));
     props.put("connected",
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
@@ -225,14 +226,30 @@ public class RabbitMQOptions {
     return name;
   }
 
-  private String getHostName() {
+  private static HostInfo getHostInfo() {
     try {
-      return InetAddress.getLocalHost().getHostName();
-    } catch (UnknownHostException e) {
-      // suppressed
+      final InetAddress inet = InetAddress.getLocalHost();
+      return HostInfo.from(inet.getCanonicalHostName(), inet.getHostAddress());
+    } catch (final UnknownHostException e) {
+      // suppress
+    }
+    return HostInfo.from("localhost", "127.0.0.1");
+  }
+
+  public static class HostInfo {
+
+    public String hostname;
+
+    public String address;
+
+    private HostInfo(String hostname, String address) {
+      this.hostname = Objects.requireNonNull(hostname);
+      this.address = Objects.requireNonNull(address);
     }
 
-    return "localhost";
+    public static HostInfo from(String hostname, String address) {
+      return new HostInfo(hostname, address);
+    }
   }
 
   private String findWorkingDirectory() {
@@ -411,12 +428,13 @@ public class RabbitMQOptions {
 
   @Override
   public String toString() {
+    final HostInfo hostInfo = getHostInfo();
     return String.format("Host:    '%s'%n"
             + "Hostname:    '%s'%n"
             + "VirtualHost: '%s'%n"
             + "Port: '%s'%n"
             + "TLS: '%s'%n"
-        , getHost(), getHostName(), getVirtualHost(), getPort(), isTlsEnabled());
+        , getHost(), hostInfo.hostname, getVirtualHost(), getPort(), isTlsEnabled());
   }
 
   public boolean isTlsEnabled() {

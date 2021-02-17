@@ -481,7 +481,7 @@ Client will attempt to use Direct-Reply queue if available.
 **Batch job receiver**
 
 The subscriber is just a binding to a queue. The key is the return type of the handler for 
-`Reply<LogDetail>`. Currently the value has to be wrapped with the `Reply` objects.
+`Reply<LogDetail>`. Currently, the value has to be wrapped with the `Reply` objects.
 
 
 ```java
@@ -688,7 +688,7 @@ rabbitmqctl list_connections
 
 ## Version 1.1.5
 
-* RPC suppor tto handle multiple messages
+* RPC support to handle multiple messages
 * Prefetch Size (QOS) can be set for the RPC Server
 * Custom executor can be supplied to RPC server
 
@@ -697,7 +697,7 @@ rabbitmqctl list_connections
 [Google Style Guides](https://github.com/google/styleguide)
 
 # Versioning
-Following [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) guidline.
+Following [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) guideline.
 
 # Resources
 
@@ -708,3 +708,12 @@ Following [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) guidl
 [EasyNetQ](https://github.com/EasyNetQ/EasyNetQ)
 
 OSSRH-43588
+
+
+### Maven version upgrade
+```bash
+
+mvn versions:set -DnewVersion=1.1.6
+mvn versions:commit
+
+```
