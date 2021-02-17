@@ -123,7 +123,8 @@ public class BindingBuilder {
     }
 
     public Binding build() {
-      return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap(), buildOptions());
+      return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap(),
+          buildOptions());
     }
   }
 
@@ -137,7 +138,8 @@ public class BindingBuilder {
 
     @Override
     public Binding build() {
-      return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap(), buildOptions());
+      return new Binding(destination.queue.getName(), exchange, routingKey, Collections.emptyMap(),
+          buildOptions());
     }
   }
 
