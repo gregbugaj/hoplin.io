@@ -108,6 +108,9 @@ public class DefaultQueueConsumer extends DefaultConsumer {
         int invokedHandlers = 0;
         final boolean batchRequest = isBatchedRequest(context);
 
+        final Map<String, Object> headersXX = properties.getHeaders();
+        System.out.println(headersXX);
+
         Reply<?> reply = null;
         for (final MethodReference reference : consumers)
           try {

@@ -284,9 +284,13 @@ abstract class AbstractExchangeClient implements ExchangeClient {
    * @return
    */
   private Consumer<MessageConfiguration> createDefaultConfiguration() {
-    return cfg -> {
-      // TODO : Default values
-    };
+    return this::decorateMessageConfiguration;
+  }
+
+  private void decorateMessageConfiguration(MessageConfiguration cfg) {
+    // TODO : Default values
+    // https://tools.ietf.org/html/rfc7239
+    cfg.addHeader("Forwarded", "for=127.0.6.6");
   }
 
   @Override
