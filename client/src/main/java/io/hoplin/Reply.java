@@ -12,7 +12,6 @@ public class Reply<T> {
   // The reply value to the client
   private final T reply;
 
-
   // The exception hit during the execution of the request (or null if there was no exception).
   private Exception exception;
 
@@ -33,7 +32,7 @@ public class Reply<T> {
    */
   public static Reply<?> exceptionally(final Exception exception) {
     Objects.requireNonNull(exception);
-    return new Reply(null, exception);
+    return new Reply<>(null, exception);
   }
 
   /**

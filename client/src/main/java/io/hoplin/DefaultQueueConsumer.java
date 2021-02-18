@@ -14,8 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
 
   private final Publisher publisher;
 
-  private final Executor executor;
+  private final ExecutorService executor;
 
   /**
    * Constructs a new instance and records its association to the passed-in channel.
@@ -48,27 +47,26 @@ public class DefaultQueueConsumer extends DefaultConsumer {
    * @param queue
    * @param channel      the channel to which this consumer is attached
    * @param queueOptions the options to use for this queue consumer
-   */
   public DefaultQueueConsumer(String queue, final Channel channel,
       final QueueOptions queueOptions) {
     this(queue, channel, queueOptions,
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
   }
+   */
 
   /**
    * Construct a new instance of queue consumer
    *
    * @param channel      the channel bound to this consumer
    * @param queueOptions the options for this consumer
-   * @param executor     the {@link Executor} to use for this consumer
+   * @param executor     the {@link ExecutorService} to use for this consumer
    */
   public DefaultQueueConsumer(final String queue, final Channel channel,
-      final QueueOptions queueOptions, final Executor executor) {
+      final QueueOptions queueOptions, final ExecutorService executor) {
     super(channel);
-
-    this.queue = queue;
     this.queueOptions = Objects.requireNonNull(queueOptions);
     this.executor = Objects.requireNonNull(executor);
+    this.queue = queue;
     this.errorStrategy = new DefaultConsumerErrorStrategy(channel);
     this.metrics = QueueMetrics.Factory.getInstance(queue);
     this.publisher = new Publisher(executor);

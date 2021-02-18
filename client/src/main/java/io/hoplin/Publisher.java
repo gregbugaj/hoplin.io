@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +28,9 @@ public class Publisher {
 
   private static final Logger log = LoggerFactory.getLogger(Publisher.class);
 
-  private final Executor executor;
+  private final ExecutorService executor;
 
-  public Publisher(final Executor executor) {
+  public Publisher(final ExecutorService executor) {
     this.executor = Objects.requireNonNull(executor);
   }
 

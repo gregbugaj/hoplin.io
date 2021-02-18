@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -29,6 +30,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private final ConnectionProvider provider;
 
+  private final ExecutorService executor;
+
   private DefaultQueueConsumer consumer;
 
   private final Publisher publisher;
@@ -37,8 +40,8 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
     this.options = Objects.requireNonNull(options, "Options are required and can't be null");
     this.provider = ConnectionProvider.createAndConnect(options);
     this.channel = provider.acquire();
-    this.publisher = new Publisher(
-        Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors()));
+    this.executor = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
+    this.publisher = new Publisher(executor);
 
     channel.addReturnListener(new UnroutableMessageReturnListener(options));
   }
@@ -84,7 +87,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
           channel.addConfirmListener(this::confirmedAck, this::confirmedNack);
         }
 
-        consumer = new DefaultQueueConsumer(queue, channel, options);
+        consumer = new DefaultQueueConsumer(queue, channel, options, executor);
         channel.basicQos(prefetchCount);
 
         final String consumerTag = channel.basicConsume(queue, autoAck, consumer);
