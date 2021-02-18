@@ -55,15 +55,16 @@ public interface RabbitMQClient {
    * Returns the number of messages in a queue ready to be delivered.
    *
    * @see com.rabbitmq.client.Channel#messageCount(String)
+   * @return
    */
-  int messageCount(final String queue);
+  QueueStats messageCount(final String queue);
 
   /**
    * Returns the number of messages in a queue ready to be delivered.
    *
    * @see com.rabbitmq.client.Channel#messageCount(String)
    */
-  CompletableFuture<Integer> messageCountAsync(final String queue);
+  CompletableFuture<QueueStats> messageCountAsync(final String queue);
 
   /**
    * Publish a message. Publishing to a non-existent exchange will result in a channel-level

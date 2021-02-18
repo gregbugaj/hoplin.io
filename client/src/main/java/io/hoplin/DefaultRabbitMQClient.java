@@ -187,7 +187,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
     try {
       return handler.handle(channel);
     } catch (final Exception e) {
-      log.error("Unable to execute operation on  channel", e);
+      log.error("Unable to execute operation on channel", e);
     }
     return null;
   }
@@ -203,19 +203,23 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   }
 
   @Override
-  public int messageCount(final String queue) {
+  public QueueStats messageCount(final String queue) {
     try {
       return messageCountAsync(queue).get();
     } catch (final ExecutionException | InterruptedException e) {
       log.error("Unable to get message count", e);
     }
 
-    return -1;
+    return new QueueStats(0, 0);
   }
 
   @Override
-  public CompletableFuture<Integer> messageCountAsync(final String queue) {
-    return null;
+  public CompletableFuture<QueueStats> messageCountAsync(final String queue) {
+    return CompletableFuture.supplyAsync(() -> with(channel -> {
+      final long consumerCount = channel.consumerCount(queue);
+      final long messageCount = channel.messageCount(queue);
+      return new QueueStats(consumerCount, messageCount);
+    }));
   }
 
   @Override

@@ -58,3 +58,10 @@ The client property is visible in the management console if you go look at that 
 ```
 
 
+Enable stats
+https://www.rabbitmq.com/management.html#disable-stats
+
+```bash
+cd  /etc/rabbitmq/conf.d/
+echo management_agent.disable_metrics_collector = false > management_agent.disable_metrics_collector.conf
+``` 

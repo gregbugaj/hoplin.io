@@ -46,7 +46,7 @@ public abstract class BaseExample {
         log.info("Subscription Exchange         : {}", subscription.getExchange());
         log.info("Subscription Queue            : {}", subscription.getQueue());
         log.info("Subscription ErrorExchange    : {}", subscription.getErrorExchangeName());
-        log.info("Subscription ErrrorQueue      : {}", subscription.getErrorQueueName());
+        log.info("Subscription ErrorQueue       : {}", subscription.getErrorQueueName());
     }
 
 }
