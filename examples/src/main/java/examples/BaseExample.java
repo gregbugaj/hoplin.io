@@ -20,7 +20,7 @@ public abstract class BaseExample {
     protected static RabbitMQOptions options() {
         final RabbitMQOptions options = new RabbitMQOptions();
 
-        options.setConnectionRetries(25);
+        options.setConnectionRetries(50);
         options.setConnectionRetryDelay(500L);
 
         return options;

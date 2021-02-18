@@ -1,5 +1,7 @@
 package io.hoplin;
 
+import static io.hoplin.util.IpUtil.getHostInfo;
+
 import com.rabbitmq.client.ConnectionFactory;
 import io.hoplin.util.OsUtil;
 import java.io.File;
@@ -182,8 +184,8 @@ public class RabbitMQOptions {
     props.put("version", findApplicationVersion());
     props.put("application", findApplicationName());
     props.put("application_location", findWorkingDirectory());
-    props.put("machine_name", hostInfo.hostname);
-    props.put("client_ip", hostInfo.address);
+    props.put("machine_name", hostInfo.getHostname());
+    props.put("client_ip", hostInfo.getAddress());
     props.put("user", System.getProperty("user.name"));
     props.put("connected",
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
@@ -224,32 +226,6 @@ public class RabbitMQOptions {
         .getPath())
         .getName();
     return name;
-  }
-
-  private static HostInfo getHostInfo() {
-    try {
-      final InetAddress inet = InetAddress.getLocalHost();
-      return HostInfo.from(inet.getCanonicalHostName(), inet.getHostAddress());
-    } catch (final UnknownHostException e) {
-      // suppress
-    }
-    return HostInfo.from("localhost", "127.0.0.1");
-  }
-
-  public static class HostInfo {
-
-    public String hostname;
-
-    public String address;
-
-    private HostInfo(String hostname, String address) {
-      this.hostname = Objects.requireNonNull(hostname);
-      this.address = Objects.requireNonNull(address);
-    }
-
-    public static HostInfo from(String hostname, String address) {
-      return new HostInfo(hostname, address);
-    }
   }
 
   private String findWorkingDirectory() {
@@ -434,7 +410,7 @@ public class RabbitMQOptions {
             + "VirtualHost: '%s'%n"
             + "Port: '%s'%n"
             + "TLS: '%s'%n"
-        , getHost(), hostInfo.hostname, getVirtualHost(), getPort(), isTlsEnabled());
+        , getHost(), hostInfo.getHostname(), getVirtualHost(), getPort(), isTlsEnabled());
   }
 
   public boolean isTlsEnabled() {

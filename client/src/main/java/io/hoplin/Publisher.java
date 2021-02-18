@@ -48,7 +48,6 @@ public class Publisher {
   public <T> CompletableFuture<Void> basicPublishAsync(final Channel channel, final String exchange,
       final String routingKey, final T message,
       final Map<String, Object> headers) {
-    Objects.requireNonNull(channel);
     Objects.requireNonNull(exchange);
 
     return CompletableFuture.runAsync(() -> {

@@ -5,7 +5,7 @@ import static io.hoplin.ConsumerErrorStrategy.createDlqQueueName;
 
 import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
-
+import io.hoplin.util.IpUtil;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,7 +17,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +31,16 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
   RabbitMQClient client;
 
+  private HostInfo hostInfo;
+
   AbstractExchangeClient(final RabbitMQOptions options, final Binding binding) {
     Objects.requireNonNull(options);
     Objects.requireNonNull(binding);
 
     this.client = RabbitMQClient.create(options);
     this.binding = binding;
+    this.hostInfo = IpUtil.getHostInfo();
+    log.info("hostInfo : {}", hostInfo);
   }
 
   /**
@@ -291,7 +294,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
     Objects.requireNonNull(cfg);
     // TODO : Default values
     // https://tools.ietf.org/html/rfc7239
-    cfg.addHeader("Forwarded", "for=127.0.6.6");
+    cfg.addHeader("Forwarded", "for=" + hostInfo.getAddress());
   }
 
   @Override
@@ -302,13 +305,11 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   @Override
   public <T> void publish(final T message, final String routingKey,
       final Consumer<MessageConfiguration> cfg) {
-
     _publish(message, routingKey, cfg);
   }
 
   private <T> void _publish(final T message, final String routingKey,
       final Consumer<MessageConfiguration> cfg) {
-
     Objects.requireNonNull(message);
     Objects.requireNonNull(routingKey);
     Objects.requireNonNull(cfg);
