@@ -287,7 +287,8 @@ abstract class AbstractExchangeClient implements ExchangeClient {
     return this::decorateMessageConfiguration;
   }
 
-  private void decorateMessageConfiguration(MessageConfiguration cfg) {
+  private void decorateMessageConfiguration(final MessageConfiguration cfg) {
+    Objects.requireNonNull(cfg);
     // TODO : Default values
     // https://tools.ietf.org/html/rfc7239
     cfg.addHeader("Forwarded", "for=127.0.6.6");
@@ -305,7 +306,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
     _publish(message, routingKey, cfg);
   }
 
-  public <T> void _publish(final T message, final String routingKey,
+  private <T> void _publish(final T message, final String routingKey,
       final Consumer<MessageConfiguration> cfg) {
 
     Objects.requireNonNull(message);
@@ -314,8 +315,9 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
     // populate our configurations with default etc...
     final MessageConfiguration conf = new MessageConfiguration();
-
     cfg.accept(conf);
+    decorateMessageConfiguration(conf);
+
     Object val;
 
     if (conf.isNativeMessageFormat()) {
@@ -327,7 +329,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
       val = payload;
     }
 
-    client.basicPublish(binding.getExchange(), routingKey, val);
+    client.basicPublish(binding.getExchange(), routingKey, val, conf.getHeaders());
   }
 
   @Override
@@ -355,10 +357,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
     // FIXME : This is broken
     final CompletableFuture<Void> promise = new CompletableFuture<>();
-    // Wrap our message original message
-    final MessagePayload<T> payload = new MessagePayload<>(message);
-    payload.setType(message.getClass());
-    client.basicPublish(binding.getExchange(), routingKey, payload);
+    _publish(message, routingKey, cfg);
 
     return promise;
   }
