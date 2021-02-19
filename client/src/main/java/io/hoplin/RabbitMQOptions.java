@@ -5,8 +5,6 @@ import static io.hoplin.util.IpUtil.getHostInfo;
 import com.rabbitmq.client.ConnectionFactory;
 import io.hoplin.util.OsUtil;
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -220,12 +218,11 @@ public class RabbitMQOptions {
   }
 
   private String findApplicationName() {
-    final String name = new File(RabbitMQOptions.class.getProtectionDomain()
+    return new File(RabbitMQOptions.class.getProtectionDomain()
         .getCodeSource()
         .getLocation()
         .getPath())
         .getName();
-    return name;
   }
 
   private String findWorkingDirectory() {

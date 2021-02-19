@@ -7,7 +7,7 @@ import java.util.Objects;
  */
 public class Reply<T> {
 
-  private static final Reply EMPTY = new Reply(null, null);
+  private static final Reply<?> EMPTY = new Reply<>(null, null);
 
   // The reply value to the client
   private final T reply;

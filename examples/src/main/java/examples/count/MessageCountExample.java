@@ -56,7 +56,7 @@ public class MessageCountExample extends BaseExample {
   private static void handle(final LogDetail msg) {
     log.info("Incoming msg : {}", msg);
     try {
-      Thread.sleep(10000l);
+      Thread.sleep(10000L);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

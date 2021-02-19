@@ -74,7 +74,6 @@ public class RpcCallerConsumer extends DefaultConsumer {
       if (log.isDebugEnabled()) {
         log.debug("Reply received without corresponding action in non-strict mode : {}", envelope);
       }
-      return;
     } else {
       handleReply(body, action);
     }

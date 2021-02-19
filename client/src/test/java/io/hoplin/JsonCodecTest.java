@@ -104,7 +104,7 @@ public class JsonCodecTest {
 
     val.setMapping(mapping);
 
-    final MessagePayload pay = new MessagePayload();
+    final MessagePayload<Object> pay = new MessagePayload<>();
     pay.setPayload(mapping);
     pay.setType(mapping.getClass());
 
@@ -112,7 +112,7 @@ public class JsonCodecTest {
     System.out.println(new String(dataxx));
 
     final byte[] data = codec.serialize(val);
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
     assertNotNull(out);
     assertEquals(TestCodecMapping.class, out.getTypeAsClass());

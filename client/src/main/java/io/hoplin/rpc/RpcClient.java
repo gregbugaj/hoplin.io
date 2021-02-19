@@ -1,6 +1,5 @@
 package io.hoplin.rpc;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 

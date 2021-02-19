@@ -4,7 +4,6 @@ import examples.BaseExample;
 import examples.LogDetail;
 import io.hoplin.CloseableExchangeClient;
 import io.hoplin.ExchangeClient;
-import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +19,14 @@ public class SpamClients extends BaseExample {
   public static void main(final String... args) throws InterruptedException {
     log.info("Starting producer for exchange : {}", EXCHANGE);
 // Connections will not be closed until client exits the application
-    spam();
+//    spam();
 
+    spamSingleOpenClose();
 
-    // Connections will not be closed by calling close
+    // Connections will be closed by calling close
 //     spamAndClose();
 
-    // Connections will not be closed via try-with-resources
+    // Connections will  be closed via try-with-resources
 //    spamAndAutoClose();
 
     Thread.currentThread().join();
@@ -40,7 +40,7 @@ public class SpamClients extends BaseExample {
   }
 
   private static void spamAndClose() {
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 10; ++i) {
       final ExchangeClient client = clientFromExchange();
       client.publish(createMessage("warning"), "log.spam");
       client.close();
@@ -53,6 +53,13 @@ public class SpamClients extends BaseExample {
         client.publish(createMessage("warning"), "log.spam");
       }
     }
+  }
+
+  private static void spamSingleOpenClose() {
+    final ExchangeClient client = clientFromExchange();
+    client.publish(createMessage("warning"), "log.spam");
+//    client.publish(createMessage("warning"), "log.spam");
+    client.close();
   }
 
   private static ExchangeClient clientFromExchange() {

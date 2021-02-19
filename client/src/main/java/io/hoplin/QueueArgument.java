@@ -5,5 +5,5 @@ package io.hoplin;
  */
 public class QueueArgument {
 
-  public static String MaxPriority = "x-max-priority";
+  public static String MAX_PRORITY = "x-max-priority";
 }

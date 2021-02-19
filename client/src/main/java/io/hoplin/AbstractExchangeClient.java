@@ -375,12 +375,18 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
   @Override
   public void close() {
+    if(log.isDebugEnabled()) {
+      log.debug("Client closed : start");
+    }
     if (client != null) {
       try {
         client.disconnect();
       } catch (IOException e) {
         log.warn("Error during close", e);
       }
+    }
+    if(log.isDebugEnabled()) {
+      log.debug("Client closed : done");
     }
   }
 

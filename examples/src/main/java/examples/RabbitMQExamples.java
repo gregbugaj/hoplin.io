@@ -37,5 +37,6 @@ public class RabbitMQExamples {
     config.setAutomaticRecoveryEnabled(true);
 
     RabbitMQClient client = RabbitMQClient.create(config);
+    System.out.println(client);
   }
 }

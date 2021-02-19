@@ -2,6 +2,8 @@ package io.hoplin;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import io.hoplin.executor.WorkerExecutorService;
+import io.hoplin.executor.WorkerThreadPool;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
@@ -9,7 +11,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -30,22 +31,24 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private final ConnectionProvider provider;
 
-  private final ExecutorService executor;
-
   private DefaultQueueConsumer consumer;
 
   private final Publisher publisher;
+
+  private ExecutorService executor;
 
   public DefaultRabbitMQClient(final RabbitMQOptions options) {
     this.options = Objects.requireNonNull(options, "Options are required and can't be null");
     this.provider = ConnectionProvider.createAndConnect(options);
     this.channel = provider.acquire();
-    this.executor = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
-    this.publisher = new Publisher(executor);
-
+    final WorkerThreadPool publisherExecutor = WorkerExecutorService.getInstance()
+        .getPublisherExecutor();
+    final WorkerThreadPool subscriberExecutor = WorkerExecutorService.getInstance()
+        .getSubscriberExecutor();
+    this.executor = subscriberExecutor.getExecutor();
+    this.publisher = new Publisher(publisherExecutor.getExecutor());
     channel.addReturnListener(new UnroutableMessageReturnListener(options));
   }
-
 
   @Override
   public <T> void basicConsume(final String queue, final Class<T> clazz,
@@ -251,7 +254,6 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   }
 
   private interface ThrowableChannel<T> {
-
     T handle(Channel channel) throws Exception;
   }
 }
