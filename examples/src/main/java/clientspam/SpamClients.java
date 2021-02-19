@@ -58,7 +58,7 @@ public class SpamClients extends BaseExample {
   private static void spamSingleOpenClose() {
     final ExchangeClient client = clientFromExchange();
     client.publish(createMessage("warning"), "log.spam");
-//    client.publish(createMessage("warning"), "log.spam");
+    client.publish(createMessage("warning"), "log.spam");
     client.close();
   }
 

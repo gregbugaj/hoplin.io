@@ -238,7 +238,9 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
       final Map<String, Object> headers) {
 
     with(channel -> {
-      publisher.basicPublishAsync(channel, exchange, routingKey, message, headers);
+      final CompletableFuture<Void> future = publisher
+          .basicPublishAsync(channel, exchange, routingKey, message, headers);
+      future.get();
       return null;
     });
   }
@@ -254,6 +256,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   }
 
   private interface ThrowableChannel<T> {
+
     T handle(Channel channel) throws Exception;
   }
 }
