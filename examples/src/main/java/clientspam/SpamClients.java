@@ -21,7 +21,9 @@ public class SpamClients extends BaseExample {
 // Connections will not be closed until client exits the application
 //    spam();
 
-    spamSingleOpenClose();
+//    spamSingleOpenClose();
+
+    spamSingleOpenCloseAsync();
 
     // Connections will be closed by calling close
 //     spamAndClose();
@@ -29,7 +31,7 @@ public class SpamClients extends BaseExample {
     // Connections will  be closed via try-with-resources
 //    spamAndAutoClose();
 
-    Thread.currentThread().join();
+//    Thread.currentThread().join();
   }
 
   private static void spam() {
@@ -59,6 +61,17 @@ public class SpamClients extends BaseExample {
     final ExchangeClient client = clientFromExchange();
     client.publish(createMessage("warning"), "log.spam");
     client.publish(createMessage("warning"), "log.spam");
+    client.close();
+  }
+
+  /**
+   * Messages should have been published and close should wait before terminating
+   */
+  private static void spamSingleOpenCloseAsync() {
+    final ExchangeClient client = clientFromExchange();
+    client.publishAsync(createMessage("warning"), "log.spam");
+    client.publishAsync(createMessage("warning"), "log.spam");
+
     client.close();
   }
 
