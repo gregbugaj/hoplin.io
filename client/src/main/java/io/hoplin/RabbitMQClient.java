@@ -85,6 +85,9 @@ public interface RabbitMQClient {
   <T> void basicPublish(final String exchange, final String routingKey, final T message,
       final Map<String, Object> headers);
 
+  <T> CompletableFuture<Void> basicPublishAsync(String exchange, String routingKey, T message,
+      Map<String, Object> headers);
+
   /**
    * Acknowledge one or several received messages. Supply the deliveryTag create the
    * AMQP.Basic.GetOk or AMQP.Basic.Deliver method containing the received message being

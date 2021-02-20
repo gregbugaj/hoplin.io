@@ -67,7 +67,7 @@ public class SpamClients extends BaseExample {
   /**
    * Messages should have been published and close should wait before terminating
    */
-  private static void spamSingleOpenCloseAsync() {
+  private static void spamSingleOpenCloseAsync() throws InterruptedException {
     final ExchangeClient client = clientFromExchange();
     client.publishAsync(createMessage("warning"), "log.spam");
     client.publishAsync(createMessage("warning"), "log.spam");

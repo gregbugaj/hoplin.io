@@ -236,13 +236,19 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   @Override
   public <T> void basicPublish(final String exchange, final String routingKey, final T message,
       final Map<String, Object> headers) {
+    try {
+      basicPublishAsync(exchange, routingKey, message, headers).get();
+    } catch (InterruptedException | ExecutionException e) {
+      log.error("Unable to publish message", e);
+    }
+  }
 
-    with(channel -> {
-      final CompletableFuture<Void> future = publisher
-          .basicPublishAsync(channel, exchange, routingKey, message, headers);
-      future.get();
-      return null;
-    });
+  @Override
+  public <T> CompletableFuture<Void> basicPublishAsync(final String exchange,
+      final String routingKey, final T message,
+      final Map<String, Object> headers) {
+    return with(
+        channel -> publisher.basicPublishAsync(channel, exchange, routingKey, message, headers));
   }
 
   @Override
