@@ -1,8 +1,6 @@
 package io.hoplin.executor;
 
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -63,32 +61,6 @@ public interface ThreadPoolMetrics {
    * @param taskTime
    */
   void addTaskTime(long taskTime);
-
-  class Factory {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ThreadPoolMetrics.class);
-
-    private static final Map<String, ThreadPoolMetrics> metrics = new ConcurrentHashMap<>();
-
-    public static ThreadPoolMetrics getInstance(final String threadPoolKey) {
-      final ThreadPoolMetrics metric = metrics.get(threadPoolKey);
-
-      if (metric != null) {
-        return metric;
-      }
-
-      // attempt to store
-      final ThreadPoolMetrics existing = metrics.putIfAbsent(threadPoolKey,
-          new ThreadPoolMetricsDefault());
-
-      if (existing == null) {
-        // we won the race so retrieve it from  cache
-        return metrics.get(threadPoolKey);
-      }
-
-      return existing;
-    }
-  }
 
   class ThreadPoolMetricsDefault implements ThreadPoolMetrics {
 

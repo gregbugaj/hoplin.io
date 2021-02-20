@@ -45,9 +45,6 @@ public class WorkerExecutorServiceTest {
     final ThreadPoolMetrics m1 = publisher.getMetrics();
     final ThreadPoolMetrics m2 = subscriber.getMetrics();
 
-    System.out.println(m1);
-    System.out.println(m2);
-
     for (int i = 0; i < 7; ++i) {
       final ExecutorService executor;
       if (i % 2 == 0) {

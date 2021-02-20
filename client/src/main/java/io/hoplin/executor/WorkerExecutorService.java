@@ -28,6 +28,6 @@ public class WorkerExecutorService {
   }
 
   public void shutdownAndAwaitTermination(long timeout, TimeUnit unit) {
-    Factory.shutdown(timeout, unit);
+    WorkerThreadPool.Factory.shutdown(timeout, unit);
   }
 }

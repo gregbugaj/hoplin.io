@@ -1,5 +1,6 @@
 package io.hoplin.executor;
 
+import io.hoplin.executor.ThreadPoolMetrics.ThreadPoolMetricsDefault;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ public interface WorkerThreadPool {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Factory.class);
 
-    private static final ConcurrentHashMap<String, WorkerThreadPool> pools = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, WorkerThreadPool> pools = new ConcurrentHashMap<>();
 
     public static WorkerThreadPool getInstance(final String threadPoolKey,
         ThreadPoolConfiguration configuration) {
@@ -71,25 +72,21 @@ public interface WorkerThreadPool {
 
     public static void shutdown(final long timeout, final TimeUnit unit) {
       for (final WorkerThreadPool pool : pools.values()) {
-        pool.getExecutor().shutdown();
+        pool.shutdown();
       }
 
       awaitTermination(timeout, unit);
     }
 
     public Map<String, List<Runnable>> shutdownNow() {
-
       final Map<String, List<Runnable>> tasks = new HashMap<>();
-
       for (final WorkerThreadPool pool : pools.values()) {
         final ThreadPoolConfiguration config = pool.getConfig();
         final String key = config.getThreadPoolKey();
 
         tasks.put(key, pool.getExecutor().shutdownNow());
       }
-
       awaitTermination(-1, TimeUnit.MILLISECONDS);
-
       return tasks;
     }
 
@@ -104,16 +101,19 @@ public interface WorkerThreadPool {
         }
       }
 
+      // Important that we clear the pools after the termination
       pools.clear();
     }
 
     /**
      * Reset underlying states of ALL pools
      */
-    public static void reset() {
+    private static void reset() {
       pools.clear();
     }
   }
+
+  void shutdown();
 
   class WorkerThreadPoolDefault implements WorkerThreadPool {
 
@@ -123,18 +123,17 @@ public interface WorkerThreadPool {
 
     private final ThreadPoolConfiguration config;
 
-    private final ThreadPoolMetrics metrics;
+    private ThreadPoolMetrics metrics;
 
     WorkerThreadPoolDefault(final ThreadPoolConfiguration config) {
       Objects.requireNonNull(config);
       this.config = config;
-      this.metrics = ThreadPoolMetrics.Factory.getInstance(config.getThreadPoolKey());
+      this.metrics = new ThreadPoolMetricsDefault();
       this.executor = createExecutorService(this.metrics);
     }
 
     private ThreadPoolExecutor createExecutorService(final ThreadPoolMetrics metrics) {
       Objects.requireNonNull(metrics);
-
       final int corePoolSize = config.getCoreSize();
       final int maximumPoolSize = config.getMaximumSize();
       final int maxQueueSize = config.getMaxQueueSize();
@@ -162,6 +161,11 @@ public interface WorkerThreadPool {
     @Override
     public ThreadPoolConfiguration getConfig() {
       return config;
+    }
+
+    @Override
+    public void shutdown() {
+      executor.shutdown();
     }
   }
 }
