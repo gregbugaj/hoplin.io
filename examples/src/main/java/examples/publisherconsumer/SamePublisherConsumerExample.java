@@ -26,6 +26,8 @@ public class SamePublisherConsumerExample extends BaseExample {
 
       Thread.sleep(1000L);
     }
+
+    Thread.currentThread().join();
   }
 
   private static void handle(final LogDetail msg) {

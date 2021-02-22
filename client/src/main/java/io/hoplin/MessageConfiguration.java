@@ -1,5 +1,6 @@
 package io.hoplin;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BasicProperties;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class MessageConfiguration {
 
   private boolean nativeMessageFormat;
 
-  private BasicProperties properties;
+  private AMQP.BasicProperties properties = new AMQP.BasicProperties();
 
   private final Map<String, Object> headers = new HashMap<>();
 
