@@ -7,12 +7,12 @@ import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
 import io.hoplin.util.IpUtil;
 import java.io.IOException;
-import java.sql.Time;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
@@ -309,7 +309,15 @@ abstract class AbstractExchangeClient implements ExchangeClient {
   @Override
   public <T> void publish(final T message, final String routingKey,
       final Consumer<MessageConfiguration> cfg) {
-    _publishAsync(message, routingKey, cfg);
+
+    final CompletableFuture<Void> feature = _publishAsync(message, routingKey, cfg);
+    try {
+      feature.get();
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (final ExecutionException e) {
+      throw new HoplinRuntimeException("Unable to publish", e);
+    }
   }
 
   private <T> CompletableFuture<Void> _publishAsync(final T message, final String routingKey,
