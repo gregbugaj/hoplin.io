@@ -9,9 +9,9 @@ import java.util.Objects;
  */
 public class MessagePayload<T> {
 
-  public static int SUCCESS = 0;
+  public static final int SUCCESS = 0;
 
-  public static int FAILURE = 0;
+  public static final int FAILURE = 0;
 
   // 0 = Success
   // 1 = Failure

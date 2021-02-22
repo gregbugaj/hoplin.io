@@ -3,6 +3,8 @@ package io.hoplin;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Envelope;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -84,11 +86,11 @@ public class MessageContext {
   }
 
   public byte[] getBody() {
-    return body;
+    return Arrays.copyOf(body, body.length);
   }
 
-  public void setBody(byte[] body) {
-    this.body = body;
+  public void setBody(final byte[] body) {
+    this.body = Objects.requireNonNull(body);
   }
 
   public JobExecutionInformation getExecutionInfo() {
@@ -99,14 +101,17 @@ public class MessageContext {
     this.executionInfo = Objects.requireNonNull(executionInfo);
   }
 
-
   public String toString() {
-    return "MessageContext{" +
-        "receivedInfo=" + receivedInfo +
-        ", properties=" + properties +
-        ", executionInfo=" + executionInfo +
-        ", body=" + new String(body) +
-        '}';
+    try {
+      return "MessageContext{" +
+          "receivedInfo=" + receivedInfo +
+          ", properties=" + properties +
+          ", executionInfo=" + executionInfo +
+          ", body=" + new String(body, "UTF-8") +
+          '}';
+    } catch (UnsupportedEncodingException e) {
+      // suppressed
+    }
+    return "MessageContext";
   }
-
 }

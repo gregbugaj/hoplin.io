@@ -12,6 +12,9 @@ import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Test JSON Codec
+ */
 public class JsonCodecTest {
 
   @Test
@@ -19,7 +22,8 @@ public class JsonCodecTest {
     final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec();
     final String val = "MessageToProcess";
     final byte[] data = codec.serialize(val);
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
+
     assertNotNull(out);
     assertEquals(String.class, out.getTypeAsClass());
     assertEquals(val, out.getPayload());
@@ -30,7 +34,7 @@ public class JsonCodecTest {
     final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec();
     final Long val = 100L;
     final byte[] data = codec.serialize(val);
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
     assertNotNull(out);
     assertEquals(Long.class, out.getTypeAsClass());
@@ -42,7 +46,7 @@ public class JsonCodecTest {
     final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec();
     final Double val = 100.51;
     final byte[] data = codec.serialize(val);
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
     assertNotNull(out);
     assertEquals(Double.class, out.getTypeAsClass());
@@ -54,7 +58,7 @@ public class JsonCodecTest {
     final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec();
     final Long[] val = new Long[]{10L, 20L, 30L};
     final byte[] data = codec.serialize(val);
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
     assertNotNull(out);
     assertEquals(Long[].class, out.getTypeAsClass());
@@ -67,7 +71,7 @@ public class JsonCodecTest {
     final String[] val = new String[]{"Msg1", "Msg2", "Msg3"};
     final byte[] data = codec.serialize(val);
 
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
     assertNotNull(out);
     assertEquals(String[].class, out.getTypeAsClass());
@@ -84,7 +88,8 @@ public class JsonCodecTest {
     val.setValB(2);
 
     final byte[] data = codec.serialize(val);
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
+
     assertNotNull(out);
     assertEquals(TestCodecMapping.class, out.getTypeAsClass());
   }
@@ -108,9 +113,6 @@ public class JsonCodecTest {
     pay.setPayload(mapping);
     pay.setType(mapping.getClass());
 
-    final byte[] dataxx = codec.serialize(pay);
-    System.out.println(new String(dataxx));
-
     final byte[] data = codec.serialize(val);
     final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
@@ -133,7 +135,7 @@ public class JsonCodecTest {
     val.setMapping(mapping);
 
     final byte[] data = codec.serialize(mapping);
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
     assertNotNull(out);
     assertEquals(TestCodecMappingVal.class, out.getTypeAsClass());
@@ -146,14 +148,9 @@ public class JsonCodecTest {
     final Set<Class<?>> mappings = getClasses();
     final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec(mappings);
 
-    final TestCodecMapping val = new TestCodecMapping();
-    val.setMsg("Msg A");
-    val.setValA(1);
-    val.setValB(2);
-
     TestCodecMappingTuple tuple = new TestCodecMappingTuple();
     final byte[] data = codec.serialize(tuple);
-    final MessagePayload out = codec.deserialize(data, MessagePayload.class);
+    final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
     assertNotNull(out);
     assertEquals(TestCodecMappingTuple.class, out.getTypeAsClass());

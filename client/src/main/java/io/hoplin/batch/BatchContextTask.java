@@ -1,6 +1,7 @@
 package io.hoplin.batch;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
@@ -61,7 +62,7 @@ public class BatchContextTask {
   }
 
   public byte[] getReply() {
-    return reply;
+    return Arrays.copyOf(reply, reply.length);
   }
 
   public String getReplyAsString() {

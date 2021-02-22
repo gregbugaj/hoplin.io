@@ -15,8 +15,6 @@ public abstract class AbstractExchange implements Exchange {
   // exchanges survive broker restart
   private boolean durable;
 
-  private ExchangeType type;
-
   public AbstractExchange(final String name) {
     this.name = name;
   }
@@ -41,8 +39,4 @@ public abstract class AbstractExchange implements Exchange {
     return durable;
   }
 
-  @Override
-  public ExchangeType getType() {
-    return type;
-  }
 }

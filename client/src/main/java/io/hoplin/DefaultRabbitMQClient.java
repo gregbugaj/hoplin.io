@@ -225,7 +225,7 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
       final long consumerCount = channel.consumerCount(queue);
       final long messageCount = channel.messageCount(queue);
       return new QueueStats(consumerCount, messageCount);
-    }));
+    }), executor);
   }
 
   @Override
@@ -238,8 +238,11 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
       final Map<String, Object> headers) {
     try {
       basicPublishAsync(exchange, routingKey, message, headers).get();
-    } catch (InterruptedException | ExecutionException e) {
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (final ExecutionException e) {
       log.error("Unable to publish message", e);
+      throw new HoplinRuntimeException("Unable to publish message", e);
     }
   }
 

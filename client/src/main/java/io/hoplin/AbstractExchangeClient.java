@@ -33,9 +33,9 @@ abstract class AbstractExchangeClient implements ExchangeClient {
 
   RabbitMQClient client;
 
-  private HostInfo hostInfo;
+  private final HostInfo hostInfo;
 
-  private AtomicLong pendingMessages = new AtomicLong();
+  private final AtomicLong pendingMessages = new AtomicLong();
 
   AbstractExchangeClient(final RabbitMQOptions options, final Binding binding) {
     Objects.requireNonNull(options);

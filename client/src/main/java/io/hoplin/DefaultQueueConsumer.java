@@ -48,9 +48,9 @@ public class DefaultQueueConsumer extends DefaultConsumer {
    * @param channel      the channel to which this consumer is attached
    * @param queueOptions the options to use for this queue consumer
   public DefaultQueueConsumer(String queue, final Channel channel,
-      final QueueOptions queueOptions) {
-    this(queue, channel, queueOptions,
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+  final QueueOptions queueOptions) {
+  this(queue, channel, queueOptions,
+  Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
   }
    */
 
@@ -98,7 +98,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
         ack = ackFromOptions(queueOptions);
 
         final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec(handlers.keySet());
-        final MessagePayload message = codec.deserialize(body, MessagePayload.class);
+        final MessagePayload<?> message = codec.deserialize(body, MessagePayload.class);
         final Object val = message.getPayload();
         final Class<?> targetClass = message.getTypeAsClass();
         final Collection<MethodReference<?>> consumers = handlers.get(targetClass);
@@ -106,15 +106,12 @@ public class DefaultQueueConsumer extends DefaultConsumer {
         int invokedHandlers = 0;
         final boolean batchRequest = isBatchedRequest(context);
 
-        final Map<String, Object> headersXX = properties.getHeaders();
-        System.out.println(headersXX);
-
         Reply<?> reply = null;
-        for (final MethodReference reference : consumers)
+        for (final MethodReference reference : consumers) {
+          reply = null;
           try {
             final BiFunction<Object, MessageContext, Reply<?>> handler = reference.getHandler();
             final Class<?> root = reference.getRootType();
-            reply = null;
             if (root == targetClass) {
               ++invokedHandlers;
               reply = execute(context, val, handler);
@@ -137,6 +134,7 @@ public class DefaultQueueConsumer extends DefaultConsumer {
             exceptions.add(e);
             log.error("Handler error for message  : " + message, e);
           }
+        }
 
         // TODO : This should be handled better
         if (invokedHandlers == 0) {
@@ -162,13 +160,13 @@ public class DefaultQueueConsumer extends DefaultConsumer {
             log.debug("Handler time : {}", executionInfo.asElapsedMillis());
           }
 
-          if (!reply.isExceptional()) {
+          if (reply != null && !reply.isExceptional()) {
             publisher.basicPublish(getChannel(), "", replyTo, reply.getValue(), headers);
             ack = AcknowledgmentStrategies.BASIC_ACK.strategy();
           }
         }
 
-        if (reply.isExceptional()) {
+        if (reply != null && reply.isExceptional()) {
           ack = errorStrategy.handleConsumerError(context, reply.getException());
         }
       } catch (final Exception e) {

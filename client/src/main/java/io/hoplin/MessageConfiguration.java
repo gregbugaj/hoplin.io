@@ -6,7 +6,17 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Message configuration that will be populated for each outgoing message
+ * Message configuration that will be populated for each outgoing message Messages that are in
+ * native format do not use the envelope.
+ * <p>
+ * Example usage of publishing a message without envelope. We need to set native format to true via
+ * <code>Consumer<MessageConfiguration> setNativeMessageFormat(true)</code>
+ * <p>
+ * Example
+ * <code>
+ * // configuring publish without envelope ExchangeClient client = clientFromExchange(); LogDetail
+ * detail = getLogDetail(); client.publish(detail, cfg -> cfg.setNativeMessageFormat(true));
+ * </code>
  */
 public class MessageConfiguration {
 
