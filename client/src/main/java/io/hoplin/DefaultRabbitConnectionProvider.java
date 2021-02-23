@@ -80,14 +80,7 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
 
   @Override
   public Channel acquire() {
-    if (!isConnected()) {
-      log.info("Not connected to AMQP, attempting reconnect");
-      final boolean connected = connect();
-      if (!connected) {
-        throw new IllegalStateException("Client is not connected after reconnect attempt");
-      }
-    }
-
+    validateConnectionReady();
     if (!isOpenChannel()) {
       try {
         log.debug("channel is closed");
@@ -97,8 +90,23 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
         throw new IllegalStateException("Channel is not available", e);
       }
     }
-
     return channel;
+  }
+
+  @Override
+  public Channel acquirePublishChannel() {
+    validateConnectionReady();
+    throw new RuntimeException("Not implemented");
+  }
+
+  private void validateConnectionReady() {
+    if (!isConnected()) {
+      log.info("Not connected to AMQP, attempting reconnect");
+      final boolean connected = connect();
+      if (!connected) {
+        throw new IllegalStateException("Client is not connected after reconnect attempt");
+      }
+    }
   }
 
   @Override

@@ -53,6 +53,7 @@ public class Publisher {
     return CompletableFuture.runAsync(() -> {
       final QueueMetrics metrics = getInstance(getKey(exchange, routingKey));
 
+      log.info("Thread Id #{}", Thread.currentThread().getId());
       try {
         final BasicProperties props = createBasisProperties(headers);
         final String messageId = props.getMessageId();

@@ -48,6 +48,13 @@ public interface ConnectionProvider extends ShutdownListener {
   Channel acquire();
 
   /**
+   * Acquire underlying {@link Channel} for publish operations.
+   *
+   * @return
+   */
+  Channel acquirePublishChannel();
+
+  /**
    * Check if the have connection established
    *
    * @return true when the connection is open, false otherwise
@@ -62,6 +69,8 @@ public interface ConnectionProvider extends ShutdownListener {
    * @see com.rabbitmq.client.ShutdownNotifier#isOpen()
    */
   boolean isOpenChannel();
+
+  p
 
   /**
    * Check if the have connection established and channel is open
