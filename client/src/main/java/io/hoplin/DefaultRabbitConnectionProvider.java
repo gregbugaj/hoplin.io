@@ -94,9 +94,14 @@ public class DefaultRabbitConnectionProvider implements ConnectionProvider {
   }
 
   @Override
-  public Channel acquirePublishChannel() {
+  public Channel acquirePublisherChannel() {
     validateConnectionReady();
-    throw new RuntimeException("Not implemented");
+    try {
+      return createChannel();
+    } catch (IOException e) {
+      log.error("Channel is not available", e);
+      throw new IllegalStateException("Channel is not available", e);
+    }
   }
 
   private void validateConnectionReady() {

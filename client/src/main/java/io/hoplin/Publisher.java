@@ -14,15 +14,15 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Helper class for publishing messages, that does not require a full client
+ * Helper class for publishing messages, that does not require a full client.
  *
  * @see DefaultRabbitMQClient
  * @see DefaultQueueConsumer
- * @see RetryPolicy
  */
 public class Publisher {
 
@@ -34,26 +34,33 @@ public class Publisher {
     this.executor = Objects.requireNonNull(executor);
   }
 
+  public <T> CompletableFuture<Void> basicPublishAsync(final Channel r,
+      final String exchange,
+      final String routingKey, final T message,
+      final Map<String, Object> headers) {
+    Objects.requireNonNull(exchange);
+
+    return null;
+  }
   /***
-   * Publish message to a specific exchange.
+   * Publish message asynchronously to a specific exchange.
    *
    * @param <T>
-   * @param channel
+   * @param provider
    * @param exchange
    * @param routingKey
    * @param message
    * @param headers
    * @return
    */
-  public <T> CompletableFuture<Void> basicPublishAsync(final Channel channel, final String exchange,
+  public <T> CompletableFuture<Void> basicPublishAsync(final PublisherChannelProvider provider,
+      final String exchange,
       final String routingKey, final T message,
       final Map<String, Object> headers) {
     Objects.requireNonNull(exchange);
 
     return CompletableFuture.runAsync(() -> {
       final QueueMetrics metrics = getInstance(getKey(exchange, routingKey));
-
-      log.info("Thread Id #{}", Thread.currentThread().getId());
       try {
         final BasicProperties props = createBasisProperties(headers);
         final String messageId = props.getMessageId();
@@ -64,10 +71,13 @@ public class Publisher {
         }
 
         final byte[] body = serializeWithDefaults(message);
-        channel.basicPublish(exchange, routingKey, props, body);
+        try (final Channel channel = provider.acquirePublisherChannel()) {
+          channel.basicPublish(exchange, routingKey, props, body);
+        }
+
         metrics.markMessageSent();
         metrics.incrementSend(body.length);
-      } catch (final IOException e) {
+      } catch (final IOException | TimeoutException e) {
         metrics.markMessagePublishFailed();
         throw new HoplinRuntimeException("Unable to publish message", e);
       }
@@ -87,17 +97,20 @@ public class Publisher {
   public <T> void basicPublish(final Channel channel, final String exchange,
       final String routingKey, final T message,
       final Map<String, Object> headers) {
+
     final CompletableFuture<Void> completable = basicPublishAsync(channel, exchange,
         routingKey, message, headers);
     try {
       completable.get();
-    } catch (final InterruptedException | ExecutionException e) {
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (final ExecutionException e) {
       throw new HoplinRuntimeException("Publishing exception ", e);
     }
   }
 
   /**
-   * Publish message to a specific exchange
+   * Publish message asynchronously to a specific exchange
    *
    * @param <T>
    * @param channel
@@ -121,6 +134,7 @@ public class Publisher {
           log.debug("Publishing [exchange, routingKey, id] : {}, {}, {}", exchange, routingKey,
               props.getMessageId());
         }
+
         channel.basicPublish(exchange, routingKey, props, body);
         metrics.markMessageSent();
         metrics.incrementSend(body.length);
