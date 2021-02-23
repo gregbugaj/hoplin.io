@@ -3,13 +3,13 @@ package io.hoplin;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownListener;
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
 /**
  * Connection provider to RabbitMQ
  */
-public interface ConnectionProvider extends ShutdownListener {
+public interface ConnectionProvider extends PublisherChannelProvider, ShutdownListener {
 
   /**
    * Create default connection provider
@@ -26,7 +26,8 @@ public interface ConnectionProvider extends ShutdownListener {
    * @param options
    * @return
    */
-  static ConnectionProvider createAndConnect(RabbitMQOptions options) {
+  static ConnectionProvider createAndConnect(final RabbitMQOptions options) {
+    Objects.requireNonNull(options);
     try {
       final ConnectionProvider provider = create(options);
       if (!provider.connect()) {
@@ -64,7 +65,7 @@ public interface ConnectionProvider extends ShutdownListener {
   boolean isOpenChannel();
 
   /**
-   * Check if the have connection established and channel is open
+   * Check if the have connection established and primary channel is open
    *
    * @return true when the connection is open and channel is open, false otherwise
    */
@@ -80,7 +81,7 @@ public interface ConnectionProvider extends ShutdownListener {
   /**
    * Connect to our broker, this method is blocking
    *
-   * @return {@link CompletableFuture<Boolean>}
+   * @return {@link Boolean}
    * @throws IOException
    * @throws TimeoutException
    */

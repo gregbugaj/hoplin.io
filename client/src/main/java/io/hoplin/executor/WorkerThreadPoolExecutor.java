@@ -67,17 +67,16 @@ public class WorkerThreadPoolExecutor extends ThreadPoolExecutor {
       final long taskTime = System.nanoTime() - startTime.get();
       metrics.addTaskTime(taskTime);
 
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug(String.format("Thread %s: end %s, time = %dns  :  %dms  :  %ds",
+      if (LOGGER.isTraceEnabled()) {
+        LOGGER.trace(String.format("Thread %s: end %s, time = %dns  :  %dms  :  %ds",
             t,
             r,
             taskTime,
             TimeUnit.NANOSECONDS.toMillis(taskTime),
             TimeUnit.NANOSECONDS.toSeconds(taskTime)));
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      ;
+    } catch (final Exception e) {
+      LOGGER.error("Error after execute", e);
     } finally {
       super.afterExecute(r, t);
     }

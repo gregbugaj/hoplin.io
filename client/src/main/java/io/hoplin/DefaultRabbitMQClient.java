@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -221,11 +222,9 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   @Override
   public CompletableFuture<QueueStats> messageCountAsync(final String queue) {
-    return CompletableFuture.supplyAsync(() -> with(channel -> {
-      final long consumerCount = channel.consumerCount(queue);
-      final long messageCount = channel.messageCount(queue);
-      return new QueueStats(consumerCount, messageCount);
-    }), executor);
+    return CompletableFuture.supplyAsync(() -> with(
+        channel -> new QueueStats(channel.consumerCount(queue), channel.messageCount(queue))),
+        executor);
   }
 
   @Override
@@ -250,13 +249,13 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
   public <T> CompletableFuture<Void> basicPublishAsync(final String exchange,
       final String routingKey, final T message,
       final Map<String, Object> headers) {
-    return with(
-        channel -> publisher.basicPublishAsync(channel, exchange, routingKey, message, headers));
+
+    return publisher.basicPublishAsync(provider, exchange, routingKey, message, headers);
   }
 
   @Override
   public void basicAck(final long deliveryTag, final boolean multiple) {
-
+    throw new RuntimeException("Not yet implemented");
   }
 
   @Override
@@ -266,6 +265,6 @@ public class DefaultRabbitMQClient implements RabbitMQClient {
 
   private interface ThrowableChannel<T> {
 
-    T handle(Channel channel) throws Exception;
+    T handle(final Channel channel) throws Exception;
   }
 }

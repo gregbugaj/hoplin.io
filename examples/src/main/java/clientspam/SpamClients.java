@@ -19,11 +19,16 @@ public class SpamClients extends BaseExample {
   public static void main(final String... args) throws InterruptedException {
     log.info("Starting producer for exchange : {}", EXCHANGE);
 // Connections will not be closed until client exits the application
-//    spam();
+
+    spam(100000);
 
 //    spamSingleOpenClose();
 
-    spamSingleOpenCloseAsync();
+//    spamSingleOpenCloseAsync();
+
+//    spamAndAutoClose();
+
+//    spamAndClose();
 
     // Connections will be closed by calling close
 //     spamAndClose();
@@ -34,11 +39,12 @@ public class SpamClients extends BaseExample {
 //    Thread.currentThread().join();
   }
 
-  private static void spam() {
-    for (int i = 0; i < 1; ++i) {
-      final ExchangeClient client = clientFromExchange();
-      client.publish(createMessage("warning"), "log.spam");
+  private static void spam(int count) {
+    final ExchangeClient client = clientFromExchange();
+    for (int i = 0; i < count; ++i) {
+      client.publishAsync(createMessage("warning"), "log.spam");
     }
+    client.close();
   }
 
   private static void spamAndClose() {
