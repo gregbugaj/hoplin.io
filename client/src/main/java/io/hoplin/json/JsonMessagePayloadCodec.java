@@ -88,7 +88,7 @@ public class JsonMessagePayloadCodec implements Codec {
     Objects.requireNonNull(value);
     final long s = System.currentTimeMillis();
     try {
-      return gson.toJson(value).getBytes();
+      return gson.toJson(value).getBytes(StandardCharsets.UTF_8);
     } finally {
       if (log.isTraceEnabled()) {
         log.trace("serialize time (ms) {}", (System.currentTimeMillis() - s));
@@ -103,7 +103,7 @@ public class JsonMessagePayloadCodec implements Codec {
 
     final long s = System.currentTimeMillis();
     try {
-      return gson.toJson(value, clazz).getBytes();
+      return gson.toJson(value, clazz).getBytes(StandardCharsets.UTF_8);
     } finally {
       if (log.isTraceEnabled()) {
         log.trace("serialize time (ms) {}", (System.currentTimeMillis() - s));

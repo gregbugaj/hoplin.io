@@ -179,5 +179,16 @@ public interface QueueMetrics {
       receivedData.set(0);
       sentFailed.set(0);
     }
+
+    @Override
+    public String toString() {
+      return "QueueMetrics{" +
+          "sent=" + sent +
+          ", received=" + received +
+          ", sentFailed=" + sentFailed +
+          ", sentData=" + sentData +
+          ", receivedData=" + receivedData +
+          '}';
+    }
   }
 }

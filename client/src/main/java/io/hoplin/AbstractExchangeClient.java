@@ -382,7 +382,7 @@ abstract class AbstractExchangeClient implements ExchangeClient {
     final long end = System.nanoTime() + unit.toNanos(sleepFor);
     long duration = 0;
     long count;
-    final long tick = TimeUnit.MILLISECONDS.toNanos(10);
+    final long tick = TimeUnit.MILLISECONDS.toNanos(100);
     while ((count = pendingMessages.get()) > 0) {
       try {
         duration = System.nanoTime() - start;

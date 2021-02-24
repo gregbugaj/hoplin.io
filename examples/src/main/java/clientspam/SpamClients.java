@@ -1,9 +1,13 @@
 package clientspam;
 
+import static io.hoplin.metrics.QueueMetrics.Factory.getInstance;
+import static io.hoplin.metrics.QueueMetrics.getKey;
+
 import examples.BaseExample;
 import examples.LogDetail;
 import io.hoplin.CloseableExchangeClient;
 import io.hoplin.ExchangeClient;
+import io.hoplin.metrics.QueueMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +24,17 @@ public class SpamClients extends BaseExample {
     log.info("Starting producer for exchange : {}", EXCHANGE);
 // Connections will not be closed until client exits the application
 
-    spam(100000);
+    long s = System.currentTimeMillis();
+    spam(1_000);
+    long e = System.currentTimeMillis() - s;
+    System.out.println("time : " + e);
+    //time : 1_000      941
+    //time : 10_000     1799
+    //time : 100_000    5969
+    //time : 500_000    18397
+    //time : 1_000_000  40683
+    final QueueMetrics metrics = getInstance(getKey(EXCHANGE, "log.spam"));
+    System.out.println(metrics);
 
 //    spamSingleOpenClose();
 
@@ -43,6 +57,8 @@ public class SpamClients extends BaseExample {
     final ExchangeClient client = clientFromExchange();
     for (int i = 0; i < count; ++i) {
       client.publishAsync(createMessage("warning"), "log.spam");
+//      client.publish(createMessage("warning"), "log.spam");
+
     }
     client.close();
   }
