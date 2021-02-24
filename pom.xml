@@ -228,6 +228,7 @@
   <modules>
     <module>client</module>
     <module>examples</module>
+    <module>benchmark</module>
     <module>toolbox</module>
     <module>logreader</module>
   </modules>
@@ -283,11 +284,7 @@
           </plugin>
         </plugins>
       </build>
-
-
       <id>release-sign-artifacts</id>
-
-
     </profile>
   </profiles>
 
