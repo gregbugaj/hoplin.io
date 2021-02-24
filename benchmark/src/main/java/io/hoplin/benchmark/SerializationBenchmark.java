@@ -1,8 +1,12 @@
 package io.hoplin.benchmark;
 
-
 import io.hoplin.MessagePayload;
+import io.hoplin.benchmark.model.TestCodecMapping;
+import io.hoplin.benchmark.model.TestCodecMappingTuple;
+import io.hoplin.benchmark.model.TestCodecMappingVal;
 import io.hoplin.json.JsonMessagePayloadCodec;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -27,9 +31,19 @@ public class SerializationBenchmark {
 
     public long id;
 
+    public JsonMessagePayloadCodec codec;
+
+    private Set<Class<?>> getClasses() {
+      final Set<Class<?>> mappings = new HashSet<>();
+      mappings.add(TestCodecMapping.class);
+      mappings.add(TestCodecMappingTuple.class);
+      mappings.add(TestCodecMappingVal.class);
+      return mappings;
+    }
+
     @Setup
     public void setup() {
-
+      codec = new JsonMessagePayloadCodec(getClasses());
     }
 
     @TearDown(Level.Iteration)
@@ -39,12 +53,46 @@ public class SerializationBenchmark {
 
     @Benchmark
     @Fork(value = 1)
-    @Measurement(iterations = 3, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
-    @Warmup(iterations = 1, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
-    public void benchmark(final Context context) {
-      final JsonMessagePayloadCodec codec = new JsonMessagePayloadCodec();
+    @Measurement(iterations = 10, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+    public void benchmark_BasicObject(final Context context) {
       final Long[] val = new Long[]{10L, 20L, 30L};
       final byte[] data = codec.serialize(val);
+      final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
+
+      context.id++;
+    }
+
+    @Benchmark
+    @Fork(value = 1)
+    @Measurement(iterations = 10, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+    public void benchmark_ComplexObject_1(final Context context) {
+
+      final TestCodecMapping val = new TestCodecMapping();
+      val.setMsg("Msg A");
+      val.setValA(1);
+      val.setValB(2);
+
+      final TestCodecMappingVal mapping = new TestCodecMappingVal();
+      mapping.setValA(111);
+
+      val.setMapping(mapping);
+
+      final byte[] data = codec.serialize(val);
+      final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
+
+      context.id++;
+    }
+
+
+    @Benchmark
+    @Fork(value = 1)
+    @Measurement(iterations = 10, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 3, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+    public void benchmark_ComplexObject_2(final Context context) {
+      TestCodecMappingTuple tuple = new TestCodecMappingTuple();
+      final byte[] data = codec.serialize(tuple);
       final MessagePayload<?> out = codec.deserialize(data, MessagePayload.class);
 
       context.id++;

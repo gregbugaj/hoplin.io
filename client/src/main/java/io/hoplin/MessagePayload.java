@@ -118,7 +118,7 @@ public class MessagePayload<T> {
       default:
         try {
           return Class.forName(fqn);
-        } catch (ClassNotFoundException ex) {
+        } catch (final ClassNotFoundException ex) {
           throw new IllegalArgumentException("Class not found: " + fqn);
         }
     }
