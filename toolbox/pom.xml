@@ -11,6 +11,30 @@
         </configuration>
         <groupId>org.apache.maven.plugins</groupId>
       </plugin>
+
+
+      <!-- Prevents : Maven assembly-plugin "group id '1377585961' is too big" error -->
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <configuration>
+              <tarLongFileMode>posix</tarLongFileMode>
+          </configuration>
+      </plugin>
+
+      <!--
+        Fixes java.lang.NoClassDefFoundError: org/apache/maven/plugin/surefire/SurefireReportParameters
+      -->
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0</version>
+          <configuration>
+              <useSystemClassLoader>false</useSystemClassLoader>
+          </configuration>
+      </plugin>
+
+
     </plugins>
   </build>
 
@@ -32,7 +56,7 @@
   <parent>
     <artifactId>hoplin-parent</artifactId>
     <groupId>io.hoplin</groupId>
-    <version>1.1.6</version>
+    <version>1.1.7</version>
   </parent>
 
 

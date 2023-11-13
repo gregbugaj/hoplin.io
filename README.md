@@ -713,6 +713,6 @@ OSSRH-43588
 ### Maven version upgrade
 
 ```bash
-mvn versions:set -DnewVersion=1.1.6
+mvn versions:set -DnewVersion=1.1.7
 mvn versions:commit
 ```

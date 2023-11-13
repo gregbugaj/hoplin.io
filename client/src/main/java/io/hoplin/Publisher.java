@@ -199,7 +199,7 @@ public class Publisher {
   public BasicProperties createBasisProperties(
       final Map<String, Object> headers) {
     return new BasicProperties.Builder()
-        .contentType("text/json")
+        .contentType("application/json")
         .contentEncoding("UTF-8")
         .messageId(UUID.randomUUID().toString())
         .deliveryMode(2)

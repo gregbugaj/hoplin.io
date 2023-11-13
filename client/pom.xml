@@ -9,7 +9,7 @@
   <parent>
     <artifactId>hoplin-parent</artifactId>
     <groupId>io.hoplin</groupId>
-    <version>1.1.6</version>
+    <version>1.1.7</version>
   </parent>
 
   <properties>
@@ -27,6 +27,30 @@
         </configuration>
         <groupId>org.apache.maven.plugins</groupId>
       </plugin>
+
+
+      <!-- Prevents : Maven assembly-plugin "group id '1377585961' is too big" error -->
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <configuration>
+              <tarLongFileMode>posix</tarLongFileMode>
+          </configuration>
+      </plugin>
+
+      <!--
+        Fixes java.lang.NoClassDefFoundError: org/apache/maven/plugin/surefire/SurefireReportParameters
+      -->
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0</version>
+          <configuration>
+              <useSystemClassLoader>false</useSystemClassLoader>
+          </configuration>
+      </plugin>
+
+
     </plugins>
   </build>
 
@@ -35,7 +59,7 @@
     <dependency>
       <artifactId>amqp-client</artifactId>
       <groupId>com.rabbitmq</groupId>
-      <version>5.10.0</version>
+      <version>5.11.0</version>
     </dependency>
 
     <dependency>
@@ -47,13 +71,13 @@
     <dependency>
       <artifactId>gson</artifactId>
       <groupId>com.google.code.gson</groupId>
-      <version>2.8.5</version>
+      <version>2.8.9</version>
     </dependency>
 
     <dependency>
       <artifactId>guava</artifactId>
       <groupId>com.google.guava</groupId>
-      <version>25.0-jre</version>
+      <version>30.0-jre</version>
     </dependency>
 
     <dependency>
